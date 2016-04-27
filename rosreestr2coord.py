@@ -59,8 +59,9 @@ class Area:
         self.width = 0
         self.height = 0
         self.image_path = ""
-        self.extent = []
-        self.center = []
+        self.extent = {}
+        self.image_extent = {}
+        self.center = {}
         self.attrs = {}
         if not self.media_path:
             self.media_path = os.path.dirname(os.path.realpath(__file__))
@@ -100,18 +101,16 @@ class Area:
             return json.dumps(feature_collection)
         return False
 
-    def get_image_url(self, format="image"):
+    def get_image_url(self):
         if self.code_id and self.extent:
             # extent_list = self.get_extent_list(self.extent)
             ex = self.get_buffer_extent_list()
             dx, dy = map(lambda i: int((ex[i[0]] - ex[i[1]]) * 5), [[2, 0], [3, 1]])
-            self.width = dx
-            self.height = dy
             code = self.code_id
             layers = ["6", "7"]
             params = {
                 "dpi": 96,
-                "transparent": False,
+                "transparent": "false",
                 "format": "png32",
                 "layers": "show:%s" % ",".join(layers),
                 "bbox": ",".join(map(str, ex)),
@@ -119,15 +118,23 @@ class Area:
                 "imageSR": 102100,
                 "size": "%s,%s" % (dx, dy),
                 "layerDefs": {layer: str("ID = '%s'" % code) for layer in layers},
-                "f": format
+                "f": "json"
             }
             url_parts = list(urlparse.urlparse(IMAGE_URL))
             query = dict(urlparse.parse_qsl(url_parts[4]))
             query.update(params)
             url_parts[4] = urlencode(query)
-            image_url = urlparse.urlunparse(url_parts)
-            # print(image_url)
-            return image_url
+            meta_url = urlparse.urlunparse(url_parts)
+            if meta_url:
+                response = urllib.urlopen(meta_url)
+                data = json.loads(response.read())
+                if data["href"]:
+                    image_url = data["href"]
+                    self.width = data["width"]
+                    self.height = data["height"]
+                    self.image_extent = data["extent"]
+                    # print(image_url)
+                    return image_url
         return False
 
     def download_image(self):
@@ -222,7 +229,7 @@ class Area:
         return image_xy_corners
 
     def image_corners_to_coord(self):
-        ex = self.get_buffer_extent_list()
+        ex = self.get_extent_list(self.image_extent)
         dx = ((ex[2] - ex[0]) / self.width)
         dy = ((ex[3] - ex[1]) / self.height)
         xy_corners = []
@@ -268,13 +275,14 @@ if __name__ == "__main__":
     # area = Area("38:36:000021:1106")
     # area = Area("38:06:144003:4723")
     abspath = os.path.abspath('.')
-    opt = getopts()
-    if opt.code:
-        area = Area(opt.code)
-        geojson = area.to_geojson()
-        if geojson:
-            filename = '%s.geojson' % area.file_name
-            f = open(filename, 'w')
-            f.write(geojson)
-            f.close()
-            print(os.path.join(abspath, filename))
+    #opt = getopts()
+    #if opt.code:
+    #area = Area(opt.code)
+    area = Area("38:36:000033:375")
+    geojson = area.to_geojson()
+    if geojson:
+        filename = '%s.geojson' % area.file_name
+        f = open(filename, 'w')
+        f.write(geojson)
+        f.close()
+        print(os.path.join(abspath, filename))
