@@ -275,14 +275,14 @@ if __name__ == "__main__":
     # area = Area("38:36:000021:1106")
     # area = Area("38:06:144003:4723")
     abspath = os.path.abspath('.')
-    #opt = getopts()
-    #if opt.code:
-    #area = Area(opt.code)
-    area = Area("38:36:000033:375")
-    geojson = area.to_geojson()
-    if geojson:
-        filename = '%s.geojson' % area.file_name
-        f = open(filename, 'w')
-        f.write(geojson)
-        f.close()
-        print(os.path.join(abspath, filename))
+    opt = getopts()
+    if opt.code:
+        area = Area(opt.code)
+    #area = Area("38:36:000033:375")
+        geojson = area.to_geojson()
+        if geojson:
+            filename = '%s.geojson' % area.file_name
+            f = open(filename, 'w')
+            f.write(geojson)
+            f.close()
+            print(os.path.join(abspath, filename))
