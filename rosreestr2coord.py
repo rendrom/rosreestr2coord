@@ -50,10 +50,10 @@ class Area:
     search_url = SEARCH_URL
     meta_url = META_URL
     image_url = IMAGE_URL
-    media_path = ""
     buffer = 10
 
-    def __init__(self, code):
+    def __init__(self, code, media_path=""):
+        self.media_path = media_path
         self.image_url = ""
         self.xy = []
         self.width = 0
@@ -66,7 +66,7 @@ class Area:
         if not self.media_path:
             self.media_path = os.path.dirname(os.path.realpath(__file__))
         if not os.path.isdir(self.media_path):
-            raise Exception("media_path is not set correct")
+            os.makedirs(self.media_path)
         self.code = code
         self.code_id = ""
         self.file_name = self.code.replace(":", "-")
