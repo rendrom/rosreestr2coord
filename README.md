@@ -12,7 +12,7 @@ ROSREESTR TO COORDINATE
 
 from console (geojson output):
 
-    python rosreestr2coord -c "38:06:144003:4723"
+    python rosreestr2coord.py -c "38:06:144003:4723"
     
 programmatically:
     
@@ -20,4 +20,5 @@ programmatically:
         
     area = Area("38:06:144003:4723")
     area.to_geojson()
-    area.xy
+    area.get_coord()
+    area.get_attrs()
