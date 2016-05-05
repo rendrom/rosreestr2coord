@@ -42,7 +42,8 @@ META_URL = "http://pkk5.rosreestr.ru/api/features/1/"
 #   &f=image
 # WHERE:
 #    "layerDefs" decode to {"6":"ID = '38:36:21:1106'","7":"ID = '38:36:21:1106'"}
-#    "f" may be `json`
+#    "f" may be `json` or `html`
+#    set `&format=svg&f=json` to export image in svg 
 IMAGE_URL = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
 
 
@@ -71,16 +72,17 @@ class Area:
         self.code_id = ""
         self.file_name = self.code.replace(":", "-")
         search_data = self.search()
+        self.download_meta()
         if search_data:
-            self.download_meta()
-            self.image_url = self.get_image_url()
-            if self.image_url:
-                image = self.download_image()
-                if image:
-                    image_xy_corner = self.get_image_xy_corner()
-                    if image_xy_corner:
-                        self.xy = self.image_corners_to_coord()
-
+            formats = ["svg", ""]
+            for f in formats:              
+                self.image_url = self.get_image_url(f)
+                if self.image_url:
+                    image = self.download_image(f)
+                    if image:
+                        geom = self.get_geometry(f);
+                        break
+                        
     def get_coord(self):
         return self.xy
 
@@ -101,9 +103,8 @@ class Area:
             return json.dumps(feature_collection)
         return False
 
-    def get_image_url(self):
+    def get_image_url(self, format):
         if self.code_id and self.extent:
-            # extent_list = self.get_extent_list(self.extent)
             ex = self.get_buffer_extent_list()
             dx, dy = map(lambda i: int((ex[i[0]] - ex[i[1]]) * 5), [[2, 0], [3, 1]])
             code = self.code_id
@@ -120,6 +121,8 @@ class Area:
                 "layerDefs": {layer: str("ID = '%s'" % code) for layer in layers},
                 "f": "json"
             }
+            if format:
+                params["format"] = format
             url_parts = list(urlparse.urlparse(IMAGE_URL))
             query = dict(urlparse.parse_qsl(url_parts[4]))
             query.update(params)
@@ -137,14 +140,14 @@ class Area:
                     return image_url
         return False
 
-    def download_image(self):
+    def download_image(self, format="png"):
         try:
             image_file = urllib.URLopener()
             basedir = self.media_path
             savedir = os.path.join(basedir, "tmp")
             if not os.path.isdir(savedir):
                 os.makedirs(savedir)
-            file_path = os.path.join(savedir, "%s.png" % self.file_name)
+            file_path = os.path.join(savedir, "%s.%s" % (self.file_name, format))
             image_file.retrieve(self.image_url, file_path)
             self.image_path = file_path
             return image_file
@@ -206,6 +209,42 @@ class Area:
         response = urllib.urlopen(search_url)
         data = json.loads(response.read())
         return data
+        
+    def get_geometry(self, format):
+        if format == "svg":
+            self.xy = self.read_svg()
+        else:
+            image_xy_corner = self.get_image_xy_corner()
+            if image_xy_corner:
+                self.xy = self.image_corners_to_coord(image_xy_corner)            
+        return self.xy
+        
+    def read_svg(self):
+        # from xml.dom import minidom
+        # import pysvg.parser
+        import svg
+        svg_coord = [] 
+        object = svg.parse(self.image_path)
+        self.get_svg_points(object, svg_coord)
+        self.xy = self.image_corners_to_coord(svg_coord)
+        return self.xy
+        # svg = pysvg.parser.parse(self.image_path)
+        # p = svg.get_width(), svg.get_height()
+        
+        # doc = minidom.parse(self.image_path)  # parseString also exists
+        # path_strings = [path.getAttribute('d') for path
+        #                 in doc.getElementsByTagName('path')]
+        # doc.unlink()
+        
+    def get_svg_points(self, object, svg_coord):
+        if object.__dict__.has_key("items"):
+            for i in object.items:
+                if i.__dict__.has_key("start"):
+                    svg_coord.append([i.start.x, i.start.y])
+                else:
+                    self.get_svg_points(i, svg_coord)                    
+        else:
+            pass
 
     def get_image_xy_corner(self):
         import numpy as np
@@ -222,27 +261,26 @@ class Area:
             for i in corners:
                 x, y = i.ravel()
                 image_xy_corners.append([x, y])
-            self.image_xy_corners = image_xy_corners
             return image_xy_corners
         except Exception as ex:
             print(ex)
         return image_xy_corners
 
-    def image_corners_to_coord(self):
+    def image_corners_to_coord(self, image_xy_corners):
         ex = self.get_extent_list(self.image_extent)
         dx = ((ex[2] - ex[0]) / self.width)
         dy = ((ex[3] - ex[1]) / self.height)
         xy_corners = []
-        for im_x, im_y in self.image_xy_corners:
+        for im_x, im_y in image_xy_corners:
             x = ex[0] + (im_x * dx)
             y = ex[3] - (im_y * dy)
             xy_corners.append([x, y])
         return xy_corners
 
-    def show_plot(self):
+    def show_plot(self, image_xy_corner):
         import cv2
         from matplotlib import pyplot as plt
-        corners = self.image_xy_corners
+        corners = image_xy_corners
         img = cv2.imread(self.image_path)
         for x, y in corners:
             cv2.circle(img, (x, y), 3, 255, -1)
@@ -272,17 +310,26 @@ def getopts():
 
 
 if __name__ == "__main__":
-    # area = Area("38:36:000021:1106")
+    area = Area("38:36:000021:1106")  
     # area = Area("38:06:144003:4723")
+    # area = Area("38:36:000033:375")
     abspath = os.path.abspath('.')
-    opt = getopts()
-    if opt.code:
-        area = Area(opt.code)
-    #area = Area("38:36:000033:375")
-        geojson = area.to_geojson()
-        if geojson:
-            filename = '%s.geojson' % area.file_name
-            f = open(filename, 'w')
-            f.write(geojson)
-            f.close()
-            print(os.path.join(abspath, filename))
+    geojson = area.to_geojson()
+    if geojson:
+        filename = '%s.geojson' % area.file_name
+        f = open(filename, 'w')
+        f.write(geojson)
+        f.close()
+        print(os.path.join(abspath, filename))
+     
+    # abspath = os.path.abspath('.')
+    # opt = getopts()
+    # if opt.code:
+    #     area = Area(opt.code)
+    #     geojson = area.to_geojson()
+    #     if geojson:
+    #         filename = '%s.geojson' % area.file_name
+    #         f = open(filename, 'w')
+    #         f.write(geojson)
+    #         f.close()
+    #         print(os.path.join(abspath, filename))
