@@ -8,7 +8,7 @@ ROSREESTR TO COORDINATE
 ## Requirements
 
 * Python 2.7.x
-* [OpenCV](http://opencv.org/)
+* [OpenCV](http://opencv.org/) (опционально, для png)
 
 ## Usage
 
@@ -27,6 +27,6 @@ programmatically:
 
 ## TODO
 
-* Увеличить точность распознования углов
 * Рисовать полигон
 * В полигоне находить отверстия
+* ~~Увеличить точность распознования углов~~ Увеличино за счёт обработки SVG
