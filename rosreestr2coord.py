@@ -7,7 +7,7 @@ import os
 try:
     import urlparse
     from urllib import urlencode
-except:  # For Python 3
+except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
 
@@ -27,7 +27,7 @@ SEARCH_URL = "http://pkk5.rosreestr.ru/api/features/1"
 META_URL = "http://pkk5.rosreestr.ru/api/features/1/"
 
 #########################
-# URL to get area image # 
+# URL to get area image #
 #########################
 # http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export
 #   ?dpi=96
@@ -57,6 +57,7 @@ class Area:
         self.media_path = media_path
         self.image_url = ""
         self.xy = []
+        self.holes = []
         self.width = 0
         self.height = 0
         self.image_path = ""
@@ -84,12 +85,24 @@ class Area:
                         break
                         
     def get_coord(self):
-        return self.xy
+        if self.xy:
+            return self.xy[0]
+        return []            
+        
+    def get_holes(self):
+        holes = []
+        for fry in range(len(self.xy)):
+            if fry != 0:
+                holes.append(self.xy[fry])
+        return holes
 
     def get_attrs(self):
         return self.attrs
+        
+    def to_geojson_poly(self):
+        return self.to_geojson("polygon")
 
-    def to_geojson(self):
+    def to_geojson(self, type="point"):
         if self.xy:
             features = []
             feature_collection = {
@@ -97,8 +110,14 @@ class Area:
                 "crs": {"type": "name", "properties": {"name": "EPSG:3857"}},
                 "features": features
             }
-            for x, y in self.xy:
-                feature = {"type": "Feature", "geometry": {"type": "Point", "coordinates": [x, y]}}
+            feature = {"type": "Feature"}
+            if type.upper() == "POINT":
+                for xy in self.xy:
+                    for x, y in xy:
+                        point = {"type": "Feature", "geometry": {"type": "Point", "coordinates": [x, y]}}
+                        features.append(point)
+            elif type.upper() == "POLYGON":
+                feature["geometry"] = {"type": "Polygon", "coordinates": self.xy}
                 features.append(feature)
             return json.dumps(feature_collection)
         return False
@@ -209,47 +228,45 @@ class Area:
         response = urllib.urlopen(search_url)
         data = json.loads(response.read())
         return data
-        
+
     def get_geometry(self, format):
         if format == "svg":
             self.xy = self.read_svg()
         else:
             image_xy_corner = self.get_image_xy_corner()
             if image_xy_corner:
-                self.xy = self.image_corners_to_coord(image_xy_corner)            
+                self.xy.append(self.image_corners_to_coord(image_xy_corner))
         return self.xy
-        
+
     def read_svg(self):
-        # from xml.dom import minidom
-        # import pysvg.parser
         import svg
-        svg_coord = [] 
-        object = svg.parse(self.image_path)
-        self.get_svg_points(object, svg_coord)
-        self.xy = self.image_corners_to_coord(svg_coord)
+
+        svg_coord = [] # Set of poly coordinates set (area, hole1?, hole2?...)
+        obj = svg.parse(self.image_path)
+        self.get_svg_points(obj, svg_coord)
+        for poly in range(len(svg_coord)):
+            xy = self.image_corners_to_coord(svg_coord[poly])
+            self.xy.append(xy)
         return self.xy
-        # svg = pysvg.parser.parse(self.image_path)
-        # p = svg.get_width(), svg.get_height()
-        
-        # doc = minidom.parse(self.image_path)  # parseString also exists
-        # path_strings = [path.getAttribute('d') for path
-        #                 in doc.getElementsByTagName('path')]
-        # doc.unlink()
-        
-    def get_svg_points(self, object, svg_coord):
-        if object.__dict__.has_key("items"):
-            for i in object.items:
+
+    def get_svg_points(self, obj, svg_coord):
+        '''get absolute coordinates from svg file'''
+        if obj.__dict__.has_key("items"):
+            for i in obj.items:
+                dest = i.__dict__.has_key("dest")
+                if dest:
+                    svg_coord.append([])
                 if i.__dict__.has_key("start"):
-                    svg_coord.append([i.start.x, i.start.y])
+                    svg_coord[len(svg_coord)-1].append([i.start.x, i.start.y])
                 else:
-                    self.get_svg_points(i, svg_coord)                    
+                    self.get_svg_points(i, svg_coord)
         else:
             pass
 
     def get_image_xy_corner(self):
+        '''get coodinates from raster'''
         import numpy as np
         import cv2
-        # from matplotlib import pyplot as plt
 
         image_xy_corners = []
         img = cv2.imread(self.image_path)
@@ -310,15 +327,17 @@ def getopts():
 
 
 if __name__ == "__main__":
+    abspath = os.path.abspath('.')
     # area = Area("38:36:000021:1106")  
     # area = Area("38:06:144003:4723")
     # area = Area("38:36:000033:375")
-     
-    abspath = os.path.abspath('.')
-    opt = getopts()
-    if opt.code:
-        area = Area(opt.code)
-        geojson = area.to_geojson()
+    # code = "38:36:000021:1106"
+    opt = getopts() 
+    code = opt.code
+    
+    if code:
+        area = Area(code)
+        geojson = area.to_geojson_poly()
         if geojson:
             filename = '%s.geojson' % area.file_name
             f = open(filename, 'w')

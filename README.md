@@ -22,7 +22,9 @@ programmatically:
         
     area = Area("38:06:144003:4723")
     area.to_geojson()
+    area.to_geojson_poly()
     area.get_coord()
+    area.get_holes()
     area.get_attrs()
 
 ## TODO
