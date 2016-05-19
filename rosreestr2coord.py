@@ -109,14 +109,14 @@ class Area:
                 "type": "FeatureCollection",
                 "crs": {"type": "name", "properties": {"name": "EPSG:3857"}},
                 "features": features
-            }
-            feature = {"type": "Feature"}
+            }            
             if type.upper() == "POINT":
                 for xy in self.xy:
                     for x, y in xy:
-                        point = {"type": "Feature", "geometry": {"type": "Point", "coordinates": [x, y]}}
+                        point = {"type": "Feature", "properties": {}, "geometry": {"type": "Point", "coordinates": [x, y]}}
                         features.append(point)
             elif type.upper() == "POLYGON":
+                feature = {"type": "Feature", "properties": {}}
                 feature["geometry"] = {"type": "Polygon", "coordinates": self.xy}
                 features.append(feature)
             return json.dumps(feature_collection)
