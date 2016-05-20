@@ -20,6 +20,8 @@ except ImportError:  # For Python 3
 #   &limit=11
 SEARCH_URL = "http://pkk5.rosreestr.ru/api/features/1"
 
+FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/1/"
+
 ############################
 # URL to get area metainfo #
 ############################
@@ -72,10 +74,11 @@ class Area:
         self.code = code
         self.code_id = ""
         self.file_name = self.code.replace(":", "-")
-        search_data = self.search()
+        # search_data = self.search()
+        feature_info = self.download_feature_info()
         self.download_meta()
-        if search_data:
-            formats = ["svg", ""]
+        if feature_info:
+            formats = ["svg", "png"]
             for f in formats:            
                 self.image_url = self.get_image_url(f)
                 if self.image_url:                  
@@ -151,7 +154,8 @@ class Area:
             if meta_url:
                 response = urllib.urlopen(meta_url)
                 try:
-                    data = json.loads(response.read())
+                    read = response.read()
+                    data = json.loads(read)
                     if data.get("href"):
                         image_url = data["href"]
                         self.width = data["width"]
@@ -163,6 +167,8 @@ class Area:
                         print("can't get image data from: %s" %meta_url) 
                 except Exception as er:
                     print(er)
+        elif not self.extent:
+            print("can't get image without extent")
         return False
 
     def download_image(self, format="png"):
@@ -221,8 +227,10 @@ class Area:
                     if attrs["cn"] == self.code:
                         self.attrs["address"] = attrs["address"]
                         self.code_id = attrs["id"]
-                        self.extent = area["extent"]
-                        self.center = area["center"]
+                        if area.get("extent"):
+                            self.extent = area["extent"]
+                        if area.get("center"):
+                            self.center = area["center"]
                         return search_data
         except Exception as er:
             pass
@@ -234,6 +242,34 @@ class Area:
         response = urllib.urlopen(search_url)
         data = json.loads(response.read())
         return data
+        
+    def download_feature_info(self):
+        try:
+            search_url = FEATURE_INFO_URL + self.clear_code(self.code)
+            response = urllib.urlopen(search_url)
+            resp = response.read()
+            data = json.loads(resp)
+            if data:
+                feature = data.get("feature")
+                if feature:
+                    self.code_id = feature["_id"]
+                    if feature.get("attrs"):
+                        self.attrs = feature["attrs"]
+                        self.code_id = feature["attrs"]["cn"]
+                    if feature.get("extent"):
+                        self.extent = feature["extent"]
+                    if feature.get("center"):
+                        self.center = feature["center"]
+                return feature
+        except Exception as error:
+            print(error)
+        return False
+    
+    @staticmethod
+    def clear_code(code):
+        '''remove first nulls from code'''
+        return ":".join(map(lambda x: str(int(x)), code.split(":")))
+    
 
     def get_geometry(self, format):
         if format == "svg":
@@ -340,11 +376,11 @@ if __name__ == "__main__":
     # area = Area("38:36:000021:1106")  
     # area = Area("38:06:144003:4723")
     # area = Area("38:36:000033:375")
-    # code = "38:36:000021:1107"
-    opt = getopts() 
-    path = opt.path
-    code = opt.code
-    output = opt.output if opt.output else "."
+    code, output, path = "38:06:144003:4137", "", ""
+    # opt = getopts() 
+    # path = opt.path
+    # code = opt.code
+    # output = opt.output if opt.output else "."
     abspath = os.path.abspath(output)
     if code:
         area = Area(code, media_path=path)
