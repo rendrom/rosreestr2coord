@@ -130,7 +130,7 @@ class Area:
         if self.code_id and self.extent:
             ex = self.get_buffer_extent_list()
             dx, dy = map(lambda i: int((ex[i[0]] - ex[i[1]]) * 5), [[2, 0], [3, 1]])
-            code = self.code_id
+            code = self.clear_code(self.code_id)
             layers = ["6", "7"]
             params = {
                 "dpi": 96,
@@ -141,7 +141,7 @@ class Area:
                 "bboxSR": 102100,
                 "imageSR": 102100,
                 "size": "%s,%s" % (dx, dy),
-                "layerDefs": {layer: str("ID = '%s'" % code) for layer in layers},
+                "layerDefs": {layer:str("ID = '%s'" % code) for layer in layers},
                 "f": "json"
             }
             if format:
@@ -161,7 +161,7 @@ class Area:
                         self.width = data["width"]
                         self.height = data["height"]
                         self.image_extent = data["extent"]
-                        # print(image_url)
+                        # print(meta_url)
                         return image_url
                     else:
                         print("can't get image data from: %s" %meta_url) 
