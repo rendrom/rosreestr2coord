@@ -12,19 +12,26 @@ ROSREESTR TO COORDINATE
 
 ## Usage
 
-from console (geojson output):
+Из консоли:
 
-    python rosreestr2coord.py -c "38:06:144003:4723"
+    python rosreestr2coord.py -c 38:06:144003:4723
+    
+Опции:
+
+  -h - справка
+  -c - кадастровый номер
+  -p - путь для промежуточных файлов
+  -o - путь для полученого geojson файла
     
 programmatically:
     
     from rosreestr2coord import Area
         
-    area = Area("38:06:144003:4723")
+    area = Area("38:06:144003:4723") # media-path=MEDIA
     area.to_geojson()
     area.to_geojson_poly()
-    area.get_coord()
-    area.get_holes()
+    area.get_coord() # [x,y] - только координаты участка
+    area.get_holes() # [[h1_x,h2_y], [h2_x, h2_y]] - кординаты отверстий, если есть
     area.get_attrs()
 
 ## TODO

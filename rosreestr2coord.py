@@ -76,9 +76,9 @@ class Area:
         self.download_meta()
         if search_data:
             formats = ["svg", ""]
-            for f in formats:              
+            for f in formats:            
                 self.image_url = self.get_image_url(f)
-                if self.image_url:
+                if self.image_url:                  
                     image = self.download_image(f)
                     if image:
                         geom = self.get_geometry(f);
@@ -109,11 +109,12 @@ class Area:
                 "type": "FeatureCollection",
                 "crs": {"type": "name", "properties": {"name": "EPSG:3857"}},
                 "features": features
-            }            
+            }
             if type.upper() == "POINT":
-                for xy in self.xy:
+                for i in range(self.xy):
+                    xy = self.xy[i]
                     for x, y in xy:
-                        point = {"type": "Feature", "properties": {}, "geometry": {"type": "Point", "coordinates": [x, y]}}
+                        point = {"type": "Feature", "properties": {"hole": i > 0 }, "geometry": {"type": "Point", "coordinates": [x, y]}}
                         features.append(point)
             elif type.upper() == "POLYGON":
                 feature = {"type": "Feature", "properties": {}}
@@ -149,14 +150,19 @@ class Area:
             meta_url = urlparse.urlunparse(url_parts)
             if meta_url:
                 response = urllib.urlopen(meta_url)
-                data = json.loads(response.read())
-                if data["href"]:
-                    image_url = data["href"]
-                    self.width = data["width"]
-                    self.height = data["height"]
-                    self.image_extent = data["extent"]
-                    # print(image_url)
-                    return image_url
+                try:
+                    data = json.loads(response.read())
+                    if data.get("href"):
+                        image_url = data["href"]
+                        self.width = data["width"]
+                        self.height = data["height"]
+                        self.image_extent = data["extent"]
+                        # print(image_url)
+                        return image_url
+                    else:
+                        print("can't get image data from: %s" %meta_url) 
+                except Exception as er:
+                    print(er)
         return False
 
     def download_image(self, format="png"):
@@ -218,7 +224,7 @@ class Area:
                         self.extent = area["extent"]
                         self.center = area["center"]
                         return search_data
-        except Exception:
+        except Exception as er:
             pass
         print("Nothing found")
         return False
@@ -320,27 +326,33 @@ def getopts():
     )
     parser.add_argument('-c', '--code', action='store', type=str, required=True,
                         help='area cadastral number')
-
+    parser.add_argument('-p', '--path', action='store', type=str, required=False,
+                        help='media path')
+    parser.add_argument('-o', '--output', action='store', type=str, required=False,
+                        help='output path')
     opts = parser.parse_args()
 
     return opts
 
 
 if __name__ == "__main__":
-    abspath = os.path.abspath('.')
+    
     # area = Area("38:36:000021:1106")  
     # area = Area("38:06:144003:4723")
     # area = Area("38:36:000033:375")
-    # code = "38:36:000021:1106"
+    # code = "38:36:000021:1107"
     opt = getopts() 
+    path = opt.path
     code = opt.code
-    
+    output = opt.output if opt.output else "."
+    abspath = os.path.abspath(output)
     if code:
-        area = Area(code)
+        area = Area(code, media_path=path)
         geojson = area.to_geojson_poly()
         if geojson:
             filename = '%s.geojson' % area.file_name
-            f = open(filename, 'w')
+            file_path = os.path.join(abspath, filename)
+            f = open(file_path, 'w')
             f.write(geojson)
             f.close()
-            print(os.path.join(abspath, filename))
+            print(file_path)
