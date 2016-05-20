@@ -132,7 +132,7 @@ class Area:
             params = {
                 "dpi": 96,
                 "transparent": "false",
-                "format": "png32",
+                "format": "png",
                 "layers": "show:%s" % ",".join(layers),
                 "bbox": ",".join(map(str, ex)),
                 "bboxSR": 102100,
