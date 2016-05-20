@@ -29,9 +29,9 @@ programmatically:
         
     area = Area("38:06:144003:4723") # media-path=MEDIA
     area.to_geojson()
-    ~~area.to_geojson_poly()~~
+    # area.to_geojson_poly()
     area.get_coord() # [x,y] - только координаты участка
-    ~~area.get_holes()~~ # [[h1_x,h2_y], [h2_x, h2_y]] - кординаты отверстий, если есть
+    # area.get_holes() # [[h1_x,h2_y], [h2_x, h2_y]] - кординаты отверстий, если есть
     area.get_attrs()
     
 ## Журнал
