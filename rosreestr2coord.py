@@ -20,13 +20,11 @@ except ImportError:  # For Python 3
 #   &limit=11
 SEARCH_URL = "http://pkk5.rosreestr.ru/api/features/1"
 
-FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/1/"
-
 ############################
 # URL to get area metainfo #
 ############################
 # http://pkk5.rosreestr.ru/api/features/1/38:36:21:1106
-META_URL = "http://pkk5.rosreestr.ru/api/features/1/"
+FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/1/"
 
 #########################
 # URL to get area image #
@@ -51,7 +49,7 @@ IMAGE_URL = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSele
 
 class Area:
     search_url = SEARCH_URL
-    meta_url = META_URL
+    feature_info_url = FEATURE_INFO_URL
     image_url = IMAGE_URL
     buffer = 10
 
@@ -76,7 +74,6 @@ class Area:
         self.file_name = self.code.replace(":", "-")
         # search_data = self.search()
         feature_info = self.download_feature_info()
-        self.download_meta()
         if feature_info:
             formats = ["svg", "png"]
             for f in formats:            
@@ -84,7 +81,7 @@ class Area:
                 if self.image_url:                  
                     image = self.download_image(f)
                     if image:
-                        geom = self.get_geometry(f);
+                        geom = self.get_geometry(f)
                         break
                         
     def get_coord(self):
@@ -186,26 +183,6 @@ class Area:
             print("Nothing found")
         return False
 
-    def get_meta_url(self):
-        if self.code_id:
-            # url = urlparse.urljoin(self.meta_url, self.code_id)
-            url = self.meta_url + str(self.code_id)
-            return url
-        return ""
-
-    def download_meta(self):
-        url = self.get_meta_url()
-        if url:
-            search_url = url
-            response = urllib.urlopen(search_url)
-            data = json.loads(response.read())
-            if data["feature"] and data["feature"]["attrs"]:
-                self.attrs = data["feature"]["attrs"]
-                return self.attrs
-        return False
-
-
-
     @staticmethod
     def get_extent_list(extent):
         return [extent["xmin"], extent["ymin"], extent["xmax"], extent["ymax"]]
@@ -269,7 +246,6 @@ class Area:
     def clear_code(code):
         '''remove first nulls from code'''
         return ":".join(map(lambda x: str(int(x)), code.split(":")))
-    
 
     def get_geometry(self, format):
         if format == "svg":
@@ -277,7 +253,10 @@ class Area:
         else:
             image_xy_corner = self.get_image_xy_corner()
             if image_xy_corner:
-                self.xy.append(self.image_corners_to_coord(image_xy_corner))
+                for i in range(len(image_xy_corner)):
+                    # print(image_xy_corner[i])
+                    xy = self.image_corners_to_coord(image_xy_corner[i])
+                    self.xy.append(xy)
         return self.xy
 
     def read_svg(self):
@@ -292,7 +271,7 @@ class Area:
         return self.xy
 
     def get_svg_points(self, obj, svg_coord):
-        '''get absolute coordinates from svg file'''
+        """get absolute coordinates from svg file"""
         if obj.__dict__.has_key("items"):
             for i in obj.items:
                 dest = i.__dict__.has_key("dest")
@@ -306,24 +285,64 @@ class Area:
             pass
 
     def get_image_xy_corner(self):
-        '''get coodinates from raster'''
+        """get coodinates from raster"""
         import numpy as np
         import cv2
 
         image_xy_corners = []
-        img = cv2.imread(self.image_path)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
+        # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # gray = cv2.medianBlur(gray,5)
+        imagem = (255-img)
+
         try:
-            corners = cv2.goodFeaturesToTrack(gray, 100, 0.01, 1, useHarrisDetector=True)
-            corners = np.int0(corners)
-            for i in corners:
-                x, y = i.ravel()
-                image_xy_corners.append([x, y])
+            ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
+            contours, hierarchy = cv2.findContours(thresh, 1, 2)
+            epsilon = 0.01*cv2.arcLength(contours[0], True)
+
+            for i in range(len(contours)-1, -1, -1):
+                cc = []
+                cnt = contours[i]
+                approx = cv2.approxPolyDP(cnt, epsilon, True)
+                for c in approx:
+                    cc.append([c[0][0], c[0][1]])
+                image_xy_corners.append(cc)
+                # print(len(cnt),len(approx))
+                # cv2.drawContours(img,[approx],0,(0,0,255),2)
+            # corners = cv2.goodFeaturesToTrack(img, 100, 0.01, 1, useHarrisDetector=True)
+            # corners = np.int0(corners)
+            # for i in corners:
+            #     x, y = i.ravel()
+            #     image_xy_corners.append([x, y])
+            # cv2.imshow('img', img)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
             return image_xy_corners
         except Exception as ex:
             print(ex)
         return image_xy_corners
+
+    @staticmethod
+    def calculate_gzn(from_xy, to_xy):
+        from math import pi, atan
+        c = 1e-7
+        y1 = from_xy[0]
+        x1 = from_xy[1]
+        y2 = to_xy[0]
+        x2 = to_xy[1]
+        x = x2 - x1
+        y = y2 - y1
+
+        def sgn(i):
+            s = 0
+            if i > 0:
+                s = 1
+            elif i < 0:
+                s = -1
+            return s
+
+        gzn = pi - pi * sgn(sgn(x)+1) * sgn(y) + atan(y/(x+c))
+        return gzn
 
     def image_corners_to_coord(self, image_xy_corners):
         ex = self.get_extent_list(self.image_extent)
