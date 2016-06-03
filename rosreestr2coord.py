@@ -229,10 +229,9 @@ class Area:
             if data:
                 feature = data.get("feature")
                 if feature:
-                    self.code_id = feature["_id"]
                     if feature.get("attrs"):
                         self.attrs = feature["attrs"]
-                        self.code_id = feature["attrs"]["cn"]
+                        self.code_id = feature["attrs"]["id"]
                     if feature.get("extent"):
                         self.extent = feature["extent"]
                     if feature.get("center"):
@@ -395,11 +394,11 @@ if __name__ == "__main__":
     # area = Area("38:36:000021:1106")  
     # area = Area("38:06:144003:4723")
     # area = Area("38:36:000033:375")
-    # code, output, path = "38:06:144003:4137", "", ""
-    opt = getopts() 
-    path = opt.path
-    code = opt.code
-    output = opt.output if opt.output else "."
+    code, output, path = "38:06:144003:4137", "", ""
+    # opt = getopts() 
+    # path = opt.path
+    # code = opt.code
+    # output = opt.output if opt.output else "."
     abspath = os.path.abspath(output)
     if code:
         area = Area(code, media_path=path)
