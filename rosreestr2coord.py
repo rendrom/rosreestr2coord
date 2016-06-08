@@ -394,11 +394,11 @@ if __name__ == "__main__":
     # area = Area("38:36:000021:1106")  
     # area = Area("38:06:144003:4723")
     # area = Area("38:36:000033:375")
-    code, output, path = "38:06:144003:4137", "", ""
-    # opt = getopts() 
-    # path = opt.path
-    # code = opt.code
-    # output = opt.output if opt.output else "."
+    # code, output, path = "38:06:144003:4137", "", ""
+    opt = getopts() 
+    path = opt.path
+    code = opt.code
+    output = opt.output if opt.output else "."
     abspath = os.path.abspath(output)
     if code:
         area = Area(code, media_path=path)
