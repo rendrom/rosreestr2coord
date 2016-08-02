@@ -53,7 +53,7 @@ class Area:
     image_url = IMAGE_URL
     buffer = 10
 
-    def __init__(self, code, media_path=""):
+    def __init__(self, code, epsilon=5, media_path=""):
         self.media_path = media_path
         self.image_url = ""
         self.xy = []
@@ -65,6 +65,7 @@ class Area:
         self.image_extent = {}
         self.center = {}
         self.attrs = {}
+        self.epsilon = epsilon
         if not self.media_path:
             self.media_path = os.path.dirname(os.path.realpath(__file__))
         if not os.path.isdir(self.media_path):
@@ -75,20 +76,20 @@ class Area:
         # search_data = self.search()
         feature_info = self.download_feature_info()
         if feature_info:
-            formats = ["png"] #["svg", "png"]
-            for f in formats:            
+            formats = ["png"]  # ["svg", "png"]
+            for f in formats:
                 self.image_url = self.get_image_url(f)
-                if self.image_url:                  
+                if self.image_url:
                     image = self.download_image(f)
                     if image:
                         geom = self.get_geometry(f)
                         break
-                        
+
     def get_coord(self):
         if self.xy:
             return self.xy[0]
-        return []            
-        
+        return []
+
     def get_holes(self):
         holes = []
         for fry in range(len(self.xy)):
@@ -98,7 +99,7 @@ class Area:
 
     def get_attrs(self):
         return self.attrs
-        
+
     def to_geojson_poly(self):
         return self.to_geojson("polygon")
 
@@ -111,14 +112,17 @@ class Area:
                 "features": features
             }
             if type.upper() == "POINT":
-                for i in range(self.xy):
+                for i in range(len(self.xy)):
                     xy = self.xy[i]
                     for x, y in xy:
-                        point = {"type": "Feature", "properties": {"hole": i > 0 }, "geometry": {"type": "Point", "coordinates": [x, y]}}
+                        point = {"type": "Feature",
+                                 "properties": {"hole": i > 0},
+                                 "geometry": {"type": "Point", "coordinates": [x, y]}}
                         features.append(point)
             elif type.upper() == "POLYGON":
-                feature = {"type": "Feature", "properties": {}}
-                feature["geometry"] = {"type": "Polygon", "coordinates": self.xy}
+                feature = {"type": "Feature",
+                           "properties": {},
+                           "geometry": {"type": "Polygon", "coordinates": self.xy}}
                 features.append(feature)
             return json.dumps(feature_collection)
         return False
@@ -138,7 +142,7 @@ class Area:
                 "bboxSR": 102100,
                 "imageSR": 102100,
                 "size": "%s,%s" % (dx, dy),
-                "layerDefs": {layer:str("ID = '%s'" % code) for layer in layers},
+                "layerDefs": {layer: str("ID = '%s'" % code) for layer in layers},
                 "f": "json"
             }
             if format:
@@ -154,7 +158,7 @@ class Area:
                     read = response.read()
                     data = json.loads(read)
                     if data.get("href"):
-                        image_url =  meta_url.replace("f=json", "f=image") #data["href"]
+                        image_url = meta_url.replace("f=json", "f=image")  # data["href"]
                         self.width = data["width"]
                         self.height = data["height"]
                         self.image_extent = data["extent"]
@@ -219,7 +223,7 @@ class Area:
         response = urllib.urlopen(search_url)
         data = json.loads(response.read())
         return data
-        
+
     def download_feature_info(self):
         try:
             search_url = FEATURE_INFO_URL + self.clear_code(self.code)
@@ -240,10 +244,10 @@ class Area:
         except Exception as error:
             print(error)
         return False
-    
+
     @staticmethod
     def clear_code(code):
-        '''remove first nulls from code'''
+        """remove first nulls from code"""
         return ":".join(map(lambda x: str(int(x)), code.split(":")))
 
     def get_geometry(self, format):
@@ -261,7 +265,7 @@ class Area:
     def read_svg(self):
         import svg
 
-        svg_coord = [] # Set of poly coordinates set (area, hole1?, hole2?...)
+        svg_coord = []  # Set of poly coordinates set (area, hole1?, hole2?...)
         obj = svg.parse(self.image_path)
         self.get_svg_points(obj, svg_coord)
         for poly in range(len(svg_coord)):
@@ -271,13 +275,13 @@ class Area:
 
     def get_svg_points(self, obj, svg_coord):
         """get absolute coordinates from svg file"""
-        if obj.__dict__.has_key("items"):
+        if "items" in obj:
             for i in obj.items:
-                dest = i.__dict__.has_key("dest")
+                dest = "dest" in i
                 if dest:
                     svg_coord.append([])
-                if i.__dict__.has_key("start"):
-                    svg_coord[len(svg_coord)-1].append([i.start.x, i.start.y])
+                if "start" in i:
+                    svg_coord[len(svg_coord) - 1].append([i.start.x, i.start.y])
                 else:
                     self.get_svg_points(i, svg_coord)
         else:
@@ -290,32 +294,22 @@ class Area:
 
         image_xy_corners = []
         img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
-        # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        # gray = cv2.medianBlur(gray,5)
-        imagem = (255-img)
+        imagem = (255 - img)
 
         try:
             ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
-            contours, hierarchy = cv2.findContours(thresh, 1, 2)
-            epsilon = 0.005*cv2.arcLength(contours[len(contours)-1], True)
-
-            for i in range(len(contours)-1, -1, -1):
+            # epsilon = 0.0005*cv2.arcLength(contours[len(contours) - 1], True)
+            try:
+                contours, hierarchy = cv2.findContours(thresh, 1, 2)
+            except:
+                im2, contours, hierarchy = cv2.findContours(thresh, 1, 2)
+            for i in range(len(contours) - 1, -1, -1):
                 cc = []
                 cnt = contours[i]
-                approx = cv2.approxPolyDP(cnt, epsilon, True)
+                approx = cv2.approxPolyDP(cnt, self.epsilon, True)
                 for c in approx:
                     cc.append([c[0][0], c[0][1]])
                 image_xy_corners.append(cc)
-                # print(len(cnt),len(approx))
-                # cv2.drawContours(img,[approx],0,(0,0,255),2)
-            # corners = cv2.goodFeaturesToTrack(img, 100, 0.01, 1, useHarrisDetector=True)
-            # corners = np.int0(corners)
-            # for i in corners:
-            #     x, y = i.ravel()
-            #     image_xy_corners.append([x, y])
-            # cv2.imshow('img', img)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
             return image_xy_corners
         except Exception as ex:
             print(ex)
@@ -340,7 +334,7 @@ class Area:
                 s = -1
             return s
 
-        gzn = pi - pi * sgn(sgn(x)+1) * sgn(y) + atan(y/(x+c))
+        gzn = pi - pi * sgn(sgn(x) + 1) * sgn(y) + atan(y / (x + c))
         return gzn
 
     def image_corners_to_coord(self, image_xy_corners):
@@ -354,9 +348,13 @@ class Area:
             xy_corners.append([x, y])
         return xy_corners
 
-    def show_plot(self, image_xy_corner):
+    def show_plot(self, image_xy_corners):
         import cv2
-        from matplotlib import pyplot as plt
+        try:
+            from matplotlib import pyplot as plt
+        except ImportError:
+            raise ImportError('Matplotlib is not installed.')
+
         corners = image_xy_corners
         img = cv2.imread(self.image_path)
         for x, y in corners:
@@ -384,24 +382,28 @@ def getopts():
                         help='media path')
     parser.add_argument('-o', '--output', action='store', type=str, required=False,
                         help='output path')
+    parser.add_argument('-e', '--epsilon', action='store', type=int, required=False,
+                        help='Parameter specifying the approximation accuracy. '
+                             'This is the maximum distance between the original curve and its approximation.')
     opts = parser.parse_args()
 
     return opts
 
 
 if __name__ == "__main__":
-    
+
     # area = Area("38:36:000021:1106")  
     # area = Area("38:06:144003:4723")
     # area = Area("38:36:000033:375")
     # code, output, path = "38:06:144003:4137", "", ""
-    opt = getopts() 
+    opt = getopts()
     path = opt.path
+    epsilon = opt.epsilon
     code = opt.code
     output = opt.output if opt.output else "."
     abspath = os.path.abspath(output)
     if code:
-        area = Area(code, media_path=path)
+        area = Area(code, media_path=path, epsilon=epsilon)
         geojson = area.to_geojson_poly()
         if geojson:
             filename = '%s.geojson' % area.file_name

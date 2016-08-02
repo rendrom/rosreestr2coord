@@ -22,12 +22,13 @@ ROSREESTR TO COORDINATE
   -c - кадастровый номер
   -p - путь для промежуточных файлов
   -o - путь для полученого geojson файла
+  -e - параметр, определяющий точность аппроксимации
     
 programmatically:
     
     from rosreestr2coord import Area
         
-    area = Area("38:06:144003:4723") # media-path=MEDIA
+    area = Area("38:06:144003:4723") # дополнительные аргументы epsilum=5.5, media-path=MEDIA
     area.to_geojson()
     area.to_geojson_poly()
     area.get_coord() # [x,y] - только координаты участка
