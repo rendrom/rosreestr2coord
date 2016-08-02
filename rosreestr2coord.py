@@ -103,7 +103,7 @@ class Area:
     def to_geojson_poly(self):
         return self.to_geojson("polygon")
 
-    def to_geojson(self, type="point"):
+    def _to_geojson(self, type):
         if self.xy:
             features = []
             feature_collection = {
@@ -120,10 +120,21 @@ class Area:
                                  "geometry": {"type": "Point", "coordinates": [x, y]}}
                         features.append(point)
             elif type.upper() == "POLYGON":
+                close_xy = []
+                for fry in range(len(self.xy)):
+                    xy = self.xy[fry]
+                    xy.append(xy[0])
+                    close_xy.append(xy)
                 feature = {"type": "Feature",
                            "properties": {},
-                           "geometry": {"type": "Polygon", "coordinates": self.xy}}
+                           "geometry": {"type": "MultiPolygon", "coordinates": [close_xy]}}
                 features.append(feature)
+            return feature_collection
+        return False
+
+    def to_geojson(self, type="point"):
+        feature_collection = self._to_geojson(type)
+        if feature_collection:
             return json.dumps(feature_collection)
         return False
 
@@ -401,6 +412,7 @@ if __name__ == "__main__":
     epsilon = opt.epsilon
     code = opt.code
     output = opt.output if opt.output else "."
+
     abspath = os.path.abspath(output)
     if code:
         area = Area(code, media_path=path, epsilon=epsilon)
