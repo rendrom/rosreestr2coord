@@ -3,3 +3,10 @@ tmp/
 .vscode/
 *.pyc
 .DS_Store
+build/
+dist/
+.env/
+env/
+*.egg-info/
+.idea/
+
