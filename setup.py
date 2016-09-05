@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='rosreestr2coord',
-    version='1.0.0',
+    version='1.0.1',
     # scripts=['rosreestr2coord.py'],
     packages=find_packages(exclude=['tests*']),
     license='MIT',

@@ -269,15 +269,20 @@ class Area:
             self.xy = [self.read_svg()]
         else:
             image_xy_corner = self.get_image_xy_corner()
+            self.xy.append([])
             if image_xy_corner:
                 for i in range(len(image_xy_corner)):
                     # TODO: make multipolygon
-                    xy = [self.image_corners_to_coord(image_xy_corner[i])]
-                    self.xy.append(xy)
+                    xy = self.image_corners_to_coord(image_xy_corner[i])
+                    self.xy[0].append(xy)
         return self.xy
 
     def read_svg(self):
-        import svg
+        try:
+            import svg
+        except ImportError:
+            raise ImportError('svg lib is not installed.')
+        
 
         svg_coord = []  # Set of poly coordinates set (area, hole1?, hole2?...)
         obj = svg.parse(self.image_path)
