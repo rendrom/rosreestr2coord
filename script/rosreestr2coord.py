@@ -186,6 +186,7 @@ class Area:
             url_parts[4] = urlencode(query)
             meta_url = urlparse.urlunparse(url_parts)
             if meta_url:
+                self.log("Get image meta: %s" % meta_url)
                 response = urllib.urlopen(meta_url)
                 try:
                     read = response.read()
@@ -195,19 +196,20 @@ class Area:
                         self.width = data["width"]
                         self.height = data["height"]
                         self.image_extent = data["extent"]
-                        # print(meta_url)
+                        # self.log(meta_url)
+                        self.log("Meta info received")
                         return image_url
                     else:
-                        print("Can't get image data from: %s" % meta_url)
+                        self.log("Can't get image data from: %s" % meta_url)
                 except Exception as er:
-                    print(er)
+                    self.log(er)
         elif not self.extent:
-            print("Can't get image without extent")
+            self.log("Can't get image without extent")
         return False
 
     def download_image(self, format="png"):
         try:
-            print('Start image downloading')
+            self.log('Start image downloading')
             image_file = urllib.URLopener()
             basedir = self.media_path
             savedir = os.path.join(basedir, "tmp")
@@ -216,10 +218,10 @@ class Area:
             file_path = os.path.join(savedir, "%s.%s" % (self.file_name, format))
             image_file.retrieve(self.image_url, file_path)
             self.image_path = file_path
-            print('Downloading complete')
+            self.log('Downloading complete')
             return image_file
         except Exception:
-            print("Can not upload image")
+            self.log("Can not upload image")
         return False
 
     @staticmethod
@@ -235,6 +237,7 @@ class Area:
     def download_feature_info(self):
         try:
             search_url = self.feature_info_url + self.clear_code(self.code)
+            self.log("Download area info: %s" % search_url)
             response = urllib.urlopen(search_url)
             resp = response.read()
             data = json.loads(resp)
@@ -248,9 +251,10 @@ class Area:
                         self.extent = feature["extent"]
                     if feature.get("center"):
                         self.center = feature["center"]
+                        self.log("Area info downloaded.")
                 return feature
         except Exception as error:
-            print(error)
+            self.log(error)
         return False
 
     @staticmethod
@@ -325,7 +329,7 @@ class Area:
                 image_xy_corners.append(cc)
             return image_xy_corners
         except Exception as ex:
-            print(ex)
+            self.log(ex)
         return image_xy_corners
 
     @staticmethod
@@ -373,6 +377,9 @@ class Area:
         for x, y in corners:
             cv2.circle(img, (x, y), 3, 255, -1)
         plt.imshow(img), plt.show()
+
+    def log(self, msg):
+        print(msg)
 
 
 def getopts():
