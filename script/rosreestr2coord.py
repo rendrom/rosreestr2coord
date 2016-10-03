@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 import json
 import string
-import urllib
+import urllib2
 import os
 
 try:
@@ -187,7 +187,14 @@ class Area:
             meta_url = urlparse.urlunparse(url_parts)
             if meta_url:
                 self.log("Get image meta: %s" % meta_url)
-                response = urllib.urlopen(meta_url)
+
+                opener = urllib2.build_opener()
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 5.1; rv:10.0.1) Gecko/20100101 Firefox/10.0.1',
+                }
+                opener.addheaders = headers.items()
+
+                response = opener.open(meta_url)
                 try:
                     read = response.read()
                     data = json.loads(read)
@@ -210,13 +217,20 @@ class Area:
     def download_image(self, format="png"):
         try:
             self.log('Start image downloading')
-            image_file = urllib.URLopener()
+            
+            opener = urllib2.build_opener()
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 5.1; rv:10.0.1) Gecko/20100101 Firefox/10.0.1',
+            }
+            opener.addheaders = headers.items()
+
+            # image_file = urllib.URLopener()
             basedir = self.media_path
             savedir = os.path.join(basedir, "tmp")
             if not os.path.isdir(savedir):
                 os.makedirs(savedir)
             file_path = os.path.join(savedir, "%s.%s" % (self.file_name, format))
-            image_file.retrieve(self.image_url, file_path)
+            image_file = opener.open(self.image_url, file_path)
             self.image_path = file_path
             self.log('Downloading complete')
             return image_file
@@ -238,7 +252,14 @@ class Area:
         try:
             search_url = self.feature_info_url + self.clear_code(self.code)
             self.log("Download area info: %s" % search_url)
-            response = urllib.urlopen(search_url)
+            
+            opener = urllib2.build_opener()
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 5.1; rv:10.0.1) Gecko/20100101 Firefox/10.0.1',
+            }
+            opener.addheaders = headers.items()
+
+            response = opener.open(search_url)
             resp = response.read()
             data = json.loads(resp)
             if data:
