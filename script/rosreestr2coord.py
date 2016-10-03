@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import print_function, division
 import json
+import string
 import urllib
 import os
 
@@ -18,13 +19,13 @@ except ImportError:  # For Python 3
 #   ?text=38:36:000021:1106
 #   &tolerance=4
 #   &limit=11
-SEARCH_URL = "http://pkk5.rosreestr.ru/api/features/1"
+SEARCH_URL = "http://pkk5.rosreestr.ru/api/features/$area_type"
 
 ############################
 # URL to get area metainfo #
 ############################
 # http://pkk5.rosreestr.ru/api/features/1/38:36:21:1106
-FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/1/"
+FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/$area_type/"
 
 #########################
 # URL to get area image #
@@ -46,16 +47,29 @@ FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/1/"
 #    set `&format=svg&f=json` to export image in svg 
 IMAGE_URL = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
 
+TYPES = {
+    "Участки": 1,
+    "ОКС": 5,
+    "Кварталы": 2,
+    "Районы": 3,
+    "Округа": 4,
+    "Границы": 7,
+    "ЗОУИТ": 10,
+    "Тер. зоны": 6,
+    "Красные линии": 13,
+    "Лес": 12,
+    "СРЗУ": 15,
+    "ОЭЗ": 16,
+    "ГОК": 9,
+}
+
 
 class Area:
-    search_url = SEARCH_URL
-    feature_info_url = FEATURE_INFO_URL
     image_url = IMAGE_URL
     buffer = 10
 
-    def __init__(self, code="", epsilon=5, media_path=""):
-        if not code:
-            raise ValueError('`code` is required')
+    def __init__(self, code="", area_type=1, epsilon=5, media_path=""):
+        self.area_type = area_type
         self.media_path = media_path
         self.image_url = ""
         self.xy = []  # [[[area1], [hole1], [holeN]], [[area2]]]
@@ -64,18 +78,26 @@ class Area:
         self.image_path = ""
         self.extent = {}
         self.image_extent = {}
-        self.center = {}
+        self.center = {'x': None, 'y': None}
         self.attrs = {}
         self.epsilon = epsilon
         self.code = code
         self.code_id = ""
         self.file_name = self.code.replace(":", "-")
 
+        t = string.Template(SEARCH_URL)
+        self.search_url = t.substitute({"area_type": area_type})
+        t = string.Template(FEATURE_INFO_URL)
+        self.feature_info_url = t.substitute({"area_type": area_type})
+
         if not self.media_path:
             # self.media_path = os.path.dirname(os.path.realpath(__file__))
             self.media_path = os.getcwd()
         if not os.path.isdir(self.media_path):
             os.makedirs(self.media_path)
+
+        if not code:
+            return
 
         feature_info = self.download_feature_info()
         if feature_info:
@@ -92,7 +114,6 @@ class Area:
         if self.xy:
             return self.xy
         return []
-
 
     def get_attrs(self):
         return self.attrs
@@ -144,7 +165,7 @@ class Area:
             ex = self.get_buffer_extent_list()
             dx, dy = map(lambda i: int((ex[i[0]] - ex[i[1]]) * 5), [[2, 0], [3, 1]])
             code = self.clear_code(self.code_id)
-            layers = ["6", "7"]
+            layers = map(str,range(0, 20))
             params = {
                 "dpi": 96,
                 "transparent": "false",
@@ -211,36 +232,9 @@ class Area:
         ex = [ex["xmin"] - buf, ex["ymin"] - buf, ex["xmax"] + buf, ex["ymax"] + buf]
         return ex
 
-    # def search(self):
-    #     try:
-    #         search_data = self.download_search_result()
-    #         if search_data:
-    #             features = search_data["features"]
-    #             if features and len(features):
-    #                 area = features[0]
-    #                 attrs = area["attrs"]
-    #                 if attrs["cn"] == self.code:
-    #                     self.attrs["address"] = attrs["address"]
-    #                     self.code_id = attrs["id"]
-    #                     if area.get("extent"):
-    #                         self.extent = area["extent"]
-    #                     if area.get("center"):
-    #                         self.center = area["center"]
-    #                     return search_data
-    #     except Exception as er:
-    #         pass
-    #     print("Nothing found")
-    #     return False
-    #
-    # def download_search_result(self):
-    #     search_url = SEARCH_URL + "?text=%s&tolerance=4&limit=1" % self.code
-    #     response = urllib.urlopen(search_url)
-    #     data = json.loads(response.read())
-    #     return data
-
     def download_feature_info(self):
         try:
-            search_url = FEATURE_INFO_URL + self.clear_code(self.code)
+            search_url = self.feature_info_url + self.clear_code(self.code)
             response = urllib.urlopen(search_url)
             resp = response.read()
             data = json.loads(resp)
@@ -269,12 +263,13 @@ class Area:
             self.xy = [self.read_svg()]
         else:
             image_xy_corner = self.get_image_xy_corner()
-            self.xy.append([])
+            poly_coordinates = []
             if image_xy_corner:
                 for i in range(len(image_xy_corner)):
                     # TODO: make multipolygon
                     xy = self.image_corners_to_coord(image_xy_corner[i])
-                    self.xy[0].append(xy)
+                    poly_coordinates.append(xy)
+                self.xy.append(poly_coordinates)
         return self.xy
 
     def read_svg(self):
@@ -282,7 +277,6 @@ class Area:
             import svg
         except ImportError:
             raise ImportError('svg lib is not installed.')
-        
 
         svg_coord = []  # Set of poly coordinates set (area, hole1?, hole2?...)
         obj = svg.parse(self.image_path)
@@ -397,6 +391,8 @@ def getopts():
     )
     parser.add_argument('-c', '--code', action='store', type=str, required=True,
                         help='area cadastral number')
+    parser.add_argument('-t', '--area_type', action='store', type=int, required=False, default=1,
+                        help='area types: %s' % "; ".join(["%s:%s" % (k, v) for k, v in TYPES.items()]))
     parser.add_argument('-p', '--path', action='store', type=str, required=False,
                         help='media path')
     parser.add_argument('-o', '--output', action='store', type=str, required=False,
@@ -413,15 +409,21 @@ def main():
     # area = Area("38:36:000021:1106")
     # area = Area("38:06:144003:4723")
     # area = Area("38:36:000033:375")
-    # code, output, path = "38:06:144003:4137", "", ""
+    # area = Area("38:06:143519:6153", area_type=5)
+
+    # code, output, path, epsilon, area_type = "38:06:144003:4723", "", "", 5, 1)
+
     opt = getopts()
-    path = opt.path
-    epsilon = opt.epsilon if opt.epsilon else 5
     code = opt.code
     output = opt.output if opt.output else "."
+    path = opt.path
+    epsilon = opt.epsilon if opt.epsilon else 5
+    area_type = opt.area_type if opt.area_type else 1
+    
+    
     abspath = os.path.abspath(output)
     if code:
-        area = Area(code, media_path=path, epsilon=epsilon)
+        area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon)
         geojson = area.to_geojson_poly()
         if geojson:
             filename = '%s.geojson' % area.file_name
