@@ -163,7 +163,7 @@ class Area:
     def get_image_url(self, format):
         if self.code_id and self.extent:
             ex = self.get_buffer_extent_list()
-            dx, dy = map(lambda i: int((ex[i[0]] - ex[i[1]]) * 5), [[2, 0], [3, 1]])
+            dx, dy = map(lambda i: int((ex[i[0]] - ex[i[1]]) * 30), [[2, 0], [3, 1]])
             code = self.clear_code(self.code_id)
             layers = map(str,range(0, 20))
             params = {
