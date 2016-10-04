@@ -5,12 +5,17 @@ import string
 import urllib
 import os
 
+from script.catalog import Catalog
+from script.export import coords2geojson
+
 try:
     import urlparse
     from urllib import urlencode
 except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
+
+VERSION = "1.0.4"
 
 ##############
 # SEARCH URL #
@@ -44,7 +49,7 @@ FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/$area_type/"
 # WHERE:
 #    "layerDefs" decode to {"6":"ID = '38:36:21:1106'","7":"ID = '38:36:21:1106'"}
 #    "f" may be `json` or `html`
-#    set `&format=svg&f=json` to export image in svg 
+#    set `&format=svg&f=json` to export image in svg !closed by rosreestr, now only PNG
 IMAGE_URL = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
 
 TYPES = {
@@ -67,8 +72,10 @@ TYPES = {
 class Area:
     image_url = IMAGE_URL
     buffer = 10
+    save_attrs = ["code", "area_type", "attrs", "image_path", "center", "extent", "image_extent", "width", "height"]
 
-    def __init__(self, code="", area_type=1, epsilon=5, media_path=""):
+    def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=False, catalog=""):
+        self.with_log = with_log
         self.area_type = area_type
         self.media_path = media_path
         self.image_url = ""
@@ -95,20 +102,34 @@ class Area:
             self.media_path = os.getcwd()
         if not os.path.isdir(self.media_path):
             os.makedirs(self.media_path)
-
+        if catalog:
+            self.catalog = Catalog(catalog)
+            restore = self.catalog.find(self.code)
+            if restore:
+                self._restore(restore)
+                self.get_geometry()
+                self.log("%s - restored from %s" % (self.code,catalog))
+                return
         if not code:
             return
 
         feature_info = self.download_feature_info()
         if feature_info:
-            formats = ["png"]  # ["svg", "png"]
+            formats = ["png"]
             for f in formats:
                 self.image_url = self.get_image_url(f)
                 if self.image_url:
                     image = self.download_image(f)
                     if image:
-                        self.get_geometry(f)
+                        self.get_geometry()
+                        if self.catalog and self.catalog.store:
+                            self.catalog.update(self)
+                            self.catalog.close()
                         break
+
+    def _restore(self, data):
+        for a in self.save_attrs:
+            setattr(self, a,  data[a])
 
     def get_coord(self):
         if self.xy:
@@ -121,118 +142,11 @@ class Area:
     def to_geojson_poly(self):
         return self.to_geojson("polygon")
 
-    def _to_geojson(self, type):
-        if self.xy:
-            features = []
-            feature_collection = {
-                "type": "FeatureCollection",
-                "crs": {"type": "name", "properties": {"name": "EPSG:3857"}},
-                "features": features
-            }
-            if type.upper() == "POINT":
-                for i in range(len(self.xy)):
-                    for j in range(len(self.xy[i])):
-                        xy = self.xy[i][j]
-                        for x, y in xy:
-                            point = {"type": "Feature",
-                                     "properties": {"hole": j > 0},
-                                     "geometry": {"type": "Point", "coordinates": [x, y]}}
-                            features.append(point)
-            elif type.upper() == "POLYGON":
-                close_xy = []
-                multi_polygon = []
-                for fry in range(len(self.xy)):
-                    for j in range(len(self.xy[fry])):
-                        xy = self.xy[fry][j]
-                        xy.append(xy[0])
-                        close_xy.append(xy)
-                    multi_polygon.append(close_xy)
-                feature = {"type": "Feature",
-                           "properties": {},
-                           "geometry": {"type": "MultiPolygon", "coordinates": multi_polygon}}
-                features.append(feature)
-            return feature_collection
-        return False
-
-    def to_geojson(self, type="point"):
-        feature_collection = self._to_geojson(type)
+    def to_geojson(self, geom_type="point"):
+        feature_collection = coords2geojson(self.xy, geom_type)
         if feature_collection:
             return json.dumps(feature_collection)
         return False
-
-    def get_image_url(self, format):
-        if self.code_id and self.extent:
-            ex = self.get_buffer_extent_list()
-            dx, dy = map(lambda i: int((ex[i[0]] - ex[i[1]]) * 30), [[2, 0], [3, 1]])
-            code = self.clear_code(self.code_id)
-            layers = map(str,range(0, 20))
-            params = {
-                "dpi": 96,
-                "transparent": "false",
-                "format": "png",
-                "layers": "show:%s" % ",".join(layers),
-                "bbox": ",".join(map(str, ex)),
-                "bboxSR": 102100,
-                "imageSR": 102100,
-                "size": "%s,%s" % (dx, dy),
-                "layerDefs": {layer: str("ID = '%s'" % code) for layer in layers},
-                "f": "json"
-            }
-            if format:
-                params["format"] = format
-            url_parts = list(urlparse.urlparse(IMAGE_URL))
-            query = dict(urlparse.parse_qsl(url_parts[4]))
-            query.update(params)
-            url_parts[4] = urlencode(query)
-            meta_url = urlparse.urlunparse(url_parts)
-            if meta_url:
-                self.log("Get image meta: %s" % meta_url)
-                response = urllib.urlopen(meta_url)
-                try:
-                    read = response.read()
-                    data = json.loads(read)
-                    if data.get("href"):
-                        image_url = meta_url.replace("f=json", "f=image")  # data["href"]
-                        self.width = data["width"]
-                        self.height = data["height"]
-                        self.image_extent = data["extent"]
-                        # self.log(meta_url)
-                        self.log("Meta info received")
-                        return image_url
-                    else:
-                        self.log("Can't get image data from: %s" % meta_url)
-                except Exception as er:
-                    self.log(er)
-        elif not self.extent:
-            self.log("Can't get image without extent")
-        return False
-
-    def download_image(self, format="png"):
-        try:
-            self.log('Start image downloading')
-            image_file = urllib.URLopener()
-            basedir = self.media_path
-            savedir = os.path.join(basedir, "tmp")
-            if not os.path.isdir(savedir):
-                os.makedirs(savedir)
-            file_path = os.path.join(savedir, "%s.%s" % (self.file_name, format))
-            image_file.retrieve(self.image_url, file_path)
-            self.image_path = file_path
-            self.log('Downloading complete')
-            return image_file
-        except Exception:
-            self.log("Can not upload image")
-        return False
-
-    @staticmethod
-    def get_extent_list(extent):
-        return [extent["xmin"], extent["ymin"], extent["xmax"], extent["ymax"]]
-
-    def get_buffer_extent_list(self):
-        ex = self.extent
-        buf = self.buffer
-        ex = [ex["xmin"] - buf, ex["ymin"] - buf, ex["xmax"] + buf, ex["ymax"] + buf]
-        return ex
 
     def download_feature_info(self):
         try:
@@ -257,56 +171,115 @@ class Area:
             self.log(error)
         return False
 
+    def get_image_url(self, output_format):
+        if self.code_id and self.extent:
+            ex = self.get_buffer_extent_list()
+            dx, dy = map(lambda i: int((ex[i[0]] - ex[i[1]]) * 30), [[2, 0], [3, 1]])
+            code = self.clear_code(self.code_id)
+            layers = map(str, range(0, 20))
+            params = {
+                "dpi": 96,
+                "transparent": "false",
+                "format": "png",
+                "layers": "show:%s" % ",".join(layers),
+                "bbox": ",".join(map(str, ex)),
+                "bboxSR": 102100,
+                "imageSR": 102100,
+                "size": "%s,%s" % (dx, dy),
+                "layerDefs": {layer: str("ID = '%s'" % code) for layer in layers},
+                "f": "json"
+            }
+            if output_format:
+                params["format"] = output_format
+            url_parts = list(urlparse.urlparse(IMAGE_URL))
+            query = dict(urlparse.parse_qsl(url_parts[4]))
+            query.update(params)
+            url_parts[4] = urlencode(query)
+            meta_url = urlparse.urlunparse(url_parts)
+            if meta_url:
+                self.log("Get image meta: %s" % meta_url)
+                response = urllib.urlopen(meta_url)
+                try:
+                    read = response.read()
+                    data = json.loads(read)
+                    if data.get("href"):
+                        image_url = meta_url.replace("f=json", "f=image")
+                        self.width = data["width"]
+                        self.height = data["height"]
+                        self.image_extent = data["extent"]
+                        # self.log(meta_url)
+                        self.log("Meta info received")
+                        return image_url
+                    else:
+                        self.log("Can't get image data from: %s" % meta_url)
+                except Exception as er:
+                    self.log(er)
+        elif not self.extent:
+            self.log("Can't get image without extent")
+        return False
+
+    def download_image(self, output_format="png"):
+        try:
+            self.log('Start image downloading')
+            image_file = urllib.URLopener()
+            basedir = self.media_path
+            savedir = os.path.join(basedir, "tmp")
+            if not os.path.isdir(savedir):
+                os.makedirs(savedir)
+            file_path = os.path.join(savedir, "%s.%s" % (self.file_name, output_format))
+            image_file.retrieve(self.image_url, file_path)
+            self.image_path = file_path
+            self.log('Downloading complete')
+            return image_file
+        except Exception:
+            self.log("Can not upload image")
+        return False
+
     @staticmethod
     def clear_code(code):
-        """remove first nulls from code"""
+        """remove first nulls from code  xxxx:00xx >> xxxx:xx"""
         return ":".join(map(lambda x: str(int(x)), code.split(":")))
 
-    def get_geometry(self, format):
-        if format == "svg":
-            self.xy = [self.read_svg()]
-        else:
-            image_xy_corner = self.get_image_xy_corner()
-            poly_coordinates = []
-            if image_xy_corner:
-                for i in range(len(image_xy_corner)):
-                    # TODO: make multipolygon
-                    xy = self.image_corners_to_coord(image_xy_corner[i])
-                    poly_coordinates.append(xy)
-                self.xy.append(poly_coordinates)
+    @staticmethod
+    def get_extent_list(extent):
+        """convert extent dick to ordered array"""
+        return [extent["xmin"], extent["ymin"], extent["xmax"], extent["ymax"]]
+
+    def get_buffer_extent_list(self):
+        """add some buffer to ordered extent array"""
+        ex = self.extent
+        buf = self.buffer
+        ex = [ex["xmin"] - buf, ex["ymin"] - buf, ex["xmax"] + buf, ex["ymax"] + buf]
+        return ex
+
+    def get_geometry(self):
+        """
+        get corner geometry array from downloaded image
+        [area1],[area2] - may be multipolygon geometry
+           |
+        [self],[hole_1],[hole_N]     - holes is optional
+           |
+        [coord1],[coord2],[coord3]   - min 3 coord for polygon
+           |
+         [x,y]                       - coordinate pair
+
+         Example:
+             [[ [ [x,y],[x,y],[x,y] ], [ [x,y],[x,y],[x,y] ], ], [ [x,y],[x,y],[x,y] ], [ [x,y],[x,y],[x,y] ] ]
+                -----------------first polygon-----------------  ----------------second polygon--------------
+                ----outer contour---   --first hole contour-
+        """
+        image_xy_corner = self.get_image_xy_corner()
+        poly_coordinates = []
+        if image_xy_corner:
+            for i in range(len(image_xy_corner)):
+                # TODO: make multipolygon
+                xy = self.image_corners_to_coord(image_xy_corner[i])
+                poly_coordinates.append(xy)
+            self.xy.append(poly_coordinates)
         return self.xy
-
-    def read_svg(self):
-        try:
-            import svg
-        except ImportError:
-            raise ImportError('svg lib is not installed.')
-
-        svg_coord = []  # Set of poly coordinates set (area, hole1?, hole2?...)
-        obj = svg.parse(self.image_path)
-        self.get_svg_points(obj, svg_coord)
-        for poly in range(len(svg_coord)):
-            xy = self.image_corners_to_coord(svg_coord[poly])
-            self.xy.append(xy)
-        return self.xy
-
-    def get_svg_points(self, obj, svg_coord):
-        """get absolute coordinates from svg file"""
-        if "items" in obj:
-            for i in obj.items:
-                dest = "dest" in i
-                if dest:
-                    svg_coord.append([])
-                if "start" in i:
-                    svg_coord[len(svg_coord) - 1].append([i.start.x, i.start.y])
-                else:
-                    self.get_svg_points(i, svg_coord)
-        else:
-            pass
 
     def get_image_xy_corner(self):
-        """get coordinates from raster"""
-        import numpy as np
+        """get сartesian coordinates from raster"""
         import cv2
 
         image_xy_corners = []
@@ -318,7 +291,7 @@ class Area:
             # epsilon = 0.0005*cv2.arcLength(contours[len(contours) - 1], True)
             try:
                 contours, hierarchy = cv2.findContours(thresh, 1, 2)
-            except:
+            except Exception:
                 im2, contours, hierarchy = cv2.findContours(thresh, 1, 2)
             for i in range(len(contours) - 1, -1, -1):
                 cc = []
@@ -332,29 +305,8 @@ class Area:
             self.log(ex)
         return image_xy_corners
 
-    @staticmethod
-    def calculate_gzn(from_xy, to_xy):
-        from math import pi, atan
-        c = 1e-7
-        y1 = from_xy[0]
-        x1 = from_xy[1]
-        y2 = to_xy[0]
-        x2 = to_xy[1]
-        x = x2 - x1
-        y = y2 - y1
-
-        def sgn(i):
-            s = 0
-            if i > 0:
-                s = 1
-            elif i < 0:
-                s = -1
-            return s
-
-        gzn = pi - pi * sgn(sgn(x) + 1) * sgn(y) + atan(y / (x + c))
-        return gzn
-
     def image_corners_to_coord(self, image_xy_corners):
+        """calculate spatial coordinates from cartesian"""
         ex = self.get_extent_list(self.image_extent)
         dx = ((ex[2] - ex[0]) / self.width)
         dy = ((ex[3] - ex[1]) / self.height)
@@ -366,6 +318,7 @@ class Area:
         return xy_corners
 
     def show_plot(self, image_xy_corners):
+        """Development tool"""
         import cv2
         try:
             from matplotlib import pyplot as plt
@@ -379,67 +332,5 @@ class Area:
         plt.imshow(img), plt.show()
 
     def log(self, msg):
-        print(msg)
-
-
-def getopts():
-    import argparse
-    import textwrap
-
-    """
-    Get the command line options.
-    """
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent("""\
-        Get geojson with coordinates of area by cadastral number.
-        http://pkk5.rosreestr.ru/
-        """)
-    )
-    parser.add_argument('-c', '--code', action='store', type=str, required=True,
-                        help='area cadastral number')
-    parser.add_argument('-t', '--area_type', action='store', type=int, required=False, default=1,
-                        help='area types: %s' % "; ".join(["%s:%s" % (k, v) for k, v in TYPES.items()]))
-    parser.add_argument('-p', '--path', action='store', type=str, required=False,
-                        help='media path')
-    parser.add_argument('-o', '--output', action='store', type=str, required=False,
-                        help='output path')
-    parser.add_argument('-e', '--epsilon', action='store', type=int, required=False,
-                        help='Parameter specifying the approximation accuracy. '
-                             'This is the maximum distance between the original curve and its approximation.')
-    opts = parser.parse_args()
-
-    return opts
-
-
-def main():
-    # area = Area("38:36:000021:1106")
-    # area = Area("38:06:144003:4723")
-    # area = Area("38:36:000033:375")
-    # area = Area("38:06:143519:6153", area_type=5)
-
-    # code, output, path, epsilon, area_type = "38:06:144003:4723", "", "", 5, 1)
-
-    opt = getopts()
-    code = opt.code
-    output = opt.output if opt.output else "."
-    path = opt.path
-    epsilon = opt.epsilon if opt.epsilon else 5
-    area_type = opt.area_type if opt.area_type else 1
-    
-    
-    abspath = os.path.abspath(output)
-    if code:
-        area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon)
-        geojson = area.to_geojson_poly()
-        if geojson:
-            filename = '%s.geojson' % area.file_name
-            file_path = os.path.join(abspath, filename)
-            f = open(file_path, 'w')
-            f.write(geojson)
-            f.close()
-            print(file_path)
-
-
-if __name__ == "__main__":
-    main()
+        if self.with_log:
+            print(msg)

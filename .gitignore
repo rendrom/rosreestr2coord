@@ -10,3 +10,4 @@ env/
 *.egg-info/
 .idea/
 
+/catalog.json
