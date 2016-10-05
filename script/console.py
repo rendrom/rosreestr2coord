@@ -29,14 +29,16 @@ def getopts():
                         help='media path')
     parser.add_argument('-o', '--output', action='store', type=str, required=False,
                         help='output path')
+    parser.add_argument('-w', '--wgs', action='store_const', const=True, required=False,
+                        help='use WGS84 coordinate system')
     parser.add_argument('-l', '--list', action='store', type=str, required=False,
-                        help='code list path')
+                        help='path of file with cadastral codes list')
+    # parser.add_argument('-x', '--csv', action='store_const', const=True, required=False,
+    #                     help='create CSV table output, use only with --list')
     parser.add_argument('-e', '--epsilon', action='store', type=int, required=False,
                         help='Parameter specifying the approximation accuracy. '
                              'This is the maximum distance between the original curve and its approximation.')
     opts = parser.parse_args()
-
-
 
     return opts
 
@@ -55,6 +57,8 @@ def main():
     path = opt.path
     epsilon = opt.epsilon if opt.epsilon else 5
     area_type = opt.area_type if opt.area_type else 1
+    coord = "EPSG:4326" if opt.wgs else "EPSG:3857"
+    # csv = opt.csv
 
     catalog_path = os.path.join(os.getcwd(), "catalog.json")
     abspath = os.path.abspath(output)
@@ -63,10 +67,11 @@ def main():
         f = open(opt.list, 'r')
         codes = f.readlines()
         f.close()
-        batch_parser(codes, media_path=path, area_type=area_type, catalog=catalog_path)
+        batch_parser(codes, media_path=path, area_type=area_type, catalog=catalog_path, coord_out=coord, output=output)
 
     elif code:
-        area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon, with_log=True, catalog=catalog_path)
+        area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon, with_log=True, catalog=catalog_path,
+                    coord_out=coord)
         geojson = area.to_geojson_poly()
         if geojson:
             filename = '%s.geojson' % area.file_name

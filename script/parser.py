@@ -7,6 +7,7 @@ import os
 
 from script.catalog import Catalog
 from script.export import coords2geojson
+from script.utils import xy2lonlat
 
 try:
     import urlparse
@@ -69,12 +70,24 @@ TYPES = {
 }
 
 
+def restore_area(restore, coord_out):
+    area = Area()
+    for a in area.save_attrs:
+        setattr(area, a, restore[a])
+    if coord_out:
+        setattr(area, "coord_out", coord_out)
+    area.get_geometry()
+    area.file_name = area.code.replace(":", "-")
+    return area
+
+
 class Area:
     image_url = IMAGE_URL
     buffer = 10
     save_attrs = ["code", "area_type", "attrs", "image_path", "center", "extent", "image_extent", "width", "height"]
 
-    def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=False, catalog=""):
+    def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=False, catalog="",
+                 coord_out="EPSG:3857"):
         self.with_log = with_log
         self.area_type = area_type
         self.media_path = media_path
@@ -92,6 +105,8 @@ class Area:
         self.code_id = ""
         self.file_name = self.code.replace(":", "-")
 
+        self.coord_out = coord_out
+
         t = string.Template(SEARCH_URL)
         self.search_url = t.substitute({"area_type": area_type})
         t = string.Template(FEATURE_INFO_URL)
@@ -108,7 +123,7 @@ class Area:
             if restore:
                 self._restore(restore)
                 self.get_geometry()
-                self.log("%s - restored from %s" % (self.code,catalog))
+                self.log("%s - restored from %s" % (self.code, catalog))
                 return
         if not code:
             return
@@ -129,7 +144,7 @@ class Area:
 
     def _restore(self, data):
         for a in self.save_attrs:
-            setattr(self, a,  data[a])
+            setattr(self, a, data[a])
 
     def get_coord(self):
         if self.xy:
@@ -143,7 +158,7 @@ class Area:
         return self.to_geojson("polygon")
 
     def to_geojson(self, geom_type="point"):
-        feature_collection = coords2geojson(self.xy, geom_type)
+        feature_collection = coords2geojson(self.xy, geom_type, self.coord_out)
         if feature_collection:
             return json.dumps(feature_collection)
         return False
@@ -314,6 +329,8 @@ class Area:
         for im_x, im_y in image_xy_corners:
             x = ex[0] + (im_x * dx)
             y = ex[3] - (im_y * dy)
+            if self.coord_out == "EPSG:4326":
+                (x, y) = xy2lonlat(x, y)
             xy_corners.append([x, y])
         return xy_corners
 

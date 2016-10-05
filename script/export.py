@@ -1,13 +1,51 @@
 # coding: utf-8
 from __future__ import print_function, division
+import csv
+import os
 
 
-def coords2geojson(coords, geom_type):
+def area_csv_output(output, area):
+    abspath = os.path.abspath(output)
+
+    filename = '%s.csv' % area.file_name
+    csv_path = os.path.join(abspath, "csv")
+    if not os.path.isdir(csv_path):
+        os.makedirs(csv_path)
+
+    f = csv.writer(open(os.path.join(csv_path, filename), "wb+"))
+
+    # Write CSV Header, If you dont need that, remove this line
+    # f.writerow(["pk", "model", "codename", "name", "content_type"])
+
+    attrs = getattr(area, "attrs")
+    f.writerow([getattr(area, "code"),
+                attrs["area_value"],
+                attrs["cad_cost"],
+                getattr(area, "xy")
+                ])
+
+
+
+def area_json_output(output, area):
+    abspath = os.path.abspath(output)
+    geojson = area.to_geojson_poly()
+    if geojson:
+        filename = '%s.geojson' % area.file_name
+        geojson_path = os.path.join(abspath, "geojson")
+        if not os.path.isdir(geojson_path):
+            os.makedirs(geojson_path)
+        file_path = os.path.join(geojson_path, filename)
+        f = open(file_path, 'w')
+        f.write(geojson)
+        f.close()
+
+
+def coords2geojson(coords, geom_type, coord):
     if coords:
         features = []
         feature_collection = {
             "type": "FeatureCollection",
-            "crs": {"type": "name", "properties": {"name": "EPSG:3857"}},
+            "crs": {"type": "name", "properties": {"name": coord}},
             "features": features
         }
         if geom_type.upper() == "POINT":
