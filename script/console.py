@@ -3,6 +3,7 @@ from __future__ import print_function, division
 
 import os
 
+from script.batch import batch_parser
 from script.parser import Area, TYPES
 
 
@@ -20,7 +21,7 @@ def getopts():
         http://pkk5.rosreestr.ru/
         """)
     )
-    parser.add_argument('-c', '--code', action='store', type=str, required=True,
+    parser.add_argument('-c', '--code', action='store', type=str, required=False,
                         help='area cadastral number')
     parser.add_argument('-t', '--area_type', action='store', type=int, required=False, default=1,
                         help='area types: %s' % "; ".join(["%s:%s" % (k, v) for k, v in TYPES.items()]))
@@ -28,10 +29,14 @@ def getopts():
                         help='media path')
     parser.add_argument('-o', '--output', action='store', type=str, required=False,
                         help='output path')
+    parser.add_argument('-l', '--list', action='store', type=str, required=False,
+                        help='code list path')
     parser.add_argument('-e', '--epsilon', action='store', type=int, required=False,
                         help='Parameter specifying the approximation accuracy. '
                              'This is the maximum distance between the original curve and its approximation.')
     opts = parser.parse_args()
+
+
 
     return opts
 
@@ -52,9 +57,15 @@ def main():
     area_type = opt.area_type if opt.area_type else 1
 
     catalog_path = os.path.join(os.getcwd(), "catalog.json")
-
     abspath = os.path.abspath(output)
-    if code:
+
+    if opt.list:
+        f = open(opt.list, 'r')
+        codes = f.readlines()
+        f.close()
+        batch_parser(codes, media_path=path, area_type=area_type, catalog=catalog_path)
+
+    elif code:
         area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon, with_log=True, catalog=catalog_path)
         geojson = area.to_geojson_poly()
         if geojson:

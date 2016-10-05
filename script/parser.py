@@ -122,7 +122,7 @@ class Area:
                     image = self.download_image(f)
                     if image:
                         self.get_geometry()
-                        if self.catalog and self.catalog.store:
+                        if catalog:
                             self.catalog.update(self)
                             self.catalog.close()
                         break

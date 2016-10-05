@@ -1,5 +1,4 @@
 tmp/
-*.geojson
 .vscode/
 *.pyc
 .DS_Store
@@ -10,4 +9,5 @@ env/
 *.egg-info/
 .idea/
 
-/catalog.json
+*.json
+output/

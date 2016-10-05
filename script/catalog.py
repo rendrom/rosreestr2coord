@@ -44,6 +44,7 @@ class Catalog:
             for a in attr_list:
                 to_store[a] = getattr(area, a)
             self.store["Area"][getattr(area, "code")] = to_store
+            return to_store
 
     def close(self, buffering=-1):
         with open(self.file_path, "w", buffering=buffering) as local_file:
