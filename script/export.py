@@ -1,5 +1,7 @@
 # coding: utf-8
 from __future__ import print_function, division
+
+import copy
 import csv
 import os
 
@@ -16,19 +18,25 @@ def make_output(output, file_name, file_format, out_path=""):
 
 def _write_csv_row(f, area, header=False):
     try:
+        xy = copy.deepcopy(list(getattr(area, "xy")))
+        for geom in xy:
+            for poly in geom:
+                for c in range(len(poly)):
+                    poly[c] = poly[c][::-1]
         attrs = getattr(area, "attrs", {})
         cols = [
             {"name": "№", "value": attrs.get("cn", getattr(area, "code"))},
             {"name": "Площадь", "value": attrs.get("area_value", "")},
             {"name": "Цена", "value": attrs.get("cad_cost", "")},
-            {"name": "Координаты", "value": getattr(area, "xy")},
+            {"name": "Координаты", "value": xy},
         ]
 
         if header:
             f.writerow(map(lambda x: x["name"], cols))
 
         f.writerow(map(lambda x: x["value"], cols))
-    except:
+    except Exception as er:
+        print(er)
         pass
 
 
