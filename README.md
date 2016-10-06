@@ -22,18 +22,18 @@ __Результат работы скрипта не соответствует
 
     # Установку `python setup.py install` можно не выполнять
 
-Установка через пакетный мэнеджер
+Установка через пакетный менеджер
 
     $ pip install rosreestr2coord
 
 ## Использование
 
-Из консоли:
+### Из консоли
 
     $ rosreestr2coord -c 38:06:144003:4723
     $ rosreestr2coord -w -l ./cadastral_numbers_list.txt 
 
-   или, буз установки
+   или, без установки
 
     $ python rosreestr2coord.py -c 38:06:144003:4723
     
@@ -51,15 +51,18 @@ __Результат работы скрипта не соответствует
   * -l - пакетная загрузка из списка в текстовом файле (тестовый файл -l list_example.txt )
   * -w - переводить координаты в WGS84 EPSG:4326
     
-programmatically:
-    
-    from rosreestr2coord import Area
-    
-    area = Area("38:06:144003:4723") # дополнительные аргументы area_type=1 epsilum=5.5, media-path=MEDIA
-    area.to_geojson()
-    area.to_geojson_poly()
-    area.get_coord() # [[[area1_xy], [hole1_xy], [hole2_xy]], [[area2_xyl]]]
-    area.get_attrs()
+### Программно:
+    $ python
+
+```python
+from rosreestr2coord import Area
+
+area = Area("38:06:144003:4723") # дополнительные аргументы coord_out="EPSG:4326", area_type=1, media-path=MEDIA, 
+area.to_geojson()
+area.to_geojson_poly()
+area.get_coord() # [[[area1_xy], [hole1_xy], [hole2_xy]], [[area2_xyl]]]
+area.get_attrs()
+```
     
 ## Журнал
 * 06.10.2016 - Осуществление экспорта таблиц в формате csv
