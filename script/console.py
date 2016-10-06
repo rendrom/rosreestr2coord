@@ -64,10 +64,13 @@ def main():
     abspath = os.path.abspath(output)
 
     if opt.list:
+        file_name = os.path.splitext(os.path.basename(opt.list))[0]
         f = open(opt.list, 'r')
         codes = f.readlines()
+
         f.close()
-        batch_parser(codes, media_path=path, area_type=area_type, catalog=catalog_path, coord_out=coord, output=output)
+        batch_parser(codes, media_path=path, area_type=area_type, catalog=catalog_path, coord_out=coord, output=output,
+                     file_name=file_name)
 
     elif code:
         area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon, with_log=True, catalog=catalog_path,

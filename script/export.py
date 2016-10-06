@@ -4,38 +4,49 @@ import csv
 import os
 
 
-def area_csv_output(output, area):
+def make_output(output, file_name, file_format, out_path=""):
+    out_path = out_path if out_path else file_format
     abspath = os.path.abspath(output)
+    filename = '%s.%s' % (file_name, file_format)
+    path = os.path.join(abspath, out_path)
+    if not os.path.isdir(path):
+        os.makedirs(path)
+    return os.path.join(path, filename)
 
-    filename = '%s.csv' % area.file_name
-    csv_path = os.path.join(abspath, "csv")
-    if not os.path.isdir(csv_path):
-        os.makedirs(csv_path)
 
-    f = csv.writer(open(os.path.join(csv_path, filename), "wb+"))
-
-    # Write CSV Header, If you dont need that, remove this line
-    # f.writerow(["pk", "model", "codename", "name", "content_type"])
-
+def _write_csv_row(f, area, header=False):
     attrs = getattr(area, "attrs")
-    f.writerow([getattr(area, "code"),
-                attrs["area_value"],
-                attrs["cad_cost"],
-                getattr(area, "xy")
-                ])
+    cols = [
+        {"name": "№", "value": attrs["cn"]},
+        {"name": "Площадь", "value": attrs["area_value"]},
+        {"name": "Цена", "value": attrs["cad_cost"]},
+        {"name": "Координаты", "value": getattr(area, "xy")},
+    ]
 
+    if header:
+        f.writerow(map(lambda x: x["name"], cols))
+
+    f.writerow(map(lambda x: x["value"], cols))
+
+
+def area_csv_output(output, area):
+    path = make_output(output, area.file_name, "csv")
+    f = csv.writer(open(path, "wb+"))
+    _write_csv_row(f, area)
+
+
+def batch_csv_output(output, areas, file_name):
+    path = make_output(output, file_name, "csv")
+    f = csv.writer(open(path, "wb+"))
+    for a in range(len(areas)):
+        _write_csv_row(f, areas[a], a == 0)
+    return path
 
 
 def area_json_output(output, area):
-    abspath = os.path.abspath(output)
     geojson = area.to_geojson_poly()
     if geojson:
-        filename = '%s.geojson' % area.file_name
-        geojson_path = os.path.join(abspath, "geojson")
-        if not os.path.isdir(geojson_path):
-            os.makedirs(geojson_path)
-        file_path = os.path.join(geojson_path, filename)
-        f = open(file_path, 'w')
+        f = open(make_output(output, area.file_name, "geojson"), 'w')
         f.write(geojson)
         f.close()
 

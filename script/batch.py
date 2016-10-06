@@ -3,12 +3,12 @@ from __future__ import print_function
 import os
 
 from script.catalog import Catalog
-from script.export import area_json_output, area_csv_output
+from script.export import area_json_output, area_csv_output, batch_csv_output
 from script.parser import Area, restore_area
 
 
 def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog="", coord_out="EPSG:3857",
-                 output=os.path.join("output")):
+                 file_name="example", output=os.path.join("output")):
     catalog = Catalog(catalog)
     areas = []
     restores = []
@@ -52,5 +52,6 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog="", 
     print("  error       : %i" % with_error)
     print("  from catalog: %i" % from_catalog)
     print("-----------------")
-
+    path = batch_csv_output(output, areas, file_name)
+    print("Create output complete: %s" % path)
 
