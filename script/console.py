@@ -69,7 +69,7 @@ def main():
         codes = f.readlines()
 
         f.close()
-        batch_parser(codes, media_path=path, area_type=area_type, catalog=catalog_path, coord_out=coord, output=output,
+        batch_parser(codes, media_path=path, area_type=area_type, catalog_path=catalog_path, coord_out=coord, output=output,
                      file_name=file_name)
 
     elif code:
