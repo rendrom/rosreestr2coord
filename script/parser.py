@@ -16,7 +16,7 @@ except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
 
-VERSION = "1.0.4"
+VERSION = "1.1.0"
 
 ##############
 # SEARCH URL #
@@ -303,11 +303,11 @@ class Area:
 
         try:
             ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
-            # epsilon = 0.0005*cv2.arcLength(contours[len(contours) - 1], True)
             try:
                 contours, hierarchy = cv2.findContours(thresh, 1, 2)
             except Exception:
                 im2, contours, hierarchy = cv2.findContours(thresh, 1, 2)
+            # epsilon = 0.0005 * cv2.arcLength(contours[len(contours) - 1], True)
             for i in range(len(contours) - 1, -1, -1):
                 cc = []
                 cnt = contours[i]
