@@ -15,11 +15,11 @@ def make_output(output, file_name, file_format, out_path=""):
 
 
 def _write_csv_row(f, area, header=False):
-    attrs = getattr(area, "attrs")
+    attrs = getattr(area, "attrs", {})
     cols = [
-        {"name": "№", "value": attrs["cn"]},
-        {"name": "Площадь", "value": attrs["area_value"]},
-        {"name": "Цена", "value": attrs["cad_cost"]},
+        {"name": "№", "value": attrs.get("cn", getattr(area, "code"))},
+        {"name": "Площадь", "value": attrs.get("area_value", "")},
+        {"name": "Цена", "value": attrs.get("cad_cost", "")},
         {"name": "Координаты", "value": getattr(area, "xy")},
     ]
 
