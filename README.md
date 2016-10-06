@@ -1,21 +1,44 @@
 ROSREESTR TO COORDINATE
 =======================
-Инструмент, позволяющий получать координаты участка по его кадастровому номеру
-Данные берутся с сайта публичной кадастровой карты [http://pkk5.rosreestr.ru/](http://pkk5.rosreestr.ru/)
+Инструмент, позволяющий вычислять координаты участка по его кадастровому номеру.
+Данные берутся с сайта публичной кадастровой карты [http://pkk5.rosreestr.ru/](http://pkk5.rosreestr.ru/).
+
+__Результат работы скрипта не соответствует информации в кадастровой выписке__
 
 [DEMO](http://geonote.ru/pkk/)
 
-## Requirements
+## Зависимости
 
 * Python 2.7.x
-* numpy
 * [OpenCV](http://opencv.org/)
 
-## Usage
+## Установка
+
+Получите последнюю версию из репозитория
+
+    $ git clone https://github.com/rendrom/rosreestr2coord
+    $ cd ./rosreestr2coord
+    $ python setup.py install
+
+    # Установку `python setup.py install` можно не выполнять
+
+Установка через пакетный мэнеджер
+
+    $ pip install rosreestr2coord
+
+## Использование
 
 Из консоли:
 
-    python rosreestr2coord.py -c 38:06:144003:4723
+    $ rosreestr2coord -c 38:06:144003:4723
+    $ rosreestr2coord -w -l ./cadastral_numbers_list.txt 
+
+   или, буз установки
+
+    $ python rosreestr2coord.py -c 38:06:144003:4723
+    
+Во время выполнения скрипта, в директории откуда был произведен запуск будут созданы файлы и папки. 
+Поэтому рекомендуется создать отдельную папку для работы с этим прилождением из консоли. 
     
 Опции:
 
