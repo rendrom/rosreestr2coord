@@ -5,9 +5,9 @@ import string
 import urllib
 import os
 
-from script.catalog import Catalog
-from script.export import coords2geojson
-from script.utils import xy2lonlat
+from catalog import Catalog
+from export import coords2geojson
+from utils import xy2lonlat
 
 try:
     import urlparse
@@ -16,7 +16,7 @@ except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
 
-VERSION = "1.1.1"
+VERSION = "1.1.2"
 
 ##############
 # SEARCH URL #
@@ -71,13 +71,8 @@ TYPES = {
 
 
 def restore_area(restore, coord_out):
-    area = Area()
-    for a in area.save_attrs:
-        setattr(area, a, restore[a])
-    if coord_out:
-        setattr(area, "coord_out", coord_out)
-    area.get_geometry()
-    area.file_name = area.code.replace(":", "-")
+    area = Area(coord_out=coord_out)
+    area.restore(restore)
     return area
 
 
@@ -121,8 +116,7 @@ class Area:
             self.catalog = Catalog(catalog)
             restore = self.catalog.find(self.code)
             if restore:
-                self._restore(restore)
-                self.get_geometry()
+                self.restore(restore)
                 self.log("%s - restored from %s" % (self.code, catalog))
                 return
         if not code:
@@ -142,9 +136,13 @@ class Area:
                             self.catalog.close()
                         break
 
-    def _restore(self, data):
+    def restore(self, restore):
         for a in self.save_attrs:
-            setattr(self, a, data[a])
+            setattr(self, a, restore[a])
+        if self.coord_out:
+            setattr(self, "coord_out", self.coord_out)
+        self.get_geometry()
+        self.file_name = self.code.replace(":", "-")
 
     def get_coord(self):
         if self.xy:
@@ -154,11 +152,12 @@ class Area:
     def get_attrs(self):
         return self.attrs
 
-    def to_geojson_poly(self):
-        return self.to_geojson("polygon")
+    def to_geojson_poly(self, with_attrs=False):
+        return self.to_geojson("polygon", with_attrs)
 
-    def to_geojson(self, geom_type="point"):
-        feature_collection = coords2geojson(self.xy, geom_type, self.coord_out)
+    def to_geojson(self, geom_type="point", with_attrs=False):
+        attrs = self.attrs if with_attrs and self.attrs else False
+        feature_collection = coords2geojson(self.xy, geom_type, self.coord_out, attrs=attrs)
         if feature_collection:
             return json.dumps(feature_collection)
         return False
@@ -166,7 +165,7 @@ class Area:
     def download_feature_info(self):
         try:
             search_url = self.feature_info_url + self.clear_code(self.code)
-            self.log("Download area info: %s" % search_url)
+            self.log("Start downloading area info: %s" % search_url)
             response = urllib.urlopen(search_url)
             resp = response.read()
             data = json.loads(resp)
@@ -212,9 +211,9 @@ class Area:
             url_parts[4] = urlencode(query)
             meta_url = urlparse.urlunparse(url_parts)
             if meta_url:
-                self.log("Get image meta: %s" % meta_url)
-                response = urllib.urlopen(meta_url)
+                self.log("Start downloading image meta.")
                 try:
+                    response = urllib.urlopen(meta_url)
                     read = response.read()
                     data = json.loads(read)
                     if data.get("href"):
@@ -223,10 +222,10 @@ class Area:
                         self.height = data["height"]
                         self.image_extent = data["extent"]
                         # self.log(meta_url)
-                        self.log("Meta info received")
+                        self.log("Meta info received.")
                         return image_url
                     else:
-                        self.log("Can't get image data from: %s" % meta_url)
+                        self.log("Can't get image meta data from: %s" % meta_url)
                 except Exception as er:
                     self.log(er)
         elif not self.extent:
@@ -235,7 +234,7 @@ class Area:
 
     def download_image(self, output_format="png"):
         try:
-            self.log('Start image downloading')
+            self.log('Start image downloading.')
             image_file = urllib.URLopener()
             basedir = self.media_path
             savedir = os.path.join(basedir, "tmp")
@@ -244,10 +243,10 @@ class Area:
             file_path = os.path.join(savedir, "%s.%s" % (self.file_name, output_format))
             image_file.retrieve(self.image_url, file_path)
             self.image_path = file_path
-            self.log('Downloading complete')
+            self.log('Downloading complete.')
             return image_file
         except Exception:
-            self.log("Can not upload image")
+            self.log("Can not upload image.")
         return False
 
     @staticmethod

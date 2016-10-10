@@ -54,20 +54,22 @@ def batch_csv_output(output, areas, file_name):
     return path
 
 
-def area_json_output(output, area):
-    geojson = area.to_geojson_poly()
+def area_json_output(output, area, with_attrs=False):
+    geojson = area.to_geojson_poly(with_attrs)
     if geojson:
         f = open(make_output(output, area.file_name, "geojson"), 'w')
         f.write(geojson)
         f.close()
 
 
-def coords2geojson(coords, geom_type, coord):
+def coords2geojson(coords, geom_type, crs_name, attrs=None):
+    if attrs is False:
+        attrs = {}
     if coords:
         features = []
         feature_collection = {
             "type": "FeatureCollection",
-            "crs": {"type": "name", "properties": {"name": coord}},
+            "crs": {"type": "name", "properties": {"name": crs_name}},
             "features": features
         }
         if geom_type.upper() == "POINT":
@@ -89,7 +91,7 @@ def coords2geojson(coords, geom_type, coord):
                     close_xy.append(xy)
                 multi_polygon.append(close_xy)
             feature = {"type": "Feature",
-                       "properties": {},
+                       "properties": attrs,
                        "geometry": {"type": "MultiPolygon", "coordinates": multi_polygon}}
             features.append(feature)
         return feature_collection

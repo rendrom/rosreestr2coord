@@ -3,8 +3,8 @@ from __future__ import print_function, division
 
 import os
 
-from script.batch import batch_parser
-from script.parser import Area, TYPES
+from scripts.batch import batch_parser
+from scripts.parser import Area, TYPES
 
 
 def getopts():
@@ -33,6 +33,8 @@ def getopts():
                         help='use WGS84 coordinate system')
     parser.add_argument('-l', '--list', action='store', type=str, required=False,
                         help='path of file with cadastral codes list')
+    parser.add_argument('-a', '--attrs', action='store_const', const=True, required=False,
+                        help='insert the area attributes in the geojson output')
     # parser.add_argument('-x', '--csv', action='store_const', const=True, required=False,
     #                     help='create CSV table output, use only with --list')
     parser.add_argument('-e', '--epsilon', action='store', type=int, required=False,
@@ -57,6 +59,7 @@ def main():
     path = opt.path
     epsilon = opt.epsilon if opt.epsilon else 5
     area_type = opt.area_type if opt.area_type else 1
+    json_attrs = opt.attrs if opt.attrs else False
     coord = "EPSG:4326" if opt.wgs else "EPSG:3857"
     # csv = opt.csv
 
@@ -70,12 +73,12 @@ def main():
 
         f.close()
         batch_parser(codes, media_path=path, area_type=area_type, catalog_path=catalog_path, coord_out=coord, output=output,
-                     file_name=file_name)
+                     file_name=file_name, with_attrs=json_attrs)
 
     elif code:
         area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon, with_log=True, catalog=catalog_path,
                     coord_out=coord)
-        geojson = area.to_geojson_poly()
+        geojson = area.to_geojson_poly(with_attrs=json_attrs)
         if geojson:
             filename = '%s.geojson' % area.file_name
             geojson_path = os.path.join(abspath, "geojson")
