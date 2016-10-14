@@ -1,5 +1,7 @@
 # coding: utf-8
 from __future__ import print_function, division
+
+import copy
 import json
 import string
 import urllib
@@ -88,6 +90,7 @@ class Area:
         self.media_path = media_path
         self.image_url = ""
         self.xy = []  # [[[area1], [hole1], [holeN]], [[area2]]]
+        self.image_xy_corner = []  # cartesian coord from image, for draw plot
         self.width = 0
         self.height = 0
         self.image_path = ""
@@ -282,14 +285,11 @@ class Area:
                 -----------------first polygon-----------------  ----------------second polygon--------------
                 ----outer contour---   --first hole contour-
         """
-        image_xy_corner = self.get_image_xy_corner()
-        poly_coordinates = []
-        if image_xy_corner:
-            for i in range(len(image_xy_corner)):
-                # TODO: make multipolygon
-                xy = self.image_corners_to_coord(image_xy_corner[i])
-                poly_coordinates.append(xy)
-            self.xy.append(poly_coordinates)
+        image_xy_corner = self.image_xy_corner = self.get_image_xy_corner()
+        self.xy = copy.deepcopy(image_xy_corner)
+        for geom in self.xy:
+            for p in range(len(geom)):
+                geom[p] = self.image_corners_to_coord(geom[p])
         return self.xy
 
     def get_image_xy_corner(self):
@@ -303,17 +303,27 @@ class Area:
         try:
             ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
             try:
-                contours, hierarchy = cv2.findContours(thresh, 1, 2)
+                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             except Exception:
-                im2, contours, hierarchy = cv2.findContours(thresh, 1, 2)
-            # epsilon = 0.0005 * cv2.arcLength(contours[len(contours) - 1], True)
-            for i in range(len(contours) - 1, -1, -1):
+                im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
+            hierarchy = hierarchy[0]
+            hierarhy_contours = [[] for _ in range(len(hierarchy))]
+            for fry in range(len(contours)):
+                currentContour = contours[fry]
+                currentHierarchy = hierarchy[fry]
                 cc = []
-                cnt = contours[i]
-                approx = cv2.approxPolyDP(cnt, self.epsilon, True)
-                for c in approx:
-                    cc.append([c[0][0], c[0][1]])
-                image_xy_corners.append(cc)
+                # epsilon = 0.0005 * cv2.arcLength(contours[len(contours) - 1], True)
+                approx = cv2.approxPolyDP(currentContour, self.epsilon, True)
+                if len(approx) > 2:
+                    for c in approx:
+                        cc.append([c[0][0], c[0][1]])
+                    parent_index = currentHierarchy[3]
+                    index = fry if parent_index < 0 else parent_index
+                    hierarhy_contours[index].append(cc)
+
+            image_xy_corners = [c for c in hierarhy_contours if len(c) > 0]
+
             return image_xy_corners
         except Exception as ex:
             self.log(ex)
@@ -333,7 +343,7 @@ class Area:
             xy_corners.append([x, y])
         return xy_corners
 
-    def show_plot(self, image_xy_corners):
+    def show_plot(self):
         """Development tool"""
         import cv2
         try:
@@ -341,10 +351,10 @@ class Area:
         except ImportError:
             raise ImportError('Matplotlib is not installed.')
 
-        corners = image_xy_corners
         img = cv2.imread(self.image_path)
-        for x, y in corners:
-            cv2.circle(img, (x, y), 3, 255, -1)
+        for corners in self.image_xy_corner:
+            for x, y in corners:
+                cv2.circle(img, (x, y), 3, 255, -1)
         plt.imshow(img), plt.show()
 
     def log(self, msg):
