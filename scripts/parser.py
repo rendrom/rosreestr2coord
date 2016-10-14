@@ -18,7 +18,7 @@ except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
 
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 
 ##############
 # SEARCH URL #
