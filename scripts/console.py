@@ -37,6 +37,8 @@ def getopts():
                         help='insert the area attributes in the geojson output')
     parser.add_argument('-d', '--display', action='store_const', const=True, required=False,
                         help='display plot (only for --code mode)')
+    parser.add_argument('-r', '--refresh', action='store_const', const=True, required=False,
+                        help='do not use catalog')
     # parser.add_argument('-x', '--csv', action='store_const', const=True, required=False,
     #                     help='create CSV table output, use only with --list')
     parser.add_argument('-e', '--epsilon', action='store', type=int, required=False,
@@ -63,11 +65,12 @@ def main():
     epsilon = opt.epsilon if opt.epsilon else 5
     area_type = opt.area_type if opt.area_type else 1
     with_attrs = opt.attrs if opt.attrs else False
+    refresh = opt.refresh
     display = opt.display
     coord_out = "EPSG:4326" if opt.wgs else "EPSG:3857"
     # csv = opt.csv
 
-    catalog_path = os.path.join(os.getcwd(), "catalog.json")
+    catalog_path = "" if refresh else os.path.join(os.getcwd(), "catalog.json")
 
     if opt.list:
         file_name = os.path.splitext(os.path.basename(opt.list))[0]

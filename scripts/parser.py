@@ -9,7 +9,8 @@ import os
 
 from catalog import Catalog
 from export import coords2geojson
-from utils import xy2lonlat
+from scripts.merge_tiles import PkkAreaMerger
+from utils import xy2lonlat, make_request
 
 try:
     import urlparse
@@ -18,7 +19,7 @@ except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
 
-VERSION = "1.1.3"
+VERSION = "1.2.0"
 
 ##############
 # SEARCH URL #
@@ -128,16 +129,30 @@ class Area:
         feature_info = self.download_feature_info()
         if feature_info:
             formats = ["png"]
+            tmp_dir = os.path.join(self.media_path, "tmp")
+            if not os.path.isdir(tmp_dir):
+                os.makedirs(tmp_dir)
             for f in formats:
-                self.image_url = self.get_image_url(f)
-                if self.image_url:
-                    image = self.download_image(f)
-                    if image:
-                        self.get_geometry()
-                        if catalog:
-                            self.catalog.update(self)
-                            self.catalog.close()
-                        break
+                image = None
+                try:
+                    image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=with_log,
+                                          clear_code=self.clear_code(self.code_id), output_dir=tmp_dir)
+                    image.download()
+                    self.image_path = image.merge_tiles()
+                    self.width = image.real_width
+                    self.height = image.real_height
+                    self.image_extent = image.image_extent
+                except Exception:
+                    self.image_url = self.get_image_url(f)
+                    if self.image_url:
+                        image = self.download_image(f)
+
+                if image:
+                    self.get_geometry()
+                    if catalog:
+                        self.catalog.update(self)
+                        self.catalog.close()
+                    break
 
     def restore(self, restore):
         for a in self.save_attrs:
@@ -169,7 +184,7 @@ class Area:
         try:
             search_url = self.feature_info_url + self.clear_code(self.code)
             self.log("Start downloading area info: %s" % search_url)
-            response = urllib.urlopen(search_url)
+            response = make_request(search_url)
             resp = response.read()
             data = json.loads(resp)
             if data:
@@ -216,7 +231,7 @@ class Area:
             if meta_url:
                 self.log("Start downloading image meta.")
                 try:
-                    response = urllib.urlopen(meta_url)
+                    response = make_request(meta_url)
                     read = response.read()
                     data = json.loads(read)
                     if data.get("href"):
