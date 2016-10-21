@@ -2,11 +2,12 @@
 from __future__ import print_function, unicode_literals, division
 
 import json
-from itertools import chain, product
 import math
+import os
 import random
 import threading
-import os
+from itertools import chain, product
+
 from PIL import Image
 
 try:
@@ -278,7 +279,7 @@ class BingMerger(TileMerger, object):
 
 
 class GoogleMerger(UrlTileMerger):
-    url = "http://khm0.googleapis.com/kh?v=173&x={x}&y={y}&z={z}"
+    url = "http://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"  # "http://khm0.googleapis.com/kh?v=173&x={x}&y={y}&z={z}"
     file_name_prefix = 'google'
     crs = 3857
 
