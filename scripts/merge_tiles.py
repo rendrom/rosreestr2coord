@@ -134,7 +134,7 @@ class TileMerger:
                     url = self.get_url(x, y, self.zoom)
                     tile = make_request(url)
                     if tile:
-                        self.write_image(tile.read(), file_path)
+                        self.write_image(tile, file_path)
                         self.count += 1
                 else:
                     self.count += 1
@@ -379,7 +379,7 @@ class PkkAreaMerger(TileMerger, object):
             if meta_url:
                 try:
                     response = make_request(meta_url)
-                    read = response.read()
+                    read = response
                     data = json.loads(read)
                     if data.get("href"):
                         self._image_extent_list.append(data.get("extent"))

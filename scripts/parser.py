@@ -185,7 +185,7 @@ class Area:
             search_url = self.feature_info_url + self.clear_code(self.code)
             self.log("Start downloading area info: %s" % search_url)
             response = make_request(search_url)
-            resp = response.read()
+            resp = response
             data = json.loads(resp)
             if data:
                 feature = data.get("feature")
