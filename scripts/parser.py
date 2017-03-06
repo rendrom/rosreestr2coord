@@ -102,7 +102,8 @@ class Area:
         self.epsilon = epsilon
         self.code = code
         self.code_id = ""
-        self.file_name = self.code.replace(":", "-")
+        self.file_name = self.code[:]
+        self.file_name.replace(":", "-")
 
         self.coord_out = coord_out
 
@@ -142,7 +143,8 @@ class Area:
                     self.width = image.real_width
                     self.height = image.real_height
                     self.image_extent = image.image_extent
-                except Exception:
+                except Exception as er:
+                    print(er)
                     self.image_url = self.get_image_url(f)
                     if self.image_url:
                         image = self.download_image(f)

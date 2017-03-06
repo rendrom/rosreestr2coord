@@ -400,16 +400,20 @@ class PkkAreaMerger(TileMerger, object):
             tiles = []
             imx = 0
             imy = 0
-            for x in range(dx + 1):
+            for x in range(dx):
                 imy = 0
                 height = 0
-                for y in reversed(range(dy + 1)):
+                for y in reversed(range(dy)):
                     tile_file = os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format))
-                    tile = Image.open(tile_file)
-                    tiles.append((tile, (imx, imy)))
-                    imy += tile.width
-                    if tile.height > height:
-                        height = tile.height
+                    try:
+                        tile = Image.open(tile_file)
+                        tiles.append((tile, (imx, imy)))
+                        imy += tile.width
+                        if tile.height > height:
+                            height = tile.height
+                    except Exception as er:
+                        print(er)
+                        pass
                 imx += height
             path = os.path.join(self.output_dir, filename)
 
