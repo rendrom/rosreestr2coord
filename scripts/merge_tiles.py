@@ -291,7 +291,7 @@ class PkkAreaMerger(TileMerger, object):
     file_name_prefix = 'pkk'
     url = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
     crs = 3857
-    tile_size = (2000, 2000)
+    tile_size = (1000, 1000)
     use_cache = False
 
     def __init__(self, output_format, clear_code, **kwargs):
@@ -307,6 +307,14 @@ class PkkAreaMerger(TileMerger, object):
 
         self._image_extent_list = []
         self.image_extent = {}
+
+        if self.total > 1:
+            raise Exception("Area is too big. Do not support in current version.")
+            
+        xy = self.xy_range
+        max_size = max(int(math.ceil((xy["xMax"] - xy["xMin"]))), int(math.ceil((xy["yMax"] - xy["yMin"]))))
+        self.tile_size = (max_size, max_size)
+        
 
     def get_tile_dir(self, zoom):
         return os.path.join(self.output_dir, "%s" % self.file_name_prefix.replace(":", "_"))
@@ -400,10 +408,10 @@ class PkkAreaMerger(TileMerger, object):
             tiles = []
             imx = 0
             imy = 0
-            for x in range(dx + 1):
+            for x in range(dx):
                 imy = 0
                 height = 0
-                for y in reversed(range(dy + 1)):
+                for y in reversed(range(dy)):
                     tile_file = os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format))
                     tile = Image.open(tile_file)
                     tiles.append((tile, (imx, imy)))

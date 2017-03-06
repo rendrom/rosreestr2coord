@@ -19,7 +19,7 @@ except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 ##############
 # SEARCH URL #
@@ -102,7 +102,7 @@ class Area:
         self.epsilon = epsilon
         self.code = code
         self.code_id = ""
-        self.file_name = self.code.replace(":", "-")
+        self.file_name = self.code.replace(":", "_")
 
         self.coord_out = coord_out
 
@@ -132,20 +132,15 @@ class Area:
             tmp_dir = os.path.join(self.media_path, "tmp")
             if not os.path.isdir(tmp_dir):
                 os.makedirs(tmp_dir)
-            for f in formats:
-                image = None
-                try:
-                    image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=with_log,
-                                          clear_code=self.clear_code(self.code_id), output_dir=tmp_dir)
-                    image.download()
-                    self.image_path = image.merge_tiles()
-                    self.width = image.real_width
-                    self.height = image.real_height
-                    self.image_extent = image.image_extent
-                except Exception:
-                    self.image_url = self.get_image_url(f)
-                    if self.image_url:
-                        image = self.download_image(f)
+            for f in formats:           
+                image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=with_log,
+                                        clear_code=self.clear_code(self.code_id), output_dir=tmp_dir)
+                image.download()
+                self.image_path = image.merge_tiles()
+                self.width = image.real_width
+                self.height = image.real_height
+                self.image_extent = image.image_extent
+         
 
                 if image:
                     self.get_geometry()
@@ -160,7 +155,7 @@ class Area:
         if self.coord_out:
             setattr(self, "coord_out", self.coord_out)
         self.get_geometry()
-        self.file_name = self.code.replace(":", "-")
+        self.file_name = self.code.replace(":", "_")
 
     def get_coord(self):
         if self.xy:
@@ -201,70 +196,6 @@ class Area:
                 return feature
         except Exception as error:
             self.log(error)
-        return False
-
-    def get_image_url(self, output_format):
-        if self.code_id and self.extent:
-            ex = self.get_buffer_extent_list()
-            dx, dy = map(lambda i: int((ex[i[0]] - ex[i[1]]) * 30), [[2, 0], [3, 1]])
-            code = self.clear_code(self.code_id)
-            layers = map(str, range(0, 20))
-            params = {
-                "dpi": 96,
-                "transparent": "false",
-                "format": "png",
-                "layers": "show:%s" % ",".join(layers),
-                "bbox": ",".join(map(str, ex)),
-                "bboxSR": 102100,
-                "imageSR": 102100,
-                "size": "%s,%s" % (dx, dy),
-                "layerDefs": {layer: str("ID = '%s'" % code) for layer in layers},
-                "f": "json"
-            }
-            if output_format:
-                params["format"] = output_format
-            url_parts = list(urlparse.urlparse(IMAGE_URL))
-            query = dict(urlparse.parse_qsl(url_parts[4]))
-            query.update(params)
-            url_parts[4] = urlencode(query)
-            meta_url = urlparse.urlunparse(url_parts)
-            if meta_url:
-                self.log("Start downloading image meta.")
-                try:
-                    response = make_request(meta_url)
-                    read = response.read()
-                    data = json.loads(read)
-                    if data.get("href"):
-                        image_url = meta_url.replace("f=json", "f=image")
-                        self.width = data["width"]
-                        self.height = data["height"]
-                        self.image_extent = data["extent"]
-                        # self.log(meta_url)
-                        self.log("Meta info received.")
-                        return image_url
-                    else:
-                        self.log("Can't get image meta data from: %s" % meta_url)
-                except Exception as er:
-                    self.log(er)
-        elif not self.extent:
-            self.log("Can't get image without extent")
-        return False
-
-    def download_image(self, output_format="png"):
-        try:
-            self.log('Start image downloading.')
-            image_file = urllib.URLopener()
-            basedir = self.media_path
-            savedir = os.path.join(basedir, "tmp")
-            if not os.path.isdir(savedir):
-                os.makedirs(savedir)
-            file_path = os.path.join(savedir, "%s.%s" % (self.file_name, output_format))
-            image_file.retrieve(self.image_url, file_path)
-            self.image_path = file_path
-            self.log('Downloading complete.')
-            return image_file
-        except Exception:
-            self.log("Can not upload image.")
         return False
 
     @staticmethod
