@@ -7,7 +7,6 @@ import os
 from scripts.batch import batch_parser
 from scripts.parser import Area, TYPES
 
-
 def getopts():
     import argparse
     import textwrap
@@ -94,7 +93,7 @@ def get_by_code(code, path, area_type, catalog_path, with_attrs=False, epsilon=5
     abspath = os.path.abspath(output)
     geojson = area.to_geojson_poly(with_attrs=with_attrs)
     if geojson:
-        filename = '%s.geojson' % area.file_name
+        filename = '%s.geojson' % area.file_name.replace(":", "_")
         geojson_path = os.path.join(abspath, "geojson")
         if not os.path.isdir(geojson_path):
             os.makedirs(geojson_path)

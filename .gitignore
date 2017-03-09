@@ -15,3 +15,5 @@ env/
 output/
 /tests/output/
 /gui/client/dist/
+
+node_modules

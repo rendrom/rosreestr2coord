@@ -12,6 +12,8 @@ module.exports = {
     resolve: {
         extensions: ['.js'],
         alias: {
+            proj4: helpers.root("/node_modules/proj4/dist/proj4.js"),
+
             leaflet_css: helpers.root("/node_modules/leaflet/dist/leaflet.css"),
             leaflet_marker: helpers.root("/node_modules/leaflet/dist/images/marker-icon.png"),
             leaflet_marker_2x: helpers.root("/node_modules/leaflet/dist/images/marker-icon-2x.png"),

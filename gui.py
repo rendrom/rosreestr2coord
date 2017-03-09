@@ -51,6 +51,7 @@ class MainWindow(QtGui.QWidget):
     @QtCore.pyqtSlot(str)
     def onSearchClick(self, code, area_type=1):
         code = str(code)
+        print(code)
         area = get_by_code(code, path="", area_type=area_type, catalog_path="", with_attrs=False, epsilon=5,
                 coord_out='EPSG:4326', output="output", display=False, with_log=True)
 
@@ -68,7 +69,6 @@ class MainWindow(QtGui.QWidget):
             if attrs:
 
                 data["attrs"] = attrs
-
 
             # geojson_poly = area.to_geojson_poly()
             geojson_poly = coords2geojson(data["coordinates"], "polygon", area.coord_out)
@@ -88,7 +88,6 @@ class MainWindow(QtGui.QWidget):
     def onSearchResult(self, data):
         frame = self.view.page().mainFrame()
         data = json.dumps(data)
-        print(data)
         frame.evaluateJavaScript('window.onSearchResult({});'.format(data))
 
 

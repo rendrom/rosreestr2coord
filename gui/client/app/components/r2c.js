@@ -566,22 +566,25 @@ window.onSearchResult = function (data) {
 };
 
 let getAreaByCode = function (code) {
+    try {
+        startLoading();
 
-    startLoading();
-
-    if (code) {
-        onSearchClick(code);
-        // getJSON(`/get/${code}/${types.type}`, {method: "POST"})
-        //     .then(data => {
-        //         input.value = code;
-        //         build(data);
-        //         stopLoading();
-        //     })
-        //     .catch(() => {
-        //         stopLoading();
-        //         alert("Поиск не дал результатов. Измените кадастровый номер и попробуйте ещё раз.");
-        //         console.log("Error");
-        //     })
+        if (code) {
+            onSearchClick(code);
+            // getJSON(`/get/${code}/${types.type}`, {method: "POST"})
+            //     .then(data => {
+            //         input.value = code;
+            //         build(data);
+            //         stopLoading();
+            //     })
+            //     .catch(() => {
+            //         stopLoading();
+            //         alert("Поиск не дал результатов. Измените кадастровый номер и попробуйте ещё раз.");
+            //         console.log("Error");
+            //     })
+        }
+    } catch (er) {
+        // alert(er);
     }
 };
 
