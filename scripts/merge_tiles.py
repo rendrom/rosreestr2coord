@@ -109,8 +109,10 @@ class TileMerger:
         else:
             self.lazy_download()
         if self.count == self.total:
-            with Image.open(os.path.join(self.tile_dir, os.listdir(self.tile_dir)[0])) as im:
-                self.tile_size = im.size
+            im = Image.open(os.path.join(self.tile_dir, os.listdir(self.tile_dir)[0]))
+            buffer = im.load()
+            print(buffer)
+            self.tile_size = im.size
         self.log('Downloading completed. Uploaded tiles - %s' % self.count)
         return self.count
 
