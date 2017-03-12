@@ -18,23 +18,39 @@ def xy2lonlat(x, y):
 USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
 
 
-
 def make_request(url):
-    import pycurl
-    from StringIO import StringIO
+    request = url
+    # request = urllib2.Request(url, None, {'User-Agent': 'Mozilla/5.0'})
+    try:
+        resp = urllib.urlopen(request)
+        return resp.read()
+    # except urllib2.HTTPError, e:
+    #     print('HTTPError = ' + str(e.code))
+    # except urllib2.URLError, e:
+    #     print('URLError = ' + str(e.reason))
+    # except httplib.HTTPException, e:
+    #     print('HTTPException')
+    except Exception:
+        # import traceback
+        pass  # print('generic exception: ' + traceback.format_exc())
 
-    buffer = StringIO()
-    c = pycurl.Curl()
-    c.setopt(c.URL, url)
-    c.setopt(c.WRITEDATA, buffer)
-    c.perform()
-    c.close()
 
-    body = buffer.getvalue()
-    # Body is a string in some encoding.
-    # In Python 2, we can print it without knowing what the encoding is.
-    print(body)
-    return body
+# def make_request(url):
+#     import pycurl
+#     from StringIO import StringIO
+
+#     buffer = StringIO()
+#     c = pycurl.Curl()
+#     c.setopt(c.URL, url)
+#     c.setopt(c.WRITEDATA, buffer)
+#     c.perform()
+#     c.close()
+
+#     body = buffer.getvalue()
+#     # Body is a string in some encoding.
+#     # In Python 2, we can print it without knowing what the encoding is.
+#     print(body)
+#     return body
 
 # def make_request(url):
 #     request = url
