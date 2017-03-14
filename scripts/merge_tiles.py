@@ -111,7 +111,6 @@ class TileMerger:
         if self.count == self.total:
             im = Image.open(os.path.join(self.tile_dir, os.listdir(self.tile_dir)[0]))
             buffer = im.load()
-            print(buffer)
             self.tile_size = im.size
         self.log('Downloading completed. Uploaded tiles - %s' % self.count)
         return self.count
@@ -310,13 +309,10 @@ class PkkAreaMerger(TileMerger, object):
         self._image_extent_list = []
         self.image_extent = {}
 
-        if self.total > 1:
-            raise Exception("Area is too big. Do not support in current version.")
-            
-        xy = self.xy_range
-        max_size = max(int(math.ceil((xy["xMax"] - xy["xMin"]))), int(math.ceil((xy["yMax"] - xy["yMin"]))))
-        self.tile_size = (max_size, max_size)
-        
+        if self.total == 1:
+            xy = self.xy_range
+            max_size = max(int(math.ceil((xy["xMax"] - xy["xMin"]))), int(math.ceil((xy["yMax"] - xy["yMin"]))))
+            self.tile_size = (max_size, max_size)   
 
     def get_tile_dir(self, zoom):
         return os.path.join(self.output_dir, "%s" % self.file_name_prefix.replace(":", "_"))
@@ -375,7 +371,7 @@ class PkkAreaMerger(TileMerger, object):
                 "bbox": ",".join(map(str, self._get_bbox_by_xy(x, y))),
                 "bboxSR": 102100,
                 "imageSR": 102100,
-                "size": "%s,%s" % (dx * 10, dy * 10),
+                "size": "%s,%s" % (dx, dy),
                 "layerDefs": {layer: str("ID = '%s'" % code) for layer in layers},
                 "f": "json"
             }
@@ -402,46 +398,55 @@ class PkkAreaMerger(TileMerger, object):
             print("Can't get image without extent")
         return False
 
-    def merge_tiles(self):
+    def _merge_tiles(self): 
         dx, dy = self._get_delta()
-        if self.count == self.total:
-            self.log('Merging tiles...')
-            filename = '%s%s' % (self.file_name_prefix, self.tile_format)
-            tiles = []
-            imx = 0
+        self.log('Merging tiles...')
+        filename = '%s%s' % (self.file_name_prefix, self.tile_format)
+        tiles = []
+        imx = 0
+        imy = 0
+        for x in range(dx):
             imy = 0
-            for x in range(dx):
-                imy = 0
-                height = 0
-                for y in reversed(range(dy)):
-                    tile_file = os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format))
-                    try:
-                        tile = Image.open(tile_file)
-                        tiles.append((tile, (imx, imy)))
-                        imy += tile.width
-                        if tile.height > height:
-                            height = tile.height
-                    except Exception as er:
-                        print(er)
-                        pass
-                imx += height
-            path = os.path.join(self.output_dir, filename)
+            height = 0
+            for y in reversed(range(dy)):
+                tile_file = os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format))
+                try:
+                    tile = Image.open(tile_file)
+                    tiles.append((tile, (imx, imy)))
+                    imy += tile.width
+                    if tile.height > height:
+                        height = tile.height
+                except Exception as er:
+                    print(er)
+                    pass
+            imx += height
+        path = os.path.join(self.output_dir, filename)
 
-            self.real_width = imx
-            self.real_height = imy
+        self.real_width = imx
+        self.real_height = imy
 
+        out = Image.new('RGB', (self.real_width, self.real_height))
+        for t in tiles:
+            out.paste(t[0], t[1])
+        out.save(path)
+        return path
+
+    def merge_tiles(self):
+        if self.count == self.total:
+            if self.count > 1:
+                path = self._merge_tiles()
+            else:
+                path = os.path.join(self.tile_dir, "%s_%s%s" % (0, 0, self.tile_format))
+                tile = Image.open(path)
+                self.real_width = tile.width
+                self.real_height = tile.height      
             bb = self.bbox
             xmax = max([x["xmax"] for x in self._image_extent_list])
             ymax = max([x["ymax"] for x in self._image_extent_list])
             self.image_extent = {"xmin": bb[0], "ymin": bb[1], "xmax": xmax, "ymax": ymax}
-            out = Image.new('RGB', (self.real_width, self.real_height))
-            for t in tiles:
-                out.paste(t[0], t[1])
-            out.save(path)
             outpath = os.path.abspath(path)
             self.log('You raster - %s' % outpath)
-            return outpath
-
+            return outpath    
 
 def deg2num(lat_deg, lon_deg, zoom):
     lat_rad = math.radians(lat_deg)
