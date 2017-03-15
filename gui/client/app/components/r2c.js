@@ -588,7 +588,6 @@ let getAreaByCode = function (code) {
 };
 
 
-
 // getLink.onclick = function () {
 //     getLink.blur();
 //     if (code) {

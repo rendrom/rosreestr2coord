@@ -46,3 +46,5 @@ setup(
         ],
     },
 )
+
+# https://pypi.python.org/pypi/twine
