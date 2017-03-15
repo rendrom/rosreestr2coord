@@ -7,6 +7,7 @@ import os
 import random
 import threading
 from itertools import chain, product
+from logger import logger
 
 from PIL import Image
 
@@ -33,7 +34,6 @@ def chunks(l, n):
 
 def thread_download(target, xy_tile, total, thread_count=4):
     result = Queue.Queue()
-
     def task_wrapper(*args):
         result.put(target(*args))
 
@@ -102,7 +102,7 @@ class TileMerger:
         return (xy["xMax"] - xy["xMin"] + 1) * (xy["yMax"] - xy["yMin"] + 1)
 
     def download(self):
-        self.log(u'Run download:')
+        self.log(u'Run tiles download:')
         self.stop = False
         if self.bbox:
             self.bbox_download()
@@ -124,7 +124,7 @@ class TileMerger:
         p = list(product(range(xy['xMin'], xy['xMax'] + 1), range(xy['yMin'], xy['yMax'] + 1)))
         self.stream(target=self.fetch_tile, xy_tile=p, total=self.total)
         if self.with_log:
-            print()
+            pass
 
     def fetch_tile(self, porties):
         for x, y in sorted(porties, key=lambda k: random.random()):
@@ -321,7 +321,6 @@ class PkkAreaMerger(TileMerger, object):
         dx, dy = self._get_delta()
         p = list(product(range(dx), range(dy)))
         self.stream(target=self.fetch_tile, xy_tile=p, total=self.total)
-        self.log("")
 
     def get_url(self, x, y, z=None):
         return self.get_image_url(x, y)
@@ -357,7 +356,6 @@ class PkkAreaMerger(TileMerger, object):
 
     def get_image_url(self, x, y):
         output_format = self.output_format
-
         if self.clear_code and self.extent:
             dx, dy = self.tile_size
             code = self.clear_code
@@ -383,19 +381,18 @@ class PkkAreaMerger(TileMerger, object):
             url_parts[4] = urlencode(query)
             meta_url = urlparse.urlunparse(url_parts)
             if meta_url:
-                try:
+                try:                   
                     response = make_request(meta_url)
-                    read = response
-                    data = json.loads(read)
+                    data = json.loads(response)
                     if data.get("href"):
                         self._image_extent_list.append(data.get("extent"))
                         return meta_url.replace("f=json", "f=image")
                     else:
-                        print("Can't get image meta data from: %s" % meta_url)
+                        logger.warning("Can't get image meta data from: %s" % meta_url)
                 except Exception as er:
-                    print(er)
+                    logger.warning(er)
         elif not self.extent:
-            print("Can't get image without extent")
+            logger.warning("Can't get image without extent")
         return False
 
     def _merge_tiles(self): 
@@ -417,8 +414,7 @@ class PkkAreaMerger(TileMerger, object):
                     if tile.height > height:
                         height = tile.height
                 except Exception as er:
-                    print(er)
-                    pass
+                    logger.warning(er)
             imx += height
         path = os.path.join(self.output_dir, filename)
 

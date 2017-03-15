@@ -1,6 +1,7 @@
 from __future__ import division
 import math
 import urllib
+from logger import logger 
 
 
 def y2lat(y):
@@ -19,20 +20,15 @@ USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36
 
 
 def make_request(url):
-    request = url
-    # request = urllib2.Request(url, None, {'User-Agent': 'Mozilla/5.0'})
     try:
-        resp = urllib.urlopen(request)
+        url = url.encode('utf-8')
+        logger.debug(url)
+        resp = urllib.urlopen(url)
         return resp.read()
-    # except urllib2.HTTPError, e:
-    #     print('HTTPError = ' + str(e.code))
-    # except urllib2.URLError, e:
-    #     print('URLError = ' + str(e.reason))
-    # except httplib.HTTPException, e:
-    #     print('HTTPException')
-    except Exception:
-        # import traceback
-        pass  # print('generic exception: ' + traceback.format_exc())
+    except Exception as er:
+        logger.info(url)
+        logger.error(er)
+
 
 
 # def make_request(url):
@@ -53,16 +49,10 @@ def make_request(url):
 #     return body
 
 # def make_request(url):
-#     request = url
-#     # request = urllib2.Request(url, None, {'User-Agent': USER_AGENT})
+#     import urllib2
+#     logger.debug(url)
 #     try:
-#         return urllib.urlopen(request)
-#     # except urllib2.HTTPError, e:
-#     #     print('HTTPError = ' + str(e.code))
-#     # except urllib2.URLError, e:
-#     #     print('URLError = ' + str(e.reason))
-#     # except httplib.HTTPException, e:
-#     #     print('HTTPException')
-#     except Exception:
-#         # import traceback
-#         pass  # print('generic exception: ' + traceback.format_exc())
+#         f = urllib2.urlopen(url)
+#         return f.read()
+#     except Exception as er:
+#         logger.warning(er)

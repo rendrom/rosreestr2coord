@@ -1,5 +1,6 @@
 # coding: utf-8
 from __future__ import print_function, division
+from logger import logger
 
 import copy
 import json
@@ -84,7 +85,7 @@ class Area:
     buffer = 10
     save_attrs = ["code", "area_type", "attrs", "image_path", "center", "extent", "image_extent", "width", "height"]
 
-    def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=False, catalog="",
+    def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=True, catalog="",
                  coord_out="EPSG:3857"):
         self.with_log = with_log
         self.area_type = area_type
@@ -194,7 +195,7 @@ class Area:
                         self.log("Area info downloaded.")
                 return feature
         except Exception as error:
-            self.log(error)
+            self.error(error)
         return False
 
     @staticmethod
@@ -271,7 +272,7 @@ class Area:
 
             return image_xy_corners
         except Exception as ex:
-            self.log(ex)
+            self.error(ex)
         return image_xy_corners
 
     def image_corners_to_coord(self, image_xy_corners):
@@ -294,6 +295,7 @@ class Area:
         try:
             from matplotlib import pyplot as plt
         except ImportError:
+            self.error('Matplotlib is not installed.')
             raise ImportError('Matplotlib is not installed.')
 
         img = cv2.imread(self.image_path)
@@ -305,3 +307,7 @@ class Area:
     def log(self, msg):
         if self.with_log:
             print(msg)
+
+    def error(self, msg):
+        if self.with_log:
+            logger.warning(msg)

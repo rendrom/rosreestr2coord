@@ -9,6 +9,7 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 
 from scripts.console import get_by_code
 from scripts.export import coords2geojson
+from scripts.logger import logger
 
 _client_dist = os.path.join(*['gui', 'client', 'dist'])
 
@@ -51,7 +52,6 @@ class MainWindow(QtGui.QWidget):
     @QtCore.pyqtSlot(str)
     def onSearchClick(self, code, area_type=1):
         code = str(code)
-        print(code)
         area = get_by_code(code, path="", area_type=area_type, catalog_path="", with_attrs=False, epsilon=5,
                 coord_out='EPSG:4326', output="output", display=False, with_log=True)
 
@@ -79,6 +79,9 @@ class MainWindow(QtGui.QWidget):
 
 
 if __name__ == '__main__':
-    app = QtGui.QApplication([])
-    w = MainWindow()
+    try:
+        app = QtGui.QApplication([])
+        w = MainWindow()
+    except Exception as er:
+        logger(er)
     app.exec_()
