@@ -60,27 +60,14 @@ class MainWindow(QtGui.QWidget):
         xy = area.get_coord()
         if len(xy) and len(xy[0]):
             data["coordinates"] = copy.deepcopy(xy)
-            # for geom in data["coordinates"]:
-            #     for p in range(len(geom)):
-            #         geom[p] = _transform_xy_array(geom[p])
             if area.center:
                 data["center_pkk"] = area.center
             attrs = area.get_attrs()
             if attrs:
-
                 data["attrs"] = attrs
 
-            # geojson_poly = area.to_geojson_poly()
             geojson_poly = coords2geojson(data["coordinates"], "polygon", area.coord_out)
             if geojson_poly:
-                try:
-                    geometry = coords2geojson(area.get_coord(), "polygon", area.coord_out)
-                    # poly = GEOSGeometry(json.dumps(geometry['features'][0]['geometry']), srid=3857)
-                    # poly.transform(4326)
-                    # data["kml"] = poly.kml
-
-                except Exception as er:
-                    print(er)
                 data["geojson"] = json.dumps(geojson_poly)
 
         self.onSearchResult(data)

@@ -375,10 +375,10 @@ let build = function (data) {
             });
 
         });
-        // map.fitBounds(featureGroup.getBounds());
-        map.flyToBounds(featureGroup.getBounds());
+        map.fitBounds(featureGroup.getBounds());
+        // map.flyToBounds(featureGroup.getBounds());
         showCoordList();
-        startDraw();
+        // startDraw();
     }
 };
 
@@ -405,17 +405,17 @@ let prepare = function (data) {
         infoBlock.appendChild(info);
     }
     // PKK link with Search
-    if (data.center_pkk && data.code) {
-        let c = data.center_pkk;
-        let link = document.createElement("a");
-        let linkText = document.createTextNode("На сайте PKK");
-        link.className = "info-item link";
-        pkk_url = `http://pkk5.rosreestr.ru/#x=${c.x}&y=${c.y}&text=${data.code}&app=search&opened=1`;
-        link.setAttribute('href', pkk_url);
-        link.setAttribute('target', "_blank");
-        link.appendChild(linkText);
-        infoBlock.appendChild(link);
-    }
+    // if (data.center_pkk && data.code) {
+    //     let c = data.center_pkk;
+    //     let link = document.createElement("a");
+    //     let linkText = document.createTextNode("На сайте PKK");
+    //     link.className = "info-item link";
+    //     pkk_url = `http://pkk5.rosreestr.ru/#x=${c.x}&y=${c.y}&text=${data.code}&app=search&opened=1`;
+    //     link.setAttribute('href', pkk_url);
+    //     link.setAttribute('target', "_blank");
+    //     link.appendChild(linkText);
+    //     infoBlock.appendChild(link);
+    // }
 
     // let filename, pom;
     // let name = data.code.replace(/:/g, "-");
@@ -568,7 +568,6 @@ window.onSearchResult = function (data) {
 let getAreaByCode = function (code) {
     try {
         startLoading();
-
         if (code) {
             onSearchClick(code);
             // getJSON(`/get/${code}/${types.type}`, {method: "POST"})
@@ -618,37 +617,37 @@ let setMapCursor = function () {
     map._container.style.cursor = mapClickModeOn ? "crosshair" : "";
 };
 
-let onMapClickModeBtnClick = function (e) {
-    getAreaFromLatLng(e.latlng);
-};
+// let onMapClickModeBtnClick = function (e) {
+//     getAreaFromLatLng(e.latlng);
+// };
 
-let getAreaFromLatLng = function (latlng) {
-    let urlStr = serializeUrlParam({
-        text: [latlng.lat, latlng.lng].join(","),
-        tolerance: 1
-    });
-    startLoading();
-    return getJSON(`http://pkk5.rosreestr.ru/api/features?${urlStr}`).then((data) => {
-        stopLoading();
-        if (data && data.features) {
-            let pkkFeature = data.features.find((obj) => {
-                return (obj.attrs && obj.attrs.cn && obj.attrs.cn.split(":").length === 4)
-            });
-            if (pkkFeature && pkkFeature.center) {
-                getAreaByCode(pkkFeature.attrs.cn);
-            }
-        }
-    }).catch(()=> {
-        startLoading();
-    })
-};
+// let getAreaFromLatLng = function (latlng) {
+//     let urlStr = serializeUrlParam({
+//         text: [latlng.lat, latlng.lng].join(","),
+//         tolerance: 1
+//     });
+//     startLoading();
+//     return getJSON(`http://pkk5.rosreestr.ru/api/features?${urlStr}`).then((data) => {
+//         stopLoading();
+//         if (data && data.features) {
+//             let pkkFeature = data.features.find((obj) => {
+//                 return (obj.attrs && obj.attrs.cn && obj.attrs.cn.split(":").length === 4)
+//             });
+//             if (pkkFeature && pkkFeature.center) {
+//                 getAreaByCode(pkkFeature.attrs.cn);
+//             }
+//         }
+//     }).catch(()=> {
+//         startLoading();
+//     })
+// };
 
 
 // OTHER
 
 
-if (window && !window.build) {
-    window.build = build;
-}
+// if (window && !window.build) {
+//     window.build = build;
+// }
 
 

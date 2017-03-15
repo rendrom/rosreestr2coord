@@ -18,26 +18,28 @@ export class AreaTypes {
     }
 
     _fillAreaTypeOptions() {
-
-
-        AREA_TYPES.forEach((value, key) => {
-            let option = document.createElement("li");
-            let a = document.createElement("a");
-            a.href = "#";
-            a.innerHTML = key;
-            a.onclick = () => {
-                this.setType(key)
-            };
-            option.appendChild(a);
-            this.dropdownUl.appendChild(option);
-        })
+        if (this.dropdown) {
+            AREA_TYPES.forEach((value, key) => {
+                let option = document.createElement("li");
+                let a = document.createElement("a");
+                a.href = "#";
+                a.innerHTML = key;
+                a.onclick = () => {
+                    this.setType(key)
+                };
+                option.appendChild(a);
+                this.dropdownUl.appendChild(option);
+            })
+        }
 
     }
 
     setType(key) {
-        this._type = AREA_TYPES.get(key);
-        this.dropdown.getElementsByClassName("type-selected")[0].innerHTML = key;
-        this.close();
+        if (this.dropdown) {
+            this._type = AREA_TYPES.get(key);
+            this.dropdown.getElementsByClassName("type-selected")[0].innerHTML = key;
+            this.close();
+        }
     }
 
     setTypeById(id) {

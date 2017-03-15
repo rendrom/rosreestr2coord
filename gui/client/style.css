@@ -3,16 +3,18 @@ html, body, #result, .main, .map-container, #map {
 }
 
 html, body, #result {
-    padding-bottom: 60px;
+    padding-bottom: 20px;
 }
 
 .page-header {
-    margin: 20px 0 20px;
+    margin: 10px 0 10px;
 }
 
 .container {
+    margin-right: 20px; 
+    margin-left: 20px; 
     width: auto;
-    max-width: 800px;
+    /*max-width: 800px;*/
     padding: 0 15px;
 }
 
@@ -172,7 +174,7 @@ html, body, #result {
     padding-right: 3px;
 }
 
-@media (max-width: 992px) {
+/*@media (max-width: 992px) {
     #area-code-input, #get-area {
         height: 35px;
         font-size: 16pt;
@@ -193,4 +195,4 @@ html, body, #result {
     .map-container, .attr-container {
         height: 50%;
     }
-}
+}*/

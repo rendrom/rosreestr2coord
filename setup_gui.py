@@ -1,6 +1,6 @@
 import sys
 from cx_Freeze import setup, Executable
-from merge_tiles import VERSION
+from scripts.parser import VERSION
 
 base = None
 if sys.platform == 'win32':
@@ -8,7 +8,8 @@ if sys.platform == 'win32':
 
 options = {
     "build_exe": {"includes": ['atexit', 'PyQt4.QtWebKit'],
-                  "include_files": ['web'],
+    
+                  "include_files": ['gui/dist'],
                   "excludes": ["tkinter", "PyQt4.QtSql", "sqlite3",
                                   "scipy.lib.lapack.flapack",
                                   "PyQt4.QtScript",
@@ -19,10 +20,10 @@ options = {
 }
 
 exe = Executable(
-    script="tileparser_gui.py",
+    script="gui.py",
     initScript=None,
     base=base,  # None or "Win32GUI"
-    targetName="bing.exe",  # this is the name of the executable file
+    targetName="rosreestr2coord_gui.exe",  # this is the name of the executable file
     copyDependentFiles=True,
     compress=True,
     appendScriptToExe=True,
@@ -30,9 +31,11 @@ exe = Executable(
     icon='TileParser.ico'  # if you want to use an icon file, specify the file name here
 )
 
-setup(name="Bing_tile_parser",
+setup(name="rosreestr2coord_gui",
       version="%s" % VERSION,
-      description="Bing tiles parser",
+      description="Get geometry from rosreestr",
+      author='Artemiy Doroshkov',
+      author_email='rendrom@gmail.com',
       options=options,
       executables=[exe]
       )
