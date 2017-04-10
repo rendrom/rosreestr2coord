@@ -5,10 +5,11 @@ from time import sleep
 from scripts.catalog import Catalog
 from scripts.export import area_json_output, area_csv_output, batch_csv_output
 from scripts.parser import Area, restore_area
+from scripts.utils import TimeoutException
 
 
 def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path="", coord_out="EPSG:3857",
-                 file_name="example", output=os.path.join("output"), repeat=0, areas=None, with_attrs=False, delay=1000):
+                 file_name="example", output=os.path.join("output"), repeat=0, areas=None, with_attrs=False, delay=1):
     if areas is None:
         areas = []
     catalog = Catalog(catalog_path)
@@ -19,8 +20,9 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
     print("================================")
     print("Launched parsing of %i areas:" % len(codes))
     print("================================")
+    need_sleep = 0
     for c in codes:
-        need_sleep = 0
+
         code = c.strip()
         print("%s" % code, end="")
         restore = catalog.find(code)
@@ -33,7 +35,11 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
                 restore = catalog.update(area)
                 print(" - ok", end="")
                 success += 1
-            except Exception:
+            except TimeoutException:
+                print(" - error")
+                print("Your IP is probably blocked. Try later or use proxy")
+                break
+            except Exception as er:
                 area = None
                 print(" - error", end="")
                 with_error.append(code)

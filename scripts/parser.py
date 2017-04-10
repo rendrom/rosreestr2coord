@@ -11,7 +11,7 @@ import os
 from catalog import Catalog
 from export import coords2geojson
 from scripts.merge_tiles import PkkAreaMerger
-from utils import xy2lonlat, make_request
+from utils import xy2lonlat, make_request, TimeoutException
 
 try:
     import urlparse
@@ -196,6 +196,8 @@ class Area:
                         self.center = feature["center"]
                         self.log("Area info downloaded.")
                 return feature
+        except TimeoutException:
+            raise TimeoutException()
         except Exception as error:
             self.error(error)
         return False

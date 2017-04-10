@@ -1,7 +1,7 @@
 from __future__ import division
 
 # Try to send request through a TOR
-# try: 
+# try:
 #     import socks  # SocksiPy module
 #     import socket
 #     SOCKS_PORT = 9150 # 9050
@@ -16,7 +16,8 @@ from __future__ import division
 # except:
 #     pass
 
-import urllib
+import socket
+# import urllib
 import math
 from logger import logger 
 
@@ -35,16 +36,20 @@ def xy2lonlat(x, y):
 
 USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
 
-def make_request(url):
-    try:
-        url = url.encode('utf-8')
-        logger.debug(url)
-        resp = urllib.urlopen(url)
-        read = resp.read()
-        return read
-    except Exception as er:
-        logger.info(url)
-        logger.error(er)
+
+class TimeoutException(Exception):
+    pass
+
+# def make_request(url):
+#     try:
+#         url = url.encode('utf-8')
+#         logger.debug(url)
+#         resp = urllib.urlopen(url)
+#         read = resp.read()
+#         return read
+#     except Exception as er:
+#         logger.info(url)
+#         logger.error(er)
 
 
 # def make_request(url):
@@ -64,11 +69,15 @@ def make_request(url):
 #     print(body)
 #     return body
 
-# def make_request(url):
-#     import urllib2
-#     logger.debug(url)
-#     try:
-#         f = urllib2.urlopen(url)
-#         return f.read()
-#     except Exception as er:
-#         logger.warning(er)
+
+def make_request(url):
+    import urllib2
+    url = url.encode('utf-8')
+    logger.debug(url)
+    try:
+        f = urllib2.urlopen(url, timeout=2)
+        read = f.read()
+        return read
+    except Exception as er:
+        logger.warning(er)
+        raise TimeoutException()

@@ -37,7 +37,7 @@ def getopts():
                         help='insert the area attributes in the geojson output')
     parser.add_argument('-d', '--display', action='store_const', const=True, required=False,
                         help='display plot (only for --code mode)')
-    parser.add_argument('-D', '--delay', action='store', type=int, required=False, default=1000,
+    parser.add_argument('-D', '--delay', action='store', type=int, required=False, default=1,
                         help='delay between request (only for --list mode)')
     parser.add_argument('-r', '--refresh', action='store_const', const=True, required=False,
                         help='do not use catalog')
