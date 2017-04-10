@@ -8,7 +8,7 @@ from scripts.parser import Area, restore_area
 
 
 def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path="", coord_out="EPSG:3857",
-                 file_name="example", output=os.path.join("output"), repeat=5, areas=None, with_attrs=False):
+                 file_name="example", output=os.path.join("output"), repeat=5, areas=None, with_attrs=False, delay=1000):
     if areas is None:
         areas = []
     catalog = Catalog(catalog_path)
@@ -20,12 +20,15 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
     print("Launched parsing of %i areas:" % len(codes))
     print("================================")
     for c in codes:
+        need_sleep = 0
         code = c.strip()
         print("%s" % code, end="")
         restore = catalog.find(code)
         if not restore:
             try:
+                sleep(need_sleep)
                 area = Area(code, media_path=media_path, area_type=area_type, with_log=with_log, coord_out=coord_out)
+                need_sleep = delay
                 assert (len(area.get_coord()) > 0)
                 restore = catalog.update(area)
                 print(" - ok", end="")
@@ -60,7 +63,7 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
     if len(with_error) and repeat:
         print("Retries parse areas with error")
         batch_parser(with_error, area_type=area_type, media_path=media_path, with_log=with_log, file_name=file_name,
-                     catalog_path=catalog_path, coord_out=coord_out, repeat=repeat - 1, areas=areas, output=output)
+                     catalog_path=catalog_path, coord_out=coord_out, repeat=repeat - 1, areas=areas, output=output, delay=delay)
     else:
         path = batch_csv_output(output, areas, file_name)
         print("Create output complete: %s" % path)

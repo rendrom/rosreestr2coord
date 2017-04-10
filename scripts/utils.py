@@ -24,7 +24,9 @@ def make_request(url):
         url = url.encode('utf-8')
         logger.debug(url)
         resp = urllib.urlopen(url)
-        return resp.read()
+        read = resp.read()
+        print(read)
+        return read
     except Exception as er:
         logger.info(url)
         logger.error(er)

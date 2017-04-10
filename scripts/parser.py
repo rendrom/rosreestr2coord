@@ -133,7 +133,8 @@ class Area:
             tmp_dir = os.path.join(self.media_path, "tmp")
             if not os.path.isdir(tmp_dir):
                 os.makedirs(tmp_dir)
-            for f in formats:           
+            for f in formats:
+                bbox = self.get_buffer_extent_list()    
                 image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=with_log,
                                         clear_code=self.clear_code(self.code_id), output_dir=tmp_dir)
                 image.download()

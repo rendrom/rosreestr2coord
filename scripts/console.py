@@ -37,6 +37,8 @@ def getopts():
                         help='insert the area attributes in the geojson output')
     parser.add_argument('-d', '--display', action='store_const', const=True, required=False,
                         help='display plot (only for --code mode)')
+    parser.add_argument('-D', '--delay', action='store', type=int, required=False, default=1000,
+                        help='delay between request (only for --list mode)')
     parser.add_argument('-r', '--refresh', action='store_const', const=True, required=False,
                         help='do not use catalog')
     # parser.add_argument('-x', '--csv', action='store_const', const=True, required=False,
@@ -61,6 +63,7 @@ def main():
     opt = getopts()
     code = opt.code
     output = opt.output if opt.output else os.path.join("output")
+    delay = getattr(opt, "delay", 1000)
     path = opt.path
     epsilon = opt.epsilon if opt.epsilon else 5
     area_type = opt.area_type if opt.area_type else 1
@@ -79,8 +82,7 @@ def main():
 
         f.close()
         batch_parser(codes, media_path=path, area_type=area_type, catalog_path=catalog_path, coord_out=coord_out,
-                     output=output,
-                     file_name=file_name, with_attrs=with_attrs)
+                     output=output, file_name=file_name, with_attrs=with_attrs, delay=delay)
 
     elif code:
         get_by_code(code, path, area_type, catalog_path, with_attrs, epsilon, coord_out, output, display)
