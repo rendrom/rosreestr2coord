@@ -3,7 +3,8 @@ tmp/
 *.pyc
 .DS_Store
 build/
-dist/
+dist
+!/gui/client/dist
 .env/
 env/
 *.egg-info/
