@@ -135,20 +135,21 @@ class Area:
                 os.makedirs(tmp_dir)
             for f in formats:
                 bbox = self.get_buffer_extent_list()    
-                image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=with_log,
-                                        clear_code=self.clear_code(self.code_id), output_dir=tmp_dir)
-                image.download()
-                self.image_path = image.merge_tiles()
-                self.width = image.real_width
-                self.height = image.real_height
-                self.image_extent = image.image_extent
+                if bbox:
+                    image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=with_log,
+                                            clear_code=self.clear_code(self.code_id), output_dir=tmp_dir)
+                    image.download()
+                    self.image_path = image.merge_tiles()
+                    self.width = image.real_width
+                    self.height = image.real_height
+                    self.image_extent = image.image_extent
 
-                if image:
-                    self.get_geometry()
-                    if catalog:
-                        self.catalog.update(self)
-                        self.catalog.close()
-                    break
+                    if image:
+                        self.get_geometry()
+                        if catalog:
+                            self.catalog.update(self)
+                            self.catalog.close()
+                        break
 
     def restore(self, restore):
         for a in self.save_attrs:
@@ -213,7 +214,10 @@ class Area:
         """add some buffer to ordered extent array"""
         ex = self.extent
         buf = self.buffer
-        ex = [ex["xmin"] - buf, ex["ymin"] - buf, ex["xmax"] + buf, ex["ymax"] + buf]
+        if ex and ex["xmin"]:
+            ex = [ex["xmin"] - buf, ex["ymin"] - buf, ex["xmax"] + buf, ex["ymax"] + buf]
+        else:
+            self.log("Area has no coordinates")
         return ex
 
     def get_geometry(self):

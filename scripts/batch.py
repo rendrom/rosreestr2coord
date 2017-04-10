@@ -1,14 +1,14 @@
 from __future__ import print_function, division
 
 import os
-
+from time import sleep
 from scripts.catalog import Catalog
 from scripts.export import area_json_output, area_csv_output, batch_csv_output
 from scripts.parser import Area, restore_area
 
 
 def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path="", coord_out="EPSG:3857",
-                 file_name="example", output=os.path.join("output"), repeat=5, areas=None, with_attrs=False, delay=1000):
+                 file_name="example", output=os.path.join("output"), repeat=0, areas=None, with_attrs=False, delay=1000):
     if areas is None:
         areas = []
     catalog = Catalog(catalog_path)
