@@ -74,6 +74,10 @@ TYPES = {
 }
 
 
+class NoCoordinatesException(Exception):
+    pass
+
+
 def restore_area(restore, coord_out):
     area = Area(coord_out=coord_out)
     area.restore(restore)
@@ -220,6 +224,7 @@ class Area:
             ex = [ex["xmin"] - buf, ex["ymin"] - buf, ex["xmax"] + buf, ex["ymax"] + buf]
         else:
             self.log("Area has no coordinates")
+            # raise NoCoordinatesException()
         return ex
 
     def get_geometry(self):
@@ -239,16 +244,20 @@ class Area:
                 ----outer contour---   --first hole contour-
         """
         image_xy_corner = self.image_xy_corner = self.get_image_xy_corner()
-        self.xy = copy.deepcopy(image_xy_corner)
-        for geom in self.xy:
-            for p in range(len(geom)):
-                geom[p] = self.image_corners_to_coord(geom[p])
-        return self.xy
+        if image_xy_corner:
+            self.xy = copy.deepcopy(image_xy_corner)
+            for geom in self.xy:
+                for p in range(len(geom)):
+                    geom[p] = self.image_corners_to_coord(geom[p])
+            return self.xy
+        return []
 
     def get_image_xy_corner(self):
         """get сartesian coordinates from raster"""
         import cv2
 
+        if not self.image_path:
+            return False
         image_xy_corners = []
         img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
         imagem = (255 - img)

@@ -18,3 +18,5 @@ output/
 /tests/output/
 
 node_modules
+
+list.txt

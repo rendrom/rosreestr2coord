@@ -18,17 +18,18 @@ def make_output(output, file_name, file_format, out_path=""):
 
 def _write_csv_row(f, area, header=False):
     try:
-        xy = copy.deepcopy(list(getattr(area, "xy")))
+        xy = copy.deepcopy(list(getattr(area, "xy", [])))
         for geom in xy:
             for poly in geom:
                 for c in range(len(poly)):
                     poly[c] = poly[c][::-1]
         attrs = getattr(area, "attrs", {})
         cols = [
-            {"name": "№", "value": attrs.get("cn", getattr(area, "code"))},
-            {"name": "Площадь", "value": attrs.get("area_value", "")},
-            {"name": "Цена", "value": attrs.get("cad_cost", "")},
-            {"name": "Координаты", "value": xy},
+            {"name": "code", "value": getattr(area, "code")},
+            {"name": "area", "value": attrs.get("area_value", "")},
+            {"name": "cost", "value": attrs.get("cad_cost", "")},
+            {"name": "address", "value": attrs.get("address", "").encode('utf-8').strip()},
+            {"name": "coordinates", "value": xy},
         ]
 
         if header:
@@ -37,7 +38,6 @@ def _write_csv_row(f, area, header=False):
         f.writerow(map(lambda x: x["value"], cols))
     except Exception as er:
         print(er)
-        pass
 
 
 def area_csv_output(output, area):
