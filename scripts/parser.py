@@ -171,14 +171,26 @@ class Area:
     def get_attrs(self):
         return self.attrs
 
-    def to_geojson_poly(self, with_attrs=False):
-        return self.to_geojson("polygon", with_attrs)
+    def to_geojson_poly(self, with_attrs=False, dumps=True):
+        return self.to_geojson("polygon", with_attrs, dumps)
 
-    def to_geojson(self, geom_type="point", with_attrs=False):
+    def to_geojson(self, geom_type="point", with_attrs=False, dumps=True):
         attrs = self.attrs if with_attrs and self.attrs else False
+        if attrs:
+            for a in attrs:
+                attr = attrs[a]
+                if isinstance(attr, basestring):
+                    try:
+                        attr = attr.encode('utf-8').strip()
+                        attrs[a] = attr
+                    except:
+                        pass
+                    
         feature_collection = coords2geojson(self.xy, geom_type, self.coord_out, attrs=attrs)
         if feature_collection:
-            return json.dumps(feature_collection)
+            if dumps:
+                return json.dumps(feature_collection)
+            return feature_collection
         return False
 
     def download_feature_info(self):

@@ -4,7 +4,7 @@ from __future__ import print_function, division
 import copy
 import csv
 import os
-
+import json
 
 def make_output(output, file_name, file_format, out_path=""):
     out_path = out_path if out_path else file_format
@@ -53,6 +53,23 @@ def batch_csv_output(output, areas, file_name):
         _write_csv_row(f, areas[a], a == 0)
     return path
 
+def batch_json_output(output, areas, file_name, with_attrs=False, crs_name="EPSG:3857"):
+    features = []
+    feature_collection = {
+            "type": "FeatureCollection",
+            "crs": {"type": "name", "properties": {"name": crs_name}},
+            "features": features
+        }
+    for a in areas:
+        feature = a.to_geojson_poly(with_attrs, dumps=False)
+        if feature:
+            features.append(feature)
+    if feature_collection:
+        f = open(make_output(output, file_name, "geojson"), 'w')
+        f.write(json.dumps(feature_collection))
+        f.close()
+    return feature_collection
+
 
 def area_json_output(output, area, with_attrs=False):
     geojson = area.to_geojson_poly(with_attrs)
@@ -60,12 +77,14 @@ def area_json_output(output, area, with_attrs=False):
         f = open(make_output(output, area.file_name, "geojson"), 'w')
         f.write(geojson)
         f.close()
+    return geojson
 
 
 def coords2geojson(coords, geom_type, crs_name, attrs=None):
     if attrs is False:
         attrs = {}
-    if coords:
+
+    if len(coords):
         features = []
         feature_collection = {
             "type": "FeatureCollection",
@@ -93,6 +112,6 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
             feature = {"type": "Feature",
                        "properties": attrs,
                        "geometry": {"type": "MultiPolygon", "coordinates": multi_polygon}}
-            features.append(feature)
-        return feature_collection
+            feature_collection = feature
+            return feature_collection
     return False

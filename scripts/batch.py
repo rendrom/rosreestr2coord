@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import os
 from time import sleep
 from scripts.catalog import Catalog
-from scripts.export import area_json_output, area_csv_output, batch_csv_output
+from scripts.export import area_json_output, area_csv_output, batch_csv_output, batch_json_output
 from scripts.parser import Area, restore_area, NoCoordinatesException
 from scripts.utils import TimeoutException
 
@@ -22,6 +22,7 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
     print("Launched parsing of %i areas:" % len(codes))
     print("================================")
     need_sleep = 0
+    features = []
     for c in codes:
         area = None
         code = c.strip()
@@ -62,7 +63,9 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
 
         if area:
             areas.append(area)
-            area_json_output(output, area, with_attrs)
+            feature = area_json_output(output, area, with_attrs)
+            if feature:
+                features.append(feature)
             area_csv_output(output, area)
 
     catalog.close()
@@ -85,6 +88,8 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
         if len(with_no_coord):
             path = batch_csv_output(output, with_no_coord, "%s_no_coord" % file_name)
             print("Create output for no_coord complete: %s" % path)
+        if len(features):
+            batch_json_output(output, areas, file_name, with_attrs, coord_out)
         if len(with_error):
             print("-----------------")
             print("Error list:")
