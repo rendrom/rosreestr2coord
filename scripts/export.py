@@ -88,7 +88,6 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
         features = []
         feature_collection = {
             "type": "FeatureCollection",
-            "crs": {"type": "name", "properties": {"name": crs_name}},
             "features": features
         }
         if geom_type.upper() == "POINT":
@@ -113,5 +112,6 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
                        "properties": attrs,
                        "geometry": {"type": "MultiPolygon", "coordinates": multi_polygon}}
             feature_collection = feature
-            return feature_collection
+        feature_collection["crs"] = {"type": "name", "properties": {"name": crs_name}}
+        return feature_collection
     return False
