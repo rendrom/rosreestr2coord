@@ -58,19 +58,19 @@ FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/$area_type/"
 IMAGE_URL = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
 
 TYPES = {
-    "Участки": 1,
-    "ОКС": 5,
-    "Кварталы": 2,
-    "Районы": 3,
-    "Округа": 4,
-    "Границы": 7,
-    "ЗОУИТ": 10,
-    "Тер. зоны": 6,
-    "Красные линии": 13,
-    "Лес": 12,
-    "СРЗУ": 15,
-    "ОЭЗ": 16,
-    "ГОК": 9,
+    u"Участки": 1,
+    u"ОКС": 5,
+    u"Кварталы": 2,
+    u"Районы": 3,
+    u"Округа": 4,
+    u"Границы": 7,
+    u"ЗОУИТ": 10,
+    u"Тер. зоны": 6,
+    u"Красные линии": 13,
+    u"Лес": 12,
+    u"СРЗУ": 15,
+    u"ОЭЗ": 16,
+    u"ГОК": 9,
 }
 
 
@@ -297,7 +297,6 @@ class Area:
                     hierarhy_contours[index].append(cc)
 
             image_xy_corners = [c for c in hierarhy_contours if len(c) > 0]
-
             return image_xy_corners
         except Exception as ex:
             self.error(ex)

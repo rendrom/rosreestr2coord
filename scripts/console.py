@@ -43,9 +43,11 @@ def getopts():
                         help='do not use catalog')
     # parser.add_argument('-x', '--csv', action='store_const', const=True, required=False,
     #                     help='create CSV table output, use only with --list')
-    parser.add_argument('-e', '--epsilon', action='store', type=int, required=False,
-                        help='Parameter specifying the approximation accuracy. '
-                             'This is the maximum distance between the original curve and its approximation.')
+    parser.add_argument('-e', '--epsilon', action='store', type=float, required=False, default=5,
+                        help='Parameter specifying the approximation accuracy'
+                             'This is the maximum distance between the original curve and its approximation. '
+                             'Small value = hight detail = more points. '
+                             '(default %(default).2f)')
     opts = parser.parse_args()
 
     return opts
