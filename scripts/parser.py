@@ -203,13 +203,19 @@ class Area:
             if data:
                 feature = data.get("feature")
                 if feature:
-                    if feature.get("attrs"):
-                        self.attrs = feature["attrs"]
-                        self.code_id = feature["attrs"]["id"]
+                    attrs = feature.get("attrs")
+                    if attrs:
+                        self.attrs = attrs
+                        self.code_id = attrs["id"]
                     if feature.get("extent"):
                         self.extent = feature["extent"]
                     if feature.get("center"):
-                        self.center = feature["center"]
+                        x = feature["center"]["x"]
+                        y = feature["center"]["y"]
+                        if self.coord_out == "EPSG:4326":
+                            (x, y) = xy2lonlat(x, y)
+                        self.center = {"x": x, "y": y}  
+                        self.attrs["center"] = self.center
                         self.log("Area info downloaded.")
                 return feature
         except TimeoutException:
