@@ -90,7 +90,7 @@ class Area:
     save_attrs = ["code", "area_type", "attrs", "image_path", "center", "extent", "image_extent", "width", "height"]
 
     def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=True, catalog="",
-                 coord_out="EPSG:3857"):
+                 coord_out="EPSG:3857", center_only=False):
         self.with_log = with_log
         self.area_type = area_type
         self.media_path = media_path
@@ -103,6 +103,7 @@ class Area:
         self.extent = {}
         self.image_extent = {}
         self.center = {'x': None, 'y': None}
+        self.center_only = center_only
         self.attrs = {}
         self.epsilon = epsilon
         self.code = code
@@ -133,27 +134,11 @@ class Area:
 
         feature_info = self.download_feature_info()
         if feature_info:
-            formats = ["png"]
-            tmp_dir = os.path.join(self.media_path, "tmp")
-            if not os.path.isdir(tmp_dir):
-                os.makedirs(tmp_dir)
-            for f in formats:
-                bbox = self.get_buffer_extent_list()    
-                if bbox:
-                    image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=with_log,
-                                            clear_code=self.clear_code(self.code_id), output_dir=tmp_dir)
-                    image.download()
-                    self.image_path = image.merge_tiles()
-                    self.width = image.real_width
-                    self.height = image.real_height
-                    self.image_extent = image.image_extent
+            geometry = self.get_geometry()
+            if catalog and geometry:
+                self.catalog.update(self)
+                self.catalog.close()
 
-                    if image:
-                        self.get_geometry()
-                        if catalog:
-                            self.catalog.update(self)
-                            self.catalog.close()
-                        break
 
     def restore(self, restore):
         for a in self.save_attrs:
@@ -171,27 +156,54 @@ class Area:
     def get_attrs(self):
         return self.attrs
 
-    def to_geojson_poly(self, with_attrs=False, dumps=True):
-        return self.to_geojson("polygon", with_attrs, dumps)
-
-    def to_geojson(self, geom_type="point", with_attrs=False, dumps=True):
-        attrs = self.attrs if with_attrs and self.attrs else False
-        if attrs:
-            for a in attrs:
-                attr = attrs[a]
+    def _get_attrs_to_geojson(self):
+        if self.attrs:
+            for a in self.attrs:
+                attr = self.attrs[a]
                 if isinstance(attr, basestring):
                     try:
                         attr = attr.encode('utf-8').strip()
-                        attrs[a] = attr
+                        self.attrs[a] = attr
                     except:
                         pass
-                    
-        feature_collection = coords2geojson(self.xy, geom_type, self.coord_out, attrs=attrs)
-        if feature_collection:
-            if dumps:
-                return json.dumps(feature_collection)
-            return feature_collection
+        return self.attrs
+
+    def to_geojson_poly(self, with_attrs=False, dumps=True):
+        return self.to_geojson("polygon", with_attrs, dumps)
+
+    def to_geojson_center(self, with_attrs=False, dumps=True):
+        current_center_status = self.center_only
+        self.center_only = True
+        to_return = self.to_geojson("point", with_attrs, dumps)
+        self.center_only = current_center_status
+        return to_return
+
+    def to_geojson(self, geom_type="point", with_attrs=False, dumps=True):
+        attrs = False
+        if with_attrs:
+            attrs = self._get_attrs_to_geojson()
+        xy = []
+        if self.center_only:
+            xy = [self.get_center_xy()]
+            geom_type = "point"
+        else: 
+            xy = self.xy
+        if xy and len(xy):
+            feature_collection = coords2geojson(xy, geom_type, self.coord_out, attrs=attrs)
+            if feature_collection:
+                if dumps:
+                    return json.dumps(feature_collection)
+                return feature_collection
         return False
+
+    
+    def get_center_xy(self):
+        center = self.attrs["center"]
+        if center:
+            xy = [[[center["x"], center["y"]]]]
+            return xy
+        return False
+
 
     def download_feature_info(self):
         try:
@@ -245,7 +257,35 @@ class Area:
             # raise NoCoordinatesException()
         return ex
 
+
     def get_geometry(self):
+        if self.center_only:
+            return self.get_center_xy()
+        else:
+            return self.parse_geometry_from_image()
+
+
+    def parse_geometry_from_image(self):
+        formats = ["png"]
+        tmp_dir = os.path.join(self.media_path, "tmp")
+        if not os.path.isdir(tmp_dir):
+            os.makedirs(tmp_dir)
+        for f in formats:
+            bbox = self.get_buffer_extent_list()    
+            if bbox:
+                image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=self.with_log,
+                                        clear_code=self.clear_code(self.code_id), output_dir=tmp_dir)
+                image.download()
+                self.image_path = image.merge_tiles()
+                self.width = image.real_width
+                self.height = image.real_height
+                self.image_extent = image.image_extent
+
+                if image:
+                    return self.get_image_geometry()
+
+
+    def get_image_geometry(self):
         """
         get corner geometry array from downloaded image
         [area1],[area2] - may be multipolygon geometry
@@ -269,6 +309,7 @@ class Area:
                     geom[p] = self.image_corners_to_coord(geom[p])
             return self.xy
         return []
+
 
     def get_image_xy_corner(self):
         """get сartesian coordinates from raster"""

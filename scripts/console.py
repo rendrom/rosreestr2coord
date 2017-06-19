@@ -48,6 +48,8 @@ def getopts():
                              'This is the maximum distance between the original curve and its approximation. '
                              'Small value = hight detail = more points. '
                              '(default %(default).2f)')
+    parser.add_argument('-C', '--center_only', action='store_const', const=True, required=False,
+                        help='Use only the center of area')
     opts = parser.parse_args()
 
     return opts
@@ -70,13 +72,13 @@ def main():
     epsilon = opt.epsilon if opt.epsilon else 5
     area_type = opt.area_type if opt.area_type else 1
     with_attrs = opt.attrs if opt.attrs else False
+    center_only = opt.center_only if opt.center_only else False
     refresh = opt.refresh
     display = opt.display
     coord_out = "EPSG:4326" if opt.wgs else "EPSG:3857"
     # csv = opt.csv
 
     catalog_path = "" if refresh else os.path.join(os.getcwd(), "catalog.json")
-
     if opt.list:
         file_name = os.path.splitext(os.path.basename(opt.list))[0]
         f = open(opt.list, 'r')
@@ -84,16 +86,16 @@ def main():
 
         f.close()
         batch_parser(codes, media_path=path, area_type=area_type, catalog_path=catalog_path, coord_out=coord_out,
-                     output=output, file_name=file_name, with_attrs=with_attrs, delay=delay)
+                     output=output, file_name=file_name, with_attrs=with_attrs, delay=delay, center_only=center_only)
 
     elif code:
-        get_by_code(code, path, area_type, catalog_path, with_attrs, epsilon, coord_out, output, display)
+        get_by_code(code, path, area_type, catalog_path, with_attrs, epsilon, coord_out, output, display, center_only)
 
 
 def get_by_code(code, path, area_type, catalog_path, with_attrs=False, epsilon=5,
-                coord_out='EPSG:3857', output="output", display=False, with_log=True):
+                coord_out='EPSG:3857', output="output", display=False, center_only=False, with_log=True):
     area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon, with_log=with_log, catalog=catalog_path,
-                coord_out=coord_out)
+                coord_out=coord_out, center_only=center_only)
     abspath = os.path.abspath(output)
     geojson = area.to_geojson_poly(with_attrs=with_attrs)
     if geojson:

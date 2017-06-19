@@ -112,6 +112,7 @@ class TileMerger:
             im = Image.open(os.path.join(self.tile_dir, os.listdir(self.tile_dir)[0]))
             buffer = im.load()
             self.tile_size = im.size
+        print("")
         self.log('Downloading completed. Uploaded tiles - %s' % self.count)
         return self.count
 
