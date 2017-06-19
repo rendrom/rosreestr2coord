@@ -116,7 +116,7 @@ class Area:
         self.search_url = t.substitute({"area_type": area_type})
         t = string.Template(FEATURE_INFO_URL)
         self.feature_info_url = t.substitute({"area_type": area_type})
-
+        
         if not self.media_path:
             # self.media_path = os.path.dirname(os.path.realpath(__file__))
             self.media_path = os.getcwd()
@@ -138,6 +138,8 @@ class Area:
             if catalog and geometry:
                 self.catalog.update(self)
                 self.catalog.close()
+        else:
+            self.log("Nothing found")
 
 
     def restore(self, restore):
@@ -151,6 +153,9 @@ class Area:
     def get_coord(self):
         if self.xy:
             return self.xy
+        center = self.get_center_xy()
+        if center:
+            return center
         return []
 
     def get_attrs(self):
@@ -184,7 +189,7 @@ class Area:
             attrs = self._get_attrs_to_geojson()
         xy = []
         if self.center_only:
-            xy = [self.get_center_xy()]
+            xy = self.get_center_xy()
             geom_type = "point"
         else: 
             xy = self.xy
@@ -198,9 +203,9 @@ class Area:
 
     
     def get_center_xy(self):
-        center = self.attrs["center"]
+        center = self.attrs.get("center")
         if center:
-            xy = [[[center["x"], center["y"]]]]
+            xy = [[[[center["x"], center["y"]]]]]
             return xy
         return False
 
