@@ -1,7 +1,8 @@
 from distutils.core import setup
 from setuptools import find_packages
 
-from scripts.parser import VERSION
+
+VERSION = "1.4.1"
 
 setup(
     name='rosreestr2coord',
