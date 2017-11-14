@@ -72,12 +72,14 @@ class TimeoutException(Exception):
 
 def make_request(url):
     import urllib2
-    url = url.encode('utf-8')
-    logger.debug(url)
-    try:
-        f = urllib2.urlopen(url, timeout=2)
-        read = f.read()
-        return read
-    except Exception as er:
-        logger.warning(er)
-        raise TimeoutException()
+    if url:
+        url = url.encode('utf-8')
+        logger.debug(url)
+        try:
+            f = urllib2.urlopen(url)
+            read = f.read()
+            return read
+        except Exception as er:
+            logger.warning(er)
+            raise TimeoutException()
+    return False

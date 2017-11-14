@@ -20,7 +20,7 @@ except ImportError:  # For Python 3
     from urllib.parse import urlencode
     from queue import Queue
 
-from scripts.utils import make_request
+from scripts.utils import make_request, TimeoutException
 
 VERSION = "1.0.0"
 
@@ -34,8 +34,13 @@ def chunks(l, n):
 
 def thread_download(target, xy_tile, total, thread_count=4):
     result = Queue.Queue()
+
     def task_wrapper(*args):
-        result.put(target(*args))
+        try:
+            result.put(target(*args))
+        except TimeoutException:
+            logger.warning("Waiting time exceeded")
+
 
     thread_count = total // 4 if total >= thread_count else total
     threads = [threading.Thread(target=task_wrapper, args=(p,)) for p in list(chunks(xy_tile, thread_count))]
@@ -58,7 +63,7 @@ class TileMerger:
     tile_size = tuple()
     use_cache = True
 
-    def __init__(self, zoom, bbox, tile_format='.jpg', threads=7, file_name_prefix=None, output_dir=None,
+    def __init__(self, zoom, bbox, tile_format='.jpg', threads=1, file_name_prefix=None, output_dir=None,
                  with_log=True):
         if output_dir:
             self.output_dir = output_dir
@@ -313,7 +318,7 @@ class PkkAreaMerger(TileMerger, object):
         if self.total == 1:
             xy = self.xy_range
             max_size = max(int(math.ceil((xy["xMax"] - xy["xMin"]))), int(math.ceil((xy["yMax"] - xy["yMin"]))))
-            self.tile_size = (max_size, max_size)   
+            self.tile_size = (max_size, max_size)
 
     def get_tile_dir(self, zoom):
         return os.path.join(self.output_dir, "%s" % self.file_name_prefix.replace(":", "_"))
@@ -358,7 +363,10 @@ class PkkAreaMerger(TileMerger, object):
     def get_image_url(self, x, y):
         output_format = self.output_format
         if self.clear_code and self.extent:
-            dx, dy = self.tile_size
+            if self.total == 1:
+                dx, dy = map(lambda x: x if x > 500 else 500, self.tile_size)
+            else:
+                dx, dy = self.tile_size
             code = self.clear_code
 
             layers = map(str, range(0, 20))
@@ -382,7 +390,7 @@ class PkkAreaMerger(TileMerger, object):
             url_parts[4] = urlencode(query)
             meta_url = urlparse.urlunparse(url_parts)
             if meta_url:
-                try:                   
+                try:
                     response = make_request(meta_url)
                     data = json.loads(response)
                     if data.get("href"):
@@ -396,7 +404,7 @@ class PkkAreaMerger(TileMerger, object):
             logger.warning("Can't get image without extent")
         return False
 
-    def _merge_tiles(self): 
+    def _merge_tiles(self):
         dx, dy = self._get_delta()
         self.log('Merging tiles...')
         filename = '%s%s' % (self.file_name_prefix, self.tile_format)
@@ -436,14 +444,15 @@ class PkkAreaMerger(TileMerger, object):
                 path = os.path.join(self.tile_dir, "%s_%s%s" % (0, 0, self.tile_format))
                 tile = Image.open(path)
                 self.real_width = tile.width
-                self.real_height = tile.height      
+                self.real_height = tile.height
             bb = self.bbox
             xmax = max([x["xmax"] for x in self._image_extent_list])
             ymax = max([x["ymax"] for x in self._image_extent_list])
             self.image_extent = {"xmin": bb[0], "ymin": bb[1], "xmax": xmax, "ymax": ymax}
             outpath = os.path.abspath(path)
             self.log('You raster - %s' % outpath)
-            return outpath    
+            return outpath
+
 
 def deg2num(lat_deg, lon_deg, zoom):
     lat_rad = math.radians(lat_deg)
