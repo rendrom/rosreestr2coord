@@ -50,6 +50,8 @@ def getopts():
                              '(default %(default).2f)')
     parser.add_argument('-C', '--center_only', action='store_const', const=True, required=False,
                         help='Use only the center of area')
+    parser.add_argument('-P', '--proxy', action='store_const', const=True, required=False,
+                        help='use proxies')
     opts = parser.parse_args()
 
     return opts
@@ -77,7 +79,6 @@ def main():
     display = opt.display
     coord_out = "EPSG:4326" if opt.wgs else "EPSG:3857"
     # csv = opt.csv
-
     catalog_path = "" if refresh else os.path.join(os.getcwd(), "catalog.json")
     if opt.list:
         file_name = os.path.splitext(os.path.basename(opt.list))[0]
@@ -86,16 +87,16 @@ def main():
 
         f.close()
         batch_parser(codes, media_path=path, area_type=area_type, catalog_path=catalog_path, coord_out=coord_out,
-                     output=output, file_name=file_name, with_attrs=with_attrs, delay=delay, center_only=center_only)
+                     output=output, file_name=file_name, with_attrs=with_attrs, delay=delay, center_only=center_only, with_proxy=opt.proxy)
 
     elif code:
-        get_by_code(code, path, area_type, catalog_path, with_attrs, epsilon, coord_out, output, display, center_only)
+        get_by_code(code, path, area_type, catalog_path, with_attrs, epsilon, coord_out, output, display, center_only, with_proxy=opt.proxy)
 
 
 def get_by_code(code, path, area_type, catalog_path, with_attrs=False, epsilon=5,
-                coord_out='EPSG:3857', output="output", display=False, center_only=False, with_log=True):
+                coord_out='EPSG:3857', output="output", display=False, center_only=False, with_log=True, with_proxy=False):
     area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon, with_log=with_log, catalog=catalog_path,
-                coord_out=coord_out, center_only=center_only)
+                coord_out=coord_out, center_only=center_only, with_proxy=with_proxy)
     abspath = os.path.abspath(output)
     geojson = area.to_geojson_poly(with_attrs=with_attrs)
     if geojson:

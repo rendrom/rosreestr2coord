@@ -42,52 +42,23 @@ USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36
 class TimeoutException(Exception):
     pass
 
-# def make_request(url):
-#     try:
-#         url = url.encode('utf-8')
-#         logger.debug(url)
-#         resp = urllib.urlopen(url)
-#         read = resp.read()
-#         return read
-#     except Exception as er:
-#         logger.info(url)
-#         logger.error(er)
 
-
-# def make_request(url):
-#     import pycurl
-#     from StringIO import StringIO
-
-#     buffer = StringIO()
-#     c = pycurl.Curl()
-#     c.setopt(c.URL, url)
-#     c.setopt(c.WRITEDATA, buffer)
-#     c.perform()
-#     c.close()
-
-#     body = buffer.getvalue()
-#     # Body is a string in some encoding.
-#     # In Python 2, we can print it without knowing what the encoding is.
-#     print(body)
-#     return body
-
-
-def make_request(url):
+def make_request(url, with_proxy=False):
     # original function
     if url:
         url = url.encode('utf-8')
         logger.debug(url)
-        proxies = proxy_handling.load_proxies_from_file()
-        if proxies == None or (len(proxies) != 0 and proxies[0] == 'None'):
-            try:
-                f = urllib2.urlopen(url)
-                read = f.read()
-                return read
-            except Exception as er:
-                logger.warning(er)
-                raise TimeoutException()
-        else:
-            return make_request_with_proxy(url)
+        if with_proxy:
+            proxies = proxy_handling.load_proxies()
+            if proxies and len(proxies) and proxies[0] != 'None':
+                return make_request_with_proxy(url)
+        try:
+            f = urllib2.urlopen(url)
+            read = f.read()
+            return read
+        except Exception as er:
+            logger.warning(er)
+            raise TimeoutException()
     return False
 
 

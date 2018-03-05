@@ -64,13 +64,14 @@ class TileMerger:
     use_cache = True
 
     def __init__(self, zoom, bbox, tile_format='.jpg', threads=1, file_name_prefix=None, output_dir=None,
-                 with_log=True):
+                 with_log=True, make_request=make_request):
         if output_dir:
             self.output_dir = output_dir
         if file_name_prefix:
             self.file_name_prefix = file_name_prefix
         self.with_log = with_log
         self.stop = False
+        self.make_request = make_request
         self.threads = threads
         self.total = 0
         self.count = 0
@@ -139,7 +140,7 @@ class TileMerger:
                 file_path = os.path.join(self.tile_dir, file_name)
                 if not self.use_cache or not os.path.isfile(file_path):
                     url = self.get_url(x, y, self.zoom)
-                    tile = make_request(url)
+                    tile = self.make_request(url)
                     if tile:
                         self.write_image(tile, file_path)
                         self.count += 1
@@ -154,7 +155,7 @@ class TileMerger:
         while row:
             while col:
                 url_path = self.get_url(x, y, self.zoom)
-                tile = make_request(url_path)
+                tile = self.make_request(url_path)
                 if tile.getcode() == 200:
                     self.write_image(tile.read(), os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format)))
                     if y > self.xy_range["yMax"]:
@@ -391,7 +392,7 @@ class PkkAreaMerger(TileMerger, object):
             meta_url = urlparse.urlunparse(url_parts)
             if meta_url:
                 try:
-                    response = make_request(meta_url)
+                    response = self.make_request(meta_url)
                     data = json.loads(response)
                     if data.get("href"):
                         self._image_extent_list.append(data.get("extent"))

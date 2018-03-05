@@ -89,7 +89,7 @@ class Area:
     save_attrs = ["code", "area_type", "attrs", "image_path", "center", "extent", "image_extent", "width", "height"]
 
     def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=True, catalog="",
-                 coord_out="EPSG:3857", center_only=False):
+                 coord_out="EPSG:3857", center_only=False, with_proxy=False):
         self.with_log = with_log
         self.area_type = area_type
         self.media_path = media_path
@@ -108,6 +108,7 @@ class Area:
         self.code = code
         self.code_id = ""
         self.file_name = self.code[:].replace(":", "_")
+        self.with_proxy = with_proxy
 
         self.coord_out = coord_out
 
@@ -146,6 +147,7 @@ class Area:
             setattr(self, a, restore[a])
         if self.coord_out:
             setattr(self, "coord_out", self.coord_out)
+        setattr(self, "code_id", self.code)
         self.get_geometry()
         self.file_name = self.code.replace(":", "_")
 
@@ -208,12 +210,16 @@ class Area:
             return xy
         return False
 
+    def make_request(self, url):
+        response = make_request(url, self.with_proxy)
+        return response
+
 
     def download_feature_info(self):
         try:
             search_url = self.feature_info_url + self.clear_code(self.code)
             self.log("Start downloading area info: %s" % search_url)
-            response = make_request(search_url)
+            response = self.make_request(search_url)
             resp = response
             data = json.loads(resp)
             if data:
@@ -278,7 +284,7 @@ class Area:
             bbox = self.get_buffer_extent_list()    
             if bbox:
                 image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=self.with_log,
-                                        clear_code=self.clear_code(self.code_id), output_dir=tmp_dir)
+                                        clear_code=self.clear_code(self.code_id), output_dir=tmp_dir, make_request=self.make_request)
                 image.download()
                 self.image_path = image.merge_tiles()
                 self.width = image.real_width

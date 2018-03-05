@@ -10,10 +10,14 @@ from scripts.utils import TimeoutException
 
 def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path="", coord_out="EPSG:3857",
                  file_name="example", output=os.path.join("output"), repeat=0, areas=None, with_attrs=False, delay=1,
-                 center_only=False):
+                 center_only=False, with_proxy=False):
     if areas is None:
         areas = []
-    catalog = Catalog(catalog_path)
+    try:
+        catalog = Catalog(catalog_path)
+    except:
+        print("Catalog is required for batch mode!")
+        return
     restores = []
     with_error = []
     with_no_coord = []
@@ -33,7 +37,7 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
             try:
                 sleep(need_sleep)
                 area = Area(code, media_path=media_path, area_type=area_type, with_log=with_log, coord_out=coord_out,
-                            center_only=center_only)
+                            center_only=center_only, with_proxy=with_proxy)
                 need_sleep = delay
                 restore = catalog.refresh(area)
                 if not (len(area.get_coord()) > 0):
@@ -84,7 +88,7 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
         print("Retries parse areas with error")
         batch_parser(with_error, area_type=area_type, media_path=media_path, with_log=with_log, file_name=file_name,
                      catalog_path=catalog_path, coord_out=coord_out, repeat=repeat - 1, areas=areas, output=output,
-                     delay=delay)
+                     delay=delay, with_proxy=with_proxy)
     else:
         path = batch_csv_output(output, areas, file_name)
         print("Create output complete: %s" % path)

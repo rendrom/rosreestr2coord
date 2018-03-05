@@ -4,8 +4,9 @@ from random import choice
 import os
 import time
 
+PROXY_PATH = 'proxy.txt'
 
-def update_proxies(path='proxy.txt'):
+def update_proxies(path=PROXY_PATH):
     # Getting proxy list from address if file is old
     proxies = load_proxies_from_file(path)
     if not proxies:
@@ -20,7 +21,7 @@ def update_proxies(path='proxy.txt'):
         download_proxies(path)
 
 
-def download_proxies(path='proxy.txt'):
+def download_proxies(path=PROXY_PATH):
     # Downloading without proxy
     opener = urllib2.build_opener(urllib2.ProxyHandler())
     urllib2.install_opener(opener)
@@ -34,7 +35,13 @@ def download_proxies(path='proxy.txt'):
     dump_proxies_to_file(found[:20], path)  # 20 top proxies
 
 
-def load_proxies_from_file(path='proxy.txt'):
+def load_proxies(path=PROXY_PATH):
+    if not os.path.exists(PROXY_PATH):
+        with open(PROXY_PATH, 'w'): pass
+    return load_proxies_from_file()
+
+
+def load_proxies_from_file(path=PROXY_PATH):
     try:
         with open(path) as outfile:
             return outfile.readlines()
@@ -42,7 +49,7 @@ def load_proxies_from_file(path='proxy.txt'):
         return None
 
 
-def dump_proxies_to_file(proxies, path='proxy.txt'):
+def dump_proxies_to_file(proxies, path=PROXY_PATH):
     with open(path, 'w') as outfile:
         for proxy in proxies:
             outfile.write(proxy)
