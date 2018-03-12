@@ -3,6 +3,9 @@
 from __future__ import print_function, division
 
 import os
+import signal
+import time
+import sys
 
 from scripts.batch import batch_parser
 from scripts.parser import Area, TYPES
@@ -57,7 +60,8 @@ def getopts():
     return opts
 
 
-def main():
+def _main():
+
     # area = Area("38:36:000021:1106")
     # area = Area("38:06:144003:4723")
     # area = Area("38:36:000033:375")
@@ -114,5 +118,17 @@ def get_by_code(code, path, area_type, catalog_path, with_attrs=False, epsilon=5
     return area
 
 
+def main():
+    def signal_handler(signal, frame):
+        print('You pressed Ctrl+C')
+        sys.exit(0)
+    signal.signal(signal.SIGINT, signal_handler)
+    print('Press Ctrl+C to exit')
+    
+    _main()
+
+
+
 if __name__ == "__main__":
     main()
+

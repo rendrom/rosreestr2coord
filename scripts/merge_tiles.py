@@ -31,6 +31,8 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
+def has_live_threads(threads):
+    return True in [t.isAlive() for t in threads]
 
 def thread_download(target, xy_tile, total, thread_count=4):
     result = Queue.Queue()
@@ -40,14 +42,24 @@ def thread_download(target, xy_tile, total, thread_count=4):
             result.put(target(*args))
         except TimeoutException:
             logger.warning("Waiting time exceeded")
-
-
     thread_count = total // 4 if total >= thread_count else total
     threads = [threading.Thread(target=task_wrapper, args=(p,)) for p in list(chunks(xy_tile, thread_count))]
     for t in threads:
+        t.daemon = True
         t.start()
-    for t in threads:
-        t.join()
+
+    while has_live_threads(threads):
+        try:
+            # synchronization timeout of threads kill
+            [t.join(1) for t in threads
+             if t is not None and t.isAlive()]
+        except KeyboardInterrupt:
+            # Ctrl-C handling and send kill to threads
+            for t in threads:
+                t.kill_received = True
+                raise
+
+        
     return result
 
 
@@ -148,6 +160,7 @@ class TileMerger:
                     self.count += 1
                 if self.with_log:
                     print("\r%d%% %d/%d" % ((self.count / self.total) * 100, self.count, self.total), end='')
+
 
     def lazy_download(self):
         row, col = True, True

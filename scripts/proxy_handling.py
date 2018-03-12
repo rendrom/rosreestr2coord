@@ -38,7 +38,8 @@ def download_proxies(path=PROXY_PATH):
 def load_proxies(path=PROXY_PATH):
     if not os.path.exists(PROXY_PATH):
         with open(PROXY_PATH, 'w'): pass
-    return load_proxies_from_file()
+    update_proxies(path)
+    return load_proxies_from_file(path)
 
 
 def load_proxies_from_file(path=PROXY_PATH):
