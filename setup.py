@@ -2,8 +2,6 @@ from distutils.core import setup
 from setuptools import find_packages
 from version import VERSION
 
-
-
 setup(
     name='rosreestr2coord',
     version=VERSION,
@@ -49,3 +47,6 @@ setup(
 )
 
 # https://pypi.python.org/pypi/twine
+
+# python setup.py sdist bdist_wheel
+# twine upload dist/*
