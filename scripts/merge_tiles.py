@@ -52,7 +52,7 @@ def thread_download(target, xy_tile, total, thread_count=4):
         try:
             # synchronization timeout of threads kill
             [t.join(1) for t in threads
-             if t is not None and t.isAlive()]
+            if t is not None and t.isAlive()]
         except KeyboardInterrupt:
             # Ctrl-C handling and send kill to threads
             for t in threads:
