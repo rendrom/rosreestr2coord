@@ -2,6 +2,7 @@
 # coding: utf-8
 from __future__ import print_function, division
 
+import re
 import os
 import signal
 import time
@@ -89,6 +90,11 @@ def _main():
         f = open(opt.list, 'r')
         codes = f.readlines()
 
+        def code_filter(c):
+            s = re.search('^\d\d:\d+:[0]+', c)
+            return not s
+
+        codes = filter(code_filter, codes)
         f.close()
         batch_parser(codes, media_path=path, area_type=area_type, catalog_path=catalog_path, coord_out=coord_out,
                      output=output, file_name=file_name, with_attrs=with_attrs, delay=delay, center_only=center_only, with_proxy=opt.proxy)

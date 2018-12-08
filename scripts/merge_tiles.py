@@ -316,6 +316,7 @@ class PkkAreaMerger(TileMerger, object):
     # tile_size = (300000, 300000)
     tile_size = (1000, 1000)
     use_cache = False
+    max_count = 100
 
     def __init__(self, output_format, clear_code, **kwargs):
         super(PkkAreaMerger, self).__init__(zoom=0, tile_format='.%s' % output_format,
@@ -335,6 +336,9 @@ class PkkAreaMerger(TileMerger, object):
             xy = self.xy_range
             max_size = max(int(math.ceil((xy["xMax"] - xy["xMin"]))), int(math.ceil((xy["yMax"] - xy["yMin"]))))
             self.tile_size = (max_size, max_size)
+        elif self.total > self.max_count:
+            self._optimize_tile_size(self.max_count)
+
 
     def get_tile_dir(self, zoom):
         return os.path.join(self.output_dir, "%s" % self.file_name_prefix.replace(":", "_"))
@@ -355,15 +359,25 @@ class PkkAreaMerger(TileMerger, object):
         if bb:
             return dict(zip(keys, [bb[0], bb[2], bb[1], bb[3]]))
 
-    def _get_delta(self):
+    def _get_delta(self, tile_size=False):
+        tile_size = tile_size if tile_size else self.tile_size
         xy = self.xy_range
-        dx = int(math.ceil((xy["xMax"] - xy["xMin"]) / self.tile_size[0]))
-        dy = int(math.ceil((xy["yMax"] - xy["yMin"]) / self.tile_size[1]))
+        dx = int(math.ceil((xy["xMax"] - xy["xMin"]) / tile_size[0]))
+        dy = int(math.ceil((xy["yMax"] - xy["yMin"]) / tile_size[1]))
         return dx, dy
 
-    def calc_total(self):
+    def _optimize_tile_size(self, count):
+        h = count**0.5
+        xy = self.xy_range
+        x = int((xy["xMax"] - xy["xMin"]) / h)
+        y = int((xy["yMax"] - xy["yMin"]) / h)
+        max_value = max([x,y])
+        self.tile_size = [max_value, max_value]
+        self.total = self.calc_total()
+
+    def calc_total(self, d=False):
+        d = d if d else self._get_delta()
         total = 1
-        d = self._get_delta()
         for x in d:
             total *= x
         return total
