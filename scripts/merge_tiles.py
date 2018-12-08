@@ -73,6 +73,7 @@ class TileMerger:
     crs = 3857
     stream_method = thread_download
     tile_size = tuple()
+    image_size = tuple()
     use_cache = True
 
     def __init__(self, zoom, bbox, tile_format='.jpg', threads=1, file_name_prefix=None, output_dir=None,
@@ -129,7 +130,7 @@ class TileMerger:
         if self.count == self.total:
             im = Image.open(os.path.join(self.tile_dir, os.listdir(self.tile_dir)[0]))
             buffer = im.load()
-            self.tile_size = im.size
+            self.image_size = im.size
         print("")
         self.log('Downloading completed. Uploaded tiles - %s' % self.count)
         return self.count
@@ -190,8 +191,8 @@ class TileMerger:
             xy_range = self.xy_range
             filename = '%s_%d_%s%s' % (self.file_name_prefix, self.zoom,
                                        ''.join(set([str(int(g)) for g in xy_range.values()])), self.tile_format)
-            out = Image.new('RGB', ((xy_range["xMax"] + 1 - xy_range["xMin"]) * self.tile_size[0],
-                                    (xy_range["yMax"] + 1 - xy_range["yMin"]) * self.tile_size[1]))
+            out = Image.new('RGB', ((xy_range["xMax"] + 1 - xy_range["xMin"]) * self.image_size[0],
+                                    (xy_range["yMax"] + 1 - xy_range["yMin"]) * self.image_size[1]))
             imx = 0
             for x in range(xy_range["xMin"], xy_range["xMax"] + 1):
                 imy = 0
@@ -199,8 +200,8 @@ class TileMerger:
                     tile_file = os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format))
                     tile = Image.open(tile_file)
                     out.paste(tile, (imx, imy))
-                    imy += self.tile_size[1]
-                imx += self.tile_size[0]
+                    imy += self.image_size[1]
+                imx += self.image_size[0]
             path = os.path.join(self.output_dir, filename)
             out.save(path)
             # self.create_raster_worldfile(path)
@@ -312,7 +313,7 @@ class PkkAreaMerger(TileMerger, object):
     file_name_prefix = 'pkk'
     url = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
     crs = 3857
-    tile_size = (1000, 1000)
+    tile_size = (300000, 300000)
     use_cache = False
 
     def __init__(self, output_format, clear_code, **kwargs):
