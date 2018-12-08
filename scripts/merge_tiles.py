@@ -313,7 +313,8 @@ class PkkAreaMerger(TileMerger, object):
     file_name_prefix = 'pkk'
     url = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
     crs = 3857
-    tile_size = (300000, 300000)
+    # tile_size = (300000, 300000)
+    tile_size = (1000, 1000)
     use_cache = False
 
     def __init__(self, output_format, clear_code, **kwargs):
