@@ -82,7 +82,7 @@ def make_request_with_proxy(url):
                 request = urllib2.Request(url, headers=headers)
                 f = urllib2.urlopen(request)
                 read = f.read()
-                if read.find('400 Bad Request') != -1:
+                if read.find('400 Bad Request') == -1:
                     return read
             except Exception as er:
                 logger.warning(er)

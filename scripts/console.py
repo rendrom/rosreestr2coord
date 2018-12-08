@@ -89,7 +89,7 @@ def _main():
         file_name = os.path.splitext(os.path.basename(opt.list))[0]
         f = open(opt.list, 'r')
         codes = f.readlines()
-
+        # cadastral number like this 02:00:000000 is not valid
         def code_filter(c):
             s = re.search('^\d\d:\d+:[0]+', c)
             return not s
