@@ -102,9 +102,9 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
                                     "geometry": {"type": "Point", "coordinates": [x, y]}}
                             features.append(point)
         elif geom_type.upper() == "POLYGON":
-            close_xy = []
             multi_polygon = []
             for fry in range(len(coords)):
+                close_xy = []
                 for j in range(len(coords[fry])):
                     xy = coords[fry][j]
                     xy.append(xy[0])
