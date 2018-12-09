@@ -316,7 +316,7 @@ class PkkAreaMerger(TileMerger, object):
     # tile_size = (300000, 300000)
     tile_size = (1000, 1000)
     use_cache = False
-    max_count = 100
+    max_count = 50
 
     def __init__(self, output_format, clear_code, **kwargs):
         super(PkkAreaMerger, self).__init__(zoom=0, tile_format='.%s' % output_format,

@@ -90,11 +90,10 @@ def _main():
         f = open(opt.list, 'r')
         codes = f.readlines()
         # cadastral number like this 02:00:000000 is not valid
-        def code_filter(c):
-            s = re.search('^\d\d:\d+:[0]+', c)
-            return not s
-
-        codes = filter(code_filter, codes)
+        # def code_filter(c):
+        #     s = re.search('^\d\d:\d+:[0]+', c)
+        #     return not s
+        # codes = filter(code_filter, codes)
         f.close()
         batch_parser(codes, media_path=path, area_type=area_type, catalog_path=catalog_path, coord_out=coord_out,
                      output=output, file_name=file_name, with_attrs=with_attrs, delay=delay, center_only=center_only, with_proxy=opt.proxy)

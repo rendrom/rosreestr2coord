@@ -1,6 +1,7 @@
 from __future__ import division, print_function
 import proxy_handling
 import urllib2
+import threading
 import re
 
 # Try to send request through a TOR
@@ -50,9 +51,7 @@ def make_request(url, with_proxy=False):
         url = url.encode('utf-8')
         logger.debug(url)
         if with_proxy:
-            proxies = proxy_handling.load_proxies()
-            if proxies and len(proxies) and proxies[0] != 'None':
-                return make_request_with_proxy(url)
+            return make_request_with_proxy(url)
         try:
             f = urllib2.urlopen(url)
             read = f.read()
@@ -64,7 +63,7 @@ def make_request(url, with_proxy=False):
 
 
 def make_request_with_proxy(url):
-    proxies = proxy_handling.load_proxies_from_file()
+    proxies = proxy_handling.load_proxies()
     if not proxies:
         proxy_handling.update_proxies()
         proxies = proxy_handling.load_proxies_from_file()

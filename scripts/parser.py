@@ -77,8 +77,18 @@ class NoCoordinatesException(Exception):
     pass
 
 
-def restore_area(restore, coord_out):
-    area = Area(coord_out=coord_out)
+
+# def restore_area(restore, area_type=1, media_path="", with_log=False, catalog_path="", coord_out="EPSG:3857",
+#                  file_name="example", output=os.path.join("output"), repeat=0, areas=None, with_attrs=False, delay=1,
+#                  center_only=False, with_proxy=False):
+#     area = Area(media_path=media_path, area_type=area_type, with_log=with_log, coord_out=coord_out,
+#                             center_only=center_only, with_proxy=with_proxy)
+
+def restore_area(restore, area_type=1, media_path="", with_log=False, catalog_path="", coord_out="EPSG:3857",
+                 file_name="example", output=os.path.join("output"), repeat=0, areas=None, with_attrs=False, delay=1,
+                 center_only=False, with_proxy=False):
+    area = Area(media_path=media_path, area_type=area_type, with_log=with_log, coord_out=coord_out,
+                center_only=center_only, with_proxy=with_proxy)
     area.restore(restore)
     return area
 
@@ -328,10 +338,11 @@ class Area:
         if not self.image_path:
             return False
         image_xy_corners = []
-        img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
-        imagem = (255 - img)
 
         try:
+            img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
+            imagem = (255 - img)
+
             ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
             try:
                 contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
