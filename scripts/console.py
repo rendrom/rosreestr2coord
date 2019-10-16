@@ -22,7 +22,7 @@ def getopts():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent("""\
         Get geojson with coordinates of area by cadastral number.
-        http://pkk5.rosreestr.ru/
+        https://pkk5.rosreestr.ru/
         """)
     )
     parser.add_argument('-c', '--code', action='store', type=str, required=False,
