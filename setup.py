@@ -35,7 +35,7 @@ setup(
     ],
     description='Get geometry from rosreestr',
     long_description='Get area coordinates by its cadastral number',
-    install_requires=["numpy", "Pillow"],
+    install_requires=["numpy", "Pillow", "opencv-python"],
     url='https://github.com/rendrom/rosreestr2coord',
     author='Artemiy Doroshkov',
     author_email='rendrom@gmail.com',

@@ -45,6 +45,15 @@ class TimeoutException(Exception):
     pass
 
 
+def get_rosreestr_headers():
+    return {
+        'pragma': 'no-cache',
+        'referer': 'https://pkk5.rosreestr.ru/',
+        'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+
+
 def make_request(url, with_proxy=False):
     # original function
     if url:
@@ -53,7 +62,9 @@ def make_request(url, with_proxy=False):
         if with_proxy:
             return make_request_with_proxy(url)
         try:
-            f = urllib2.urlopen(url)
+            headers = get_rosreestr_headers()
+            request = urllib2.Request(url, headers=headers)
+            f = urllib2.urlopen(request, timeout=3)
             read = f.read()
             return read
         except Exception as er:
@@ -75,11 +86,9 @@ def make_request_with_proxy(url):
                 proxy_handler = urllib2.ProxyHandler({'http': proxy, 'https': proxy})
                 opener = urllib2.build_opener(proxy_handler)
                 urllib2.install_opener(opener)
-                headers = {
-                    'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36',
-                    'referer': 'htpps://www.google.com/'}
+                headers = get_rosreestr_headers()
                 request = urllib2.Request(url, headers=headers)
-                f = urllib2.urlopen(request)
+                f = urllib2.urlopen(request, timeout=3)
                 read = f.read()
                 if read.find('400 Bad Request') == -1:
                     return read

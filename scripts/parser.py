@@ -24,22 +24,22 @@ except ImportError:  # For Python 3
 ##############
 # SEARCH URL #
 ##############
-# http://pkk5.rosreestr.ru/api/features/1
+# https://pkk5.rosreestr.ru/api/features/1
 #   ?text=38:36:000021:1106
 #   &tolerance=4
 #   &limit=11
-SEARCH_URL = "http://pkk5.rosreestr.ru/api/features/$area_type"
+SEARCH_URL = "https://pkk5.rosreestr.ru/api/features/$area_type"
 
 ############################
 # URL to get area metainfo #
 ############################
-# http://pkk5.rosreestr.ru/api/features/1/38:36:21:1106
-FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/$area_type/"
+# https://pkk5.rosreestr.ru/api/features/1/38:36:21:1106
+FEATURE_INFO_URL = "https://pkk5.rosreestr.ru/api/features/$area_type/"
 
 #########################
 # URL to get area image #
 #########################
-# http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export
+# https://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export
 #   ?dpi=96
 #   &transparent=true
 #   &format=png32
@@ -54,7 +54,7 @@ FEATURE_INFO_URL = "http://pkk5.rosreestr.ru/api/features/$area_type/"
 #    "layerDefs" decode to {"6":"ID = '38:36:21:1106'","7":"ID = '38:36:21:1106'"}
 #    "f" may be `json` or `html`
 #    set `&format=svg&f=json` to export image in svg !closed by rosreestr, now only PNG
-IMAGE_URL = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
+IMAGE_URL = "https://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
 
 TYPES = {
     u"Участки": 1,

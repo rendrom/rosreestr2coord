@@ -311,7 +311,7 @@ class GoogleMerger(UrlTileMerger):
 
 class PkkAreaMerger(TileMerger, object):
     file_name_prefix = 'pkk'
-    url = "http://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
+    url = "https://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
     crs = 3857
     # tile_size = (300000, 300000)
     tile_size = (1000, 1000)
