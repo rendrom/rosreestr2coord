@@ -34,7 +34,8 @@ def download_proxies(path=PROXY_PATH):
     request.add_header('referer', 'https://www.ip-adress.com/')
     f = urllib.request.urlopen(request)
     pattern = r'\d*\.\d*\.\d*\.\d*\</a>:\d*'
-    found = [i.replace('</a>', '') + '\n' for i in re.findall(pattern, f.read())]
+    s = f.read().decode('utf-8')
+    found = [i.replace('</a>', '') + '\n' for i in re.findall(pattern, s)]
     dump_proxies_to_file(found[:20], path)  # 20 top proxies
 
 
