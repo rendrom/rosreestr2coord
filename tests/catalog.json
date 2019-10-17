@@ -1,1 +1,72 @@
-{"version": "1", "Area": {"47:16:0650002:317": {"code": "47:16:0650002:317", "image_path": "./tmp/47-16-0650002-317.png", "area_type": 1, "width": 3113, "image_extent": {"xmin": 3540131.79574, "ymin": 8375690.28732306, "ymax": 8380039.200296938, "xmax": 3543437.01207, "spatialReference": {"wkid": 102100, "latestWkid": 3857}}, "attrs": {"cad_unit": "383", "cad_cost": 4376031.68, "cn": "47:16:0650002:317", "pubdate": "17.07.2016", "rights_reg": 1, "util_code": null, "kvartal": "47:16:650002", "anno_text": "317", "util_by_doc": null, "date_create": "18.05.2009", "cad_record_date": "08.07.2015", "rayon": "47:16", "id": "47:16:650002:317", "kvartal_cn": "47:16:0650002", "date_cost": "08.07.2015", "area_type": "008", "category_type": null, "okrug_cn": "47", "cad_eng_data": {"lastmodified": "Tue, 12 Jul 2016 02:50:49 GMT", "ci_first": "\u0410\u043d\u0442\u043e\u043d\u0438\u043d\u0430", "ci_surname": "\u041b\u0443\u043d\u0435\u0432\u0430", "ci_patronymic": "\u0421\u0435\u0440\u0433\u0435\u0435\u0432\u043d\u0430", "rc_type": 0, "actual_date": "Tue, 12 Jul 2016 00:00:00 GMT", "ci_n_certificate": "78-11-0351"}, "okrug": "47", "fp": null, "area_unit": "055", "rayon_cn": "47:16", "address": "\u041b\u0435\u043d\u0438\u043d\u0433\u0440\u0430\u0434\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c, \u041a\u0438\u0440\u043e\u0432\u0441\u043a\u0438\u0439 \u0440\u0430\u0439\u043e\u043d, \u0410\u041e\u0417\u0422 \u0428\u0443\u043c\u0441\u043a\u043e\u0435", "adate": "08.07.2015", "area_value": 667078.0, "rifr": null, "sale": null, "reg": 147, "statecd": "01"}, "extent": {"xmin": 3540141.7957360153, "ymin": 8375700.484515959, "ymax": 8380029.003097284, "xmax": 3543427.0120714903}, "height": 4096, "center": {"y": 8378502.339698769, "x": 3541689.045483534}}}}
+{
+  "version": "1",
+  "Area": {
+    "47:16:0650002:317": {
+      "code": "47:16:0650002:317",
+      "image_path": "./tmp/47-16-0650002-317.png",
+      "area_type": 1,
+      "width": 3113,
+      "image_extent": {
+        "xmin": 3540131.79574,
+        "ymin": 8375690.28732306,
+        "ymax": 8380039.200296938,
+        "xmax": 3543437.01207,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      },
+      "attrs": {
+        "cad_unit": "383",
+        "cad_cost": 4376031.68,
+        "cn": "47:16:0650002:317",
+        "pubdate": "17.07.2016",
+        "rights_reg": 1,
+        "util_code": null,
+        "kvartal": "47:16:650002",
+        "anno_text": "317",
+        "util_by_doc": null,
+        "date_create": "18.05.2009",
+        "cad_record_date": "08.07.2015",
+        "rayon": "47:16",
+        "id": "47:16:650002:317",
+        "kvartal_cn": "47:16:0650002",
+        "date_cost": "08.07.2015",
+        "area_type": "008",
+        "category_type": null,
+        "okrug_cn": "47",
+        "cad_eng_data": {
+          "lastmodified": "Tue, 12 Jul 2016 02:50:49 GMT",
+          "ci_first": "\u0410\u043d\u0442\u043e\u043d\u0438\u043d\u0430",
+          "ci_surname": "\u041b\u0443\u043d\u0435\u0432\u0430",
+          "ci_patronymic": "\u0421\u0435\u0440\u0433\u0435\u0435\u0432\u043d\u0430",
+          "rc_type": 0,
+          "actual_date": "Tue, 12 Jul 2016 00:00:00 GMT",
+          "ci_n_certificate": "78-11-0351"
+        },
+        "okrug": "47",
+        "fp": null,
+        "area_unit": "055",
+        "rayon_cn": "47:16",
+        "address": "\u041b\u0435\u043d\u0438\u043d\u0433\u0440\u0430\u0434\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c, \u041a\u0438\u0440\u043e\u0432\u0441\u043a\u0438\u0439 \u0440\u0430\u0439\u043e\u043d, \u0410\u041e\u0417\u0422 \u0428\u0443\u043c\u0441\u043a\u043e\u0435",
+        "adate": "08.07.2015",
+        "area_value": 667078.0,
+        "rifr": null,
+        "sale": null,
+        "reg": 147,
+        "statecd": "01"
+      },
+      "extent": {
+        "xmin": 3540141.7957360153,
+        "ymin": 8375700.484515959,
+        "ymax": 8380029.003097284,
+        "xmax": 3543427.0120714903
+      },
+      "height": 4096,
+      "center": {
+        "y": 8378502.339698769,
+        "x": 3541689.045483534
+      }
+    }
+  }
+}
