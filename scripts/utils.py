@@ -56,7 +56,6 @@ def get_rosreestr_headers():
 def make_request(url, with_proxy=False):
     # original function
     if url:
-        url = url.encode('utf-8')
         logger.debug(url)
         if with_proxy:
             return make_request_with_proxy(url)
