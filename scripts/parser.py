@@ -173,7 +173,7 @@ class Area:
                 attr = self.attrs[a]
                 if isinstance(attr, str):
                     try:
-                        attr = attr.encode('utf-8').strip()
+                        attr = attr.strip()
                         self.attrs[a] = attr
                     except:
                         pass
