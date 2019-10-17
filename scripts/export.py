@@ -44,13 +44,13 @@ def _write_csv_row(f, area, header=False):
 
 def area_csv_output(output, area):
     path = make_output(output, area.file_name, "csv")
-    f = csv.writer(open(path, "wb+"))
+    f = csv.writer(open(path, "w+"))
     _write_csv_row(f, area)
 
 
 def batch_csv_output(output, areas, file_name):
     path = make_output(output, file_name, "csv")
-    f = csv.writer(open(path, "wb+"))
+    f = csv.writer(open(path, "w+"))
     for a in range(len(areas)):
         _write_csv_row(f, areas[a], a == 0)
     return path
