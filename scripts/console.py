@@ -49,7 +49,7 @@ def getopts():
     parser.add_argument('-e', '--epsilon', action='store', type=float, required=False, default=5,
                         help='Parameter specifying the approximation accuracy'
                              'This is the maximum distance between the original curve and its approximation. '
-                             'Small value = hight detail = more points. '
+                             'Small value = high detail = more points. '
                              '(default %(default).2f)')
     parser.add_argument('-C', '--center_only', action='store_const', const=True, required=False,
                         help='Use only the center of area')

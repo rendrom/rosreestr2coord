@@ -78,7 +78,7 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
     catalog.close()
 
     print("=================")
-    print("Parsing complate:")
+    print("Parsing complete:")
     print("  success     : %i" % success)
     print("  error       : %i" % len(with_error))
     print("  no_coord    : %i" % len(with_no_coord))

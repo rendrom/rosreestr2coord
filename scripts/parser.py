@@ -340,7 +340,7 @@ class Area:
                 im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
             hierarchy = hierarchy[0]
-            hierarhy_contours = [[] for _ in range(len(hierarchy))]
+            hierarchy_contours = [[] for _ in range(len(hierarchy))]
             for fry in range(len(contours)):
                 currentContour = contours[fry]
                 currentHierarchy = hierarchy[fry]
@@ -352,9 +352,9 @@ class Area:
                         cc.append([c[0][0], c[0][1]])
                     parent_index = currentHierarchy[3]
                     index = fry if parent_index < 0 else parent_index
-                    hierarhy_contours[index].append(cc)
+                    hierarchy_contours[index].append(cc)
 
-            image_xy_corners = [c for c in hierarhy_contours if len(c) > 0]
+            image_xy_corners = [c for c in hierarchy_contours if len(c) > 0]
             return image_xy_corners
         except Exception as ex:
             self.error(ex)
