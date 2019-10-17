@@ -62,7 +62,7 @@ def make_request(url, with_proxy=False):
         try:
             headers = get_rosreestr_headers()
             request = urllib.request.Request(url, headers=headers)
-            f = urllib.request.urlopen(request, timeout=3)
+            f = urllib.request.urlopen(request, timeout=10)
             read = f.read()
             return read
         except Exception as er:
@@ -86,7 +86,7 @@ def make_request_with_proxy(url):
                 urllib.request.install_opener(opener)
                 headers = get_rosreestr_headers()
                 request = urllib.request.Request(url, headers=headers)
-                f = urllib.request.urlopen(request, timeout=3)
+                f = urllib.request.urlopen(request, timeout=10)
                 read = f.read()
                 if read.find('400 Bad Request') == -1:
                     return read
