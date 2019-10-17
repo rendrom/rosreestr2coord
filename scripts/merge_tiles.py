@@ -4,24 +4,17 @@
 import json
 import math
 import os
+import queue
 import random
 import threading
+import urllib.parse
 from itertools import chain, product
+from urllib.parse import urlencode
 
 from PIL import Image
 
-from .logger import logger
-
-try:
-    import queue
-    import urllib.parse
-    from urllib.parse import urlencode
-except ImportError:  # For Python 3
-    import urllib.parse as urlparse
-    from urllib.parse import urlencode
-    from queue import Queue
-
 from scripts.utils import make_request, TimeoutException
+from .logger import logger
 
 VERSION = "1.0.0"
 
