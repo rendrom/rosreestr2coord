@@ -1,17 +1,18 @@
 #!/usr/bin/env python
-from __future__ import division
 
+
+import copy
 import json
 import os
-import copy
 
 from PyQt4 import QtCore, QtGui, QtWebKit
 
-from scripts.console import get_by_code
-from scripts.export import coords2geojson
-from scripts.logger import logger
+from .scripts.console import get_by_code
+from .scripts.export import coords2geojson
+from .scripts.logger import logger
 
 _client_dist = os.path.join(*['gui', 'client', 'dist'])
+
 
 # 38:6:144003:4723
 
@@ -43,17 +44,17 @@ class MainWindow(QtGui.QWidget):
             with open(scr, 'r') as f:
                 frame.evaluateJavaScript(f.read())
 
-        map(load_script, [
+        list(map(load_script, [
             os.path.join(_client_dist, 'polyfills.js'),
             os.path.join(_client_dist, 'vendor.js'),
             os.path.join(_client_dist, 'app.js')
-        ])
+        ]))
 
     @QtCore.pyqtSlot(str)
     def onSearchClick(self, code, area_type=1):
         code = str(code)
         area = get_by_code(code, path="", area_type=area_type, catalog_path="", with_attrs=False, epsilon=5,
-                coord_out='EPSG:4326', output="output", display=False, with_log=True)
+                           coord_out='EPSG:4326', output="output", display=False, with_log=True)
 
         data = {"code": code, "area_type": area_type}
 

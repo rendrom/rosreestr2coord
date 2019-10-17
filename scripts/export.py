@@ -1,10 +1,11 @@
 # coding: utf-8
-from __future__ import print_function, division
+
 
 import copy
 import csv
-import os
 import json
+import os
+
 
 def make_output(output, file_name, file_format, out_path=""):
     out_path = out_path if out_path else file_format
@@ -34,9 +35,9 @@ def _write_csv_row(f, area, header=False):
         ]
 
         if header:
-            f.writerow(map(lambda x: x["name"], cols))
+            f.writerow([x["name"] for x in cols])
 
-        f.writerow(map(lambda x: x["value"], cols))
+        f.writerow([x["value"] for x in cols])
     except Exception as er:
         print(er)
 
@@ -54,13 +55,14 @@ def batch_csv_output(output, areas, file_name):
         _write_csv_row(f, areas[a], a == 0)
     return path
 
+
 def batch_json_output(output, areas, file_name, with_attrs=False, crs_name="EPSG:3857"):
     features = []
     feature_collection = {
-            "type": "FeatureCollection",
-            "crs": {"type": "name", "properties": {"name": crs_name}},
-            "features": features
-        }
+        "type": "FeatureCollection",
+        "crs": {"type": "name", "properties": {"name": crs_name}},
+        "features": features
+    }
     for a in areas:
         feature = a.to_geojson_poly(with_attrs, dumps=False)
         if feature:
@@ -98,8 +100,8 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
                         xy = coords[i][j]
                         for x, y in xy:
                             point = {"type": "Feature",
-                                    "properties": {"hole": j > 0},
-                                    "geometry": {"type": "Point", "coordinates": [x, y]}}
+                                     "properties": {"hole": j > 0},
+                                     "geometry": {"type": "Point", "coordinates": [x, y]}}
                             features.append(point)
         elif geom_type.upper() == "POLYGON":
             close_xy = []

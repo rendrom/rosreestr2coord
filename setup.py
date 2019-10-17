@@ -1,6 +1,8 @@
 from distutils.core import setup
+
 from setuptools import find_packages
-from version import VERSION
+
+from .version import VERSION
 
 setup(
     name='rosreestr2coord',

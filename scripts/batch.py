@@ -1,10 +1,9 @@
-from __future__ import print_function, division
-
 import os
 from time import sleep
+
 from scripts.catalog import Catalog
 from scripts.export import area_json_output, area_csv_output, batch_csv_output, batch_json_output
-from scripts.parser import Area, restore_area, NoCoordinatesException
+from scripts.parser import Area, restore_area
 from scripts.utils import TimeoutException
 
 
@@ -56,8 +55,9 @@ def batch_parser(codes, area_type=1, media_path="", with_log=False, catalog_path
                 with_error.append(code)
         else:
             from_catalog += 1
-            area = restore_area(restore, media_path=media_path, area_type=area_type, with_log=with_log, coord_out=coord_out,
-                            center_only=center_only, with_proxy=with_proxy)
+            area = restore_area(restore, media_path=media_path, area_type=area_type, with_log=with_log,
+                                coord_out=coord_out,
+                                center_only=center_only, with_proxy=with_proxy)
             if restore["image_path"]:
                 print(" - ok, from catalog", end="")
                 success += 1

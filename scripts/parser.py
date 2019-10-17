@@ -1,25 +1,22 @@
 # coding: utf-8
-from __future__ import print_function, division
-from logger import logger
 
 import copy
 import json
-import string
-import urllib
 import os
+import string
 
-from catalog import Catalog
-from export import coords2geojson
 from scripts.merge_tiles import PkkAreaMerger
-from utils import xy2lonlat, make_request, TimeoutException
+from .catalog import Catalog
+from .export import coords2geojson
+from .logger import logger
+from .utils import xy2lonlat, make_request, TimeoutException
 
 try:
-    import urlparse
-    from urllib import urlencode
+    import urllib.parse
+    from urllib.parse import urlencode
 except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
-
 
 ##############
 # SEARCH URL #
@@ -57,25 +54,24 @@ FEATURE_INFO_URL = "https://pkk5.rosreestr.ru/api/features/$area_type/"
 IMAGE_URL = "https://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
 
 TYPES = {
-    u"Участки": 1,
-    u"ОКС": 5,
-    u"Кварталы": 2,
-    u"Районы": 3,
-    u"Округа": 4,
-    u"Границы": 7,
-    u"ЗОУИТ": 10,
-    u"Тер. зоны": 6,
-    u"Красные линии": 13,
-    u"Лес": 12,
-    u"СРЗУ": 15,
-    u"ОЭЗ": 16,
-    u"ГОК": 9,
+    "Участки": 1,
+    "ОКС": 5,
+    "Кварталы": 2,
+    "Районы": 3,
+    "Округа": 4,
+    "Границы": 7,
+    "ЗОУИТ": 10,
+    "Тер. зоны": 6,
+    "Красные линии": 13,
+    "Лес": 12,
+    "СРЗУ": 15,
+    "ОЭЗ": 16,
+    "ГОК": 9,
 }
 
 
 class NoCoordinatesException(Exception):
     pass
-
 
 
 # def restore_area(restore, area_type=1, media_path="", with_log=False, catalog_path="", coord_out="EPSG:3857",
@@ -126,7 +122,7 @@ class Area:
         self.search_url = t.substitute({"area_type": area_type})
         t = string.Template(FEATURE_INFO_URL)
         self.feature_info_url = t.substitute({"area_type": area_type})
-        
+
         if not self.media_path:
             # self.media_path = os.path.dirname(os.path.realpath(__file__))
             self.media_path = os.getcwd()
@@ -150,7 +146,6 @@ class Area:
                 self.catalog.close()
         else:
             self.log("Nothing found")
-
 
     def restore(self, restore):
         for a in self.save_attrs:
@@ -176,7 +171,7 @@ class Area:
         if self.attrs:
             for a in self.attrs:
                 attr = self.attrs[a]
-                if isinstance(attr, basestring):
+                if isinstance(attr, str):
                     try:
                         attr = attr.encode('utf-8').strip()
                         self.attrs[a] = attr
@@ -202,7 +197,7 @@ class Area:
         if self.center_only:
             xy = self.get_center_xy()
             geom_type = "point"
-        else: 
+        else:
             xy = self.xy
         if xy and len(xy):
             feature_collection = coords2geojson(xy, geom_type, self.coord_out, attrs=attrs)
@@ -212,7 +207,6 @@ class Area:
                 return feature_collection
         return False
 
-    
     def get_center_xy(self):
         center = self.attrs.get("center")
         if center:
@@ -223,7 +217,6 @@ class Area:
     def make_request(self, url):
         response = make_request(url, self.with_proxy)
         return response
-
 
     def download_feature_info(self):
         try:
@@ -246,7 +239,7 @@ class Area:
                         y = feature["center"]["y"]
                         if self.coord_out == "EPSG:4326":
                             (x, y) = xy2lonlat(x, y)
-                        self.center = {"x": x, "y": y}  
+                        self.center = {"x": x, "y": y}
                         self.attrs["center"] = self.center
                         self.log("Area info downloaded.")
                 return feature
@@ -259,7 +252,7 @@ class Area:
     @staticmethod
     def clear_code(code):
         """remove first nulls from code  xxxx:00xx >> xxxx:xx"""
-        return ":".join(map(lambda x: str(int(x)), code.split(":")))
+        return ":".join([str(int(x)) for x in code.split(":")])
 
     @staticmethod
     def get_extent_list(extent):
@@ -277,13 +270,11 @@ class Area:
             # raise NoCoordinatesException()
         return ex
 
-
     def get_geometry(self):
         if self.center_only:
             return self.get_center_xy()
         else:
             return self.parse_geometry_from_image()
-
 
     def parse_geometry_from_image(self):
         formats = ["png"]
@@ -291,10 +282,11 @@ class Area:
         if not os.path.isdir(tmp_dir):
             os.makedirs(tmp_dir)
         for f in formats:
-            bbox = self.get_buffer_extent_list()    
+            bbox = self.get_buffer_extent_list()
             if bbox:
                 image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=self.with_log,
-                                        clear_code=self.clear_code(self.code_id), output_dir=tmp_dir, make_request=self.make_request)
+                                      clear_code=self.clear_code(self.code_id), output_dir=tmp_dir,
+                                      make_request=self.make_request)
                 image.download()
                 self.image_path = image.merge_tiles()
                 self.width = image.real_width
@@ -303,7 +295,6 @@ class Area:
 
                 if image:
                     return self.get_image_geometry()
-
 
     def get_image_geometry(self):
         """
@@ -329,7 +320,6 @@ class Area:
                     geom[p] = self.image_corners_to_coord(geom[p])
             return self.xy
         return []
-
 
     def get_image_xy_corner(self):
         """get сartesian coordinates from raster"""

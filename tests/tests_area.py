@@ -1,9 +1,8 @@
 # coding: utf-8
-from __future__ import print_function, division
+
 import os
 
 from scripts.console import get_by_code
-
 
 if os.path.isfile(os.path.join(os.getcwd(), "tests_area.py")):
     BASE_PATH = os.getcwd()

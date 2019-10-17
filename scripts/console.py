@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
-from __future__ import print_function, division
 
-import re
+
 import os
 import signal
-import time
 import sys
 
 from scripts.batch import batch_parser
 from scripts.parser import Area, TYPES
+
 
 def getopts():
     import argparse
@@ -28,7 +27,7 @@ def getopts():
     parser.add_argument('-c', '--code', action='store', type=str, required=False,
                         help='area cadastral number')
     parser.add_argument('-t', '--area_type', action='store', type=int, required=False, default=1,
-                        help='area types: %s' % "; ".join(["%s:%s" % (k, v) for k, v in TYPES.items()]))
+                        help='area types: %s' % "; ".join(["%s:%s" % (k, v) for k, v in list(TYPES.items())]))
     parser.add_argument('-p', '--path', action='store', type=str, required=False,
                         help='media path')
     parser.add_argument('-o', '--output', action='store', type=str, required=False,
@@ -62,7 +61,6 @@ def getopts():
 
 
 def _main():
-
     # area = Area("38:36:000021:1106")
     # area = Area("38:06:144003:4723")
     # area = Area("38:36:000033:375")
@@ -96,14 +94,17 @@ def _main():
         # codes = filter(code_filter, codes)
         f.close()
         batch_parser(codes, media_path=path, area_type=area_type, catalog_path=catalog_path, coord_out=coord_out,
-                     output=output, file_name=file_name, with_attrs=with_attrs, delay=delay, center_only=center_only, with_proxy=opt.proxy)
+                     output=output, file_name=file_name, with_attrs=with_attrs, delay=delay, center_only=center_only,
+                     with_proxy=opt.proxy)
 
     elif code:
-        get_by_code(code, path, area_type, catalog_path, with_attrs, epsilon, coord_out, output, display, center_only, with_proxy=opt.proxy)
+        get_by_code(code, path, area_type, catalog_path, with_attrs, epsilon, coord_out, output, display, center_only,
+                    with_proxy=opt.proxy)
 
 
 def get_by_code(code, path, area_type, catalog_path, with_attrs=False, epsilon=5,
-                coord_out='EPSG:3857', output="output", display=False, center_only=False, with_log=True, with_proxy=False):
+                coord_out='EPSG:3857', output="output", display=False, center_only=False, with_log=True,
+                with_proxy=False):
     area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon, with_log=with_log, catalog=catalog_path,
                 coord_out=coord_out, center_only=center_only, with_proxy=with_proxy)
     abspath = os.path.abspath(output)
@@ -127,13 +128,12 @@ def main():
     def signal_handler(signal, frame):
         print('You pressed Ctrl+C')
         sys.exit(0)
+
     signal.signal(signal.SIGINT, signal_handler)
     print('Press Ctrl+C to exit')
-    
-    _main()
 
+    _main()
 
 
 if __name__ == "__main__":
     main()
-

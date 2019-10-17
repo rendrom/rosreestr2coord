@@ -1,6 +1,8 @@
-import sys, os
+import sys
+
 from cx_Freeze import setup, Executable
-from version import VERSION
+
+from .version import VERSION
 
 product_name = "rosreestr2coord"
 base = None
@@ -10,17 +12,17 @@ if sys.platform == 'win32':
 bdist_msi_options = {
     'add_to_path': False,
     'initial_target_dir': r'[ProgramFilesFolder]\%s' % (product_name),
-    }
+}
 
 options = {
     'bdist_msi': bdist_msi_options,
     "build_exe": {"includes": ['atexit', 'PyQt4.QtWebKit'],
                   "include_files": [('gui\client\dist', 'gui\client\dist')],
                   "excludes": ["tkinter", "PyQt4.QtSql", "sqlite3",
-                                  "scipy.lib.lapack.flapack",
-                                  "PyQt4.QtScript",
-                                  "numpy.core._dotblas",
-                                  "PyQt5"],
+                               "scipy.lib.lapack.flapack",
+                               "PyQt4.QtScript",
+                               "numpy.core._dotblas",
+                               "PyQt5"],
                   "optimize": 2
                   }
 }
@@ -46,5 +48,4 @@ setup(name="rosreestr2coord_gui",
       executables=[exe]
       )
 
-
-    #   http://cx-freeze.readthedocs.io/en/latest/distutils.html
+#   http://cx-freeze.readthedocs.io/en/latest/distutils.html

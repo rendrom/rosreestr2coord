@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import json
 import os
 
@@ -50,7 +48,6 @@ class Catalog:
         with open(self.file_path, "w", buffering=buffering) as local_file:
             json.dump(self.store, local_file)
 
-    
     def refresh(self, area):
         self.update(area)
         self.close()
