@@ -286,7 +286,7 @@ class Area:
             if bbox:
                 image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=self.with_log,
                                       clear_code=self.clear_code(self.code_id), output_dir=tmp_dir,
-                                      make_request=self.make_request)
+                                      requester=self.make_request)
                 image.download()
                 self.image_path = image.merge_tiles()
                 self.width = image.real_width

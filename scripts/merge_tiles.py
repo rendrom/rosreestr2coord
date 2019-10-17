@@ -80,14 +80,14 @@ class TileMerger:
     use_cache = True
 
     def __init__(self, zoom, bbox, tile_format='.jpg', threads=1, file_name_prefix=None, output_dir=None,
-                 with_log=True, make_request=make_request):
+                 with_log=True, requester=make_request):
         if output_dir:
             self.output_dir = output_dir
         if file_name_prefix:
             self.file_name_prefix = file_name_prefix
         self.with_log = with_log
         self.stop = False
-        self.make_request = make_request
+        self.make_request = requester
         self.threads = threads
         self.total = 0
         self.count = 0

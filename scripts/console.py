@@ -125,7 +125,7 @@ def get_by_code(code, path, area_type, catalog_path, with_attrs=False, epsilon=5
 
 
 def main():
-    def signal_handler(signal, frame):
+    def signal_handler(signalnum, frame):
         print('You pressed Ctrl+C')
         sys.exit(0)
 
