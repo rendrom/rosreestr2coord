@@ -1,18 +1,22 @@
 tmp/
 .vscode/
 *.pyc
+__pycache__
 .DS_Store
 build/
 dist
 !/gui/client/dist
 .env/
 env/
+venv/
+.venv/
 *.egg-info/
 .idea/
 
 *.log
 *.json
 !/tests/catalog.json
+
 
 output/
 /tests/output/
