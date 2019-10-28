@@ -138,7 +138,7 @@ class TileMerger:
 
     def bbox_download(self):
         xy = self.xy_range
-        p = list(product(list(range(xy['xMin'], xy['xMax'] + 1)), list(range(xy['yMin'], xy['yMax'] + 1))))
+        p = list(product(range(xy['xMin'], xy['xMax'] + 1), range(xy['yMin'], xy['yMax'] + 1)))
         self.stream(target=self.fetch_tile, xy_tile=p, total=self.total)
         if self.with_log:
             pass
@@ -186,7 +186,7 @@ class TileMerger:
             self.log('Merging tiles...')
             xy_range = self.xy_range
             filename = '%s_%d_%s%s' % (self.file_name_prefix, self.zoom,
-                                       ''.join(set([str(int(g)) for g in list(xy_range.values())])), self.tile_format)
+                                       ''.join(set([str(int(g)) for g in xy_range.values()])), self.tile_format)
             out = Image.new('RGB', ((xy_range["xMax"] + 1 - xy_range["xMin"]) * self.image_size[0],
                                     (xy_range["yMax"] + 1 - xy_range["yMin"]) * self.image_size[1]))
             imx = 0
@@ -340,7 +340,7 @@ class PkkAreaMerger(TileMerger, object):
 
     def bbox_download(self):
         dx, dy = self._get_delta()
-        p = list(product(list(range(dx)), list(range(dy))))
+        p = list(product(range(dx), range(dy)))
         self.stream(target=self.fetch_tile, xy_tile=p, total=self.total)
 
     def get_url(self, x, y, z=None):
@@ -352,7 +352,7 @@ class PkkAreaMerger(TileMerger, object):
         bb = self.bbox
         keys = ("xMin", "xMax", "yMin", "yMax")
         if bb:
-            return dict(list(zip(keys, [bb[0], bb[2], bb[1], bb[3]])))
+            return dict(zip(keys, [bb[0], bb[2], bb[1], bb[3]]))
 
     def _get_delta(self, tile_size=False):
         tile_size = tile_size if tile_size else self.tile_size
@@ -394,7 +394,7 @@ class PkkAreaMerger(TileMerger, object):
                 dx, dy = self.tile_size
             code = self.clear_code
 
-            layers = list(map(str, list(range(0, 20))))
+            layers = map(str, range(0, 20))
             params = {
                 "dpi": 96,
                 "transparent": "false",
@@ -439,7 +439,7 @@ class PkkAreaMerger(TileMerger, object):
         for x in range(dx):
             imy = 0
             height = 0
-            for y in reversed(list(range(dy))):
+            for y in reversed(range(dy)):
                 tile_file = os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format))
                 try:
                     tile = Image.open(tile_file)
@@ -511,7 +511,7 @@ def get_available_layers():
 
 
 def check_bbox_str(bbox):
-    b = list(map(float, bbox.split()))
+    b = map(float, bbox.split())
     if len(b) != 4:
         return False
     return all([b[x + 2] - b[x] >= 0 for x in [0, 1]])
