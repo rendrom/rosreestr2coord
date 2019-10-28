@@ -9,7 +9,7 @@
 
 ## Зависимости
 
-* Python 2.7.x
+* Python 3.x.x (для Python 2.7.x используйте версии 1.x.x)
 * numpy
 * [OpenCV](http://opencv.org/)
 * Pillow
@@ -17,22 +17,33 @@
 
 ## Установка
 
-[Подробная инструкция для Windows](https://github.com/rendrom/rosreestr2coord/wiki/Instruction)
-
-Получите последнюю версию из репозитория
-
-```bash
-git clone https://github.com/rendrom/rosreestr2coord
-cd ./rosreestr2coord
-python setup.py install
-```
-
-Установку `python setup.py install` можно не выполнять
-
 Установка через пакетный менеджер
 
 ```bash
 pip install rosreestr2coord
+```
+
+Установка девелоперской версии
+
+```bash
+git clone https://github.com/rendrom/rosreestr2coord
+cd ./rosreestr2coord
+python setup.py install # py -3 setup.py install
+```
+
+Установка через виртуальное окружение
+
+```bash
+git clone https://github.com/rendrom/rosreestr2coord
+cd ./rosreestr2coord
+# создание виртуального окружения
+python -v venv ./.venv # or py -3 -v venv ./.venv
+# активация виртуального окружения Linux and MacOS
+. ./.venv/bin/activate
+# активация виртуального окружения для Windows
+. ./env/bin/activate
+# установка зависимостей
+pip install -r requirements.txt
 ```
 
 ## Использование
@@ -42,11 +53,7 @@ pip install rosreestr2coord
 ```bash
 rosreestr2coord -c 38:06:144003:4723
 rosreestr2coord -w -l ./cadastral_numbers_list.txt
-```
-
-или, без установки
-
-```bash
+# или
 python rosreestr2coord.py -c 38:06:144003:4723
 ```
 
@@ -102,6 +109,7 @@ npm run build
 
 ## Журнал
 
+* 28.10.2019 - Перевод на Python3 by [botanegg](https://github.com/botanegg).
 * 16.10.2019 - Исправление функции загрузки данных с росреестра by [botanegg](https://github.com/botanegg).
 * 11.09.2018 - Исправление ошибки формирование полигональной геометрии при экспорте в GEOJSON [#8](https://github.com/rendrom/rosreestr2coord/issues/8) by [denny123](https://github.com/denny123).
 * 12.03.2018 - Исправление функции завершения выполнения операций в консоли при нажатии на Ctrl+C.
