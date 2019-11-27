@@ -394,11 +394,11 @@ class PkkAreaMerger(TileMerger, object):
                 dx, dy = self.tile_size
             code = self.clear_code
 
-            layers = map(str, range(0, 20))
+            layers = list(map(str, range(0, 20)))
             params = {
                 "dpi": 96,
                 "transparent": "false",
-                "format": "png",
+                "format": "png32",
                 "layers": "show:%s" % ",".join(layers),
                 "bbox": ",".join(map(str, self._get_bbox_by_xy(x, y))),
                 "bboxSR": 102100,
