@@ -47,7 +47,7 @@ class TimeoutException(Exception):
 def get_rosreestr_headers():
     return {
         'pragma': 'no-cache',
-        'referer': 'https://pkk5.rosreestr.ru/',
+        'referer': 'https://pkk.rosreestr.ru/',
         'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36',
         'x-requested-with': 'XMLHttpRequest',
     }
@@ -62,7 +62,7 @@ def make_request(url, with_proxy=False):
         try:
             headers = get_rosreestr_headers()
             request = urllib.request.Request(url, headers=headers)
-            f = urllib.request.urlopen(request, timeout=10)
+            f = urllib.request.urlopen(request, timeout=200)
             read = f.read()
             return read
         except Exception as er:

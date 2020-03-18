@@ -1,7 +1,7 @@
 # ROSREESTR TO COORDINATE
 
 Инструмент, позволяющий вычислять координаты участка по его кадастровому номеру.
-Данные берутся с сайта публичной кадастровой карты [http://pkk5.rosreestr.ru/](http://pkk5.rosreestr.ru/).
+Данные берутся с сайта публичной кадастровой карты [http://pkk.rosreestr.ru/](http://pkk.rosreestr.ru/).
 
 Результат работы скрипта __не соответствует информации в кадастровой выписке__
 
@@ -109,6 +109,7 @@ npm run build
 
 ## Журнал
 
+* 18.03.2020 - Обеспечение совместимости с новой версией api [публичной кадастровой карты](https://pkk.rosreestr.ru/)
 * 28.10.2019 - Перевод на Python3 by [botanegg](https://github.com/botanegg).
 * 16.10.2019 - Исправление функции загрузки данных с росреестра by [botanegg](https://github.com/botanegg).
 * 11.09.2018 - Исправление ошибки формирование полигональной геометрии при экспорте в GEOJSON [#8](https://github.com/rendrom/rosreestr2coord/issues/8) by [denny123](https://github.com/denny123).

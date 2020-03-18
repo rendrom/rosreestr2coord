@@ -410,7 +410,7 @@ let prepare = function (data) {
     //     let link = document.createElement("a");
     //     let linkText = document.createTextNode("На сайте PKK");
     //     link.className = "info-item link";
-    //     pkk_url = `http://pkk5.rosreestr.ru/#x=${c.x}&y=${c.y}&text=${data.code}&app=search&opened=1`;
+    //     pkk_url = `http://pkk.rosreestr.ru/#x=${c.x}&y=${c.y}&text=${data.code}&app=search&opened=1`;
     //     link.setAttribute('href', pkk_url);
     //     link.setAttribute('target', "_blank");
     //     link.appendChild(linkText);
@@ -626,7 +626,7 @@ let setMapCursor = function () {
 //         tolerance: 1
 //     });
 //     startLoading();
-//     return getJSON(`http://pkk5.rosreestr.ru/api/features?${urlStr}`).then((data) => {
+//     return getJSON(`http://pkk.rosreestr.ru/api/features?${urlStr}`).then((data) => {
 //         stopLoading();
 //         if (data && data.features) {
 //             let pkkFeature = data.features.find((obj) => {

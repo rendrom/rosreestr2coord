@@ -3,6 +3,7 @@
 
 import json
 import math
+import base64
 import os
 import queue
 import random
@@ -307,7 +308,8 @@ class GoogleMerger(UrlTileMerger):
 
 class PkkAreaMerger(TileMerger, object):
     file_name_prefix = 'pkk'
-    url = "https://pkk5.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
+    # url = "https://pkk.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
+    url = "https://pkk.rosreestr.ru/arcgis/rest/services/PKK6/CadastreSelected/MapServer/export"
     crs = 3857
     # tile_size = (300000, 300000)
     tile_size = (1000, 1000)
@@ -343,8 +345,26 @@ class PkkAreaMerger(TileMerger, object):
         p = list(product(range(dx), range(dy)))
         self.stream(target=self.fetch_tile, xy_tile=p, total=self.total)
 
+    def fetch_tile(self, porties):
+        for x, y in sorted(porties, key=lambda k: random.random()):
+            if not self.stop:
+                file_name = "%s_%s%s" % (x, y, self.tile_format)
+                file_path = os.path.join(self.tile_dir, file_name)
+                if not self.use_cache or not os.path.isfile(file_path):
+                    imgstring = self.get_image(x, y)
+                    tile = base64.b64decode(imgstring)
+                    if tile:
+                        self.write_image(tile, file_path)
+                        self.count += 1
+                else:
+                    self.count += 1
+                if self.with_log:
+                    print("\r%d%% %d/%d" % ((self.count / self.total) * 100, self.count, self.total), end='')
+
+
     def get_url(self, x, y, z=None):
         return self.get_image_url(x, y)
+
 
     def set_xy_range(self):
         if len(self.bbox) != 4:
@@ -385,7 +405,7 @@ class PkkAreaMerger(TileMerger, object):
         yMax = bbox["yMin"] + ((y + 1) * self.tile_size[1])
         return [xMax, yMax, xMin, yMin]
 
-    def get_image_url(self, x, y):
+    def get_image(self, x, y):
         output_format = self.output_format
         if self.clear_code and self.extent:
             if self.total == 1:
@@ -418,9 +438,9 @@ class PkkAreaMerger(TileMerger, object):
                 try:
                     response = self.make_request(meta_url)
                     data = json.loads(response)
-                    if data.get("href"):
+                    if data.get("imageData"):
                         self._image_extent_list.append(data.get("extent"))
-                        return meta_url.replace("f=json", "f=image")
+                        return data.get("imageData")
                     else:
                         logger.warning("Can't get image meta data from: %s" % meta_url)
                 except Exception as er:
