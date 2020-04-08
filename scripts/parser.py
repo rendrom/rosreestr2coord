@@ -6,7 +6,6 @@ import os
 import string
 
 from scripts.merge_tiles import PkkAreaMerger
-from .catalog import Catalog
 from .export import coords2geojson
 from .logger import logger
 from .utils import xy2lonlat, make_request, TimeoutException
@@ -75,28 +74,12 @@ class NoCoordinatesException(Exception):
     pass
 
 
-# def restore_area(restore, area_type=1, media_path="", with_log=False, catalog_path="", coord_out="EPSG:3857",
-#                  file_name="example", output=os.path.join("output"), repeat=0, areas=None, with_attrs=False, delay=1,
-#                  center_only=False, with_proxy=False):
-#     area = Area(media_path=media_path, area_type=area_type, with_log=with_log, coord_out=coord_out,
-#                             center_only=center_only, with_proxy=with_proxy)
-
-def restore_area(restore, area_type=1, media_path="", with_log=False, catalog_path="", coord_out="EPSG:3857",
-                 file_name="example", output=os.path.join("output"), repeat=0, areas=None, with_attrs=False, delay=1,
-                 center_only=False, with_proxy=False):
-    area = Area(media_path=media_path, area_type=area_type, with_log=with_log, coord_out=coord_out,
-                center_only=center_only, with_proxy=with_proxy)
-    area.restore(restore)
-    return area
-
-
 class Area:
     image_url = IMAGE_URL
     buffer = 10
-    save_attrs = ["code", "area_type", "attrs", "image_path", "center", "extent", "image_extent", "width", "height"]
 
-    def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=True, catalog="",
-                 coord_out="EPSG:3857", center_only=False, with_proxy=False):
+    def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=True,
+                 coord_out="EPSG:4326", center_only=False, with_proxy=False, use_cache=True):
         self.with_log = with_log
         self.area_type = area_type
         self.media_path = media_path
@@ -116,46 +99,31 @@ class Area:
         self.code_id = ""
         self.file_name = self.code[:].replace(":", "_")
         self.with_proxy = with_proxy
-
+        self.use_cache = use_cache
         self.coord_out = coord_out
 
         t = string.Template(SEARCH_URL)
         self.search_url = t.substitute({"area_type": area_type})
         t = string.Template(FEATURE_INFO_URL)
         self.feature_info_url = t.substitute({"area_type": area_type})
-
-        if not self.media_path:
-            # self.media_path = os.path.dirname(os.path.realpath(__file__))
-            self.media_path = os.getcwd()
-        if not os.path.isdir(self.media_path):
-            os.makedirs(self.media_path)
-        if catalog:
-            self.catalog = Catalog(catalog)
-            restore = self.catalog.find(self.code)
-            if restore:
-                self.restore(restore)
-                self.log("%s - restored from %s" % (self.code, catalog))
-                return
         if not code:
             return
-
+        self.workspace = self.create_workspace()
         feature_info = self.download_feature_info()
         if feature_info:
             geometry = self.get_geometry()
-            if catalog and geometry:
-                self.catalog.update(self)
-                self.catalog.close()
         else:
             self.log("Nothing found")
 
-    def restore(self, restore):
-        for a in self.save_attrs:
-            setattr(self, a, restore[a])
-        if self.coord_out:
-            setattr(self, "coord_out", self.coord_out)
-        setattr(self, "code_id", self.code)
-        self.get_geometry()
-        self.file_name = self.code.replace(":", "_")
+    def create_workspace(self):
+        if not self.media_path:
+            self.media_path = os.getcwd()
+        area_path_name = self.clear_code(self.code).replace(":", "_")
+        workspace = os.path.join(
+            self.media_path, "tmp", area_path_name)
+        if not os.path.isdir(workspace):
+            os.makedirs(workspace)
+        return workspace
 
     def get_coord(self):
         if self.xy:
@@ -180,17 +148,17 @@ class Area:
                         pass
         return self.attrs
 
-    def to_geojson_poly(self, with_attrs=False, dumps=True):
+    def to_geojson_poly(self, with_attrs=True, dumps=True):
         return self.to_geojson("polygon", with_attrs, dumps)
 
-    def to_geojson_center(self, with_attrs=False, dumps=True):
+    def to_geojson_center(self, with_attrs=True, dumps=True):
         current_center_status = self.center_only
         self.center_only = True
         to_return = self.to_geojson("point", with_attrs, dumps)
         self.center_only = current_center_status
         return to_return
 
-    def to_geojson(self, geom_type="point", with_attrs=False, dumps=True):
+    def to_geojson(self, geom_type="point", with_attrs=True, dumps=True):
         attrs = False
         if with_attrs:
             attrs = self._get_attrs_to_geojson()
@@ -201,7 +169,8 @@ class Area:
         else:
             xy = self.xy
         if xy and len(xy):
-            feature_collection = coords2geojson(xy, geom_type, self.coord_out, attrs=attrs)
+            feature_collection = coords2geojson(
+                xy, geom_type, self.coord_out, attrs=attrs)
             if feature_collection:
                 if dumps:
                     return json.dumps(feature_collection)
@@ -220,12 +189,25 @@ class Area:
         return response
 
     def download_feature_info(self):
+        feature_info_path = os.path.join(self.workspace, 'feature_info.json')
+        data = False
+        if self.use_cache:
+            try:
+                with open(feature_info_path, 'r') as data_file:
+                    data = json.loads(data_file.read())
+            except:
+                pass
         try:
-            search_url = self.feature_info_url + self.clear_code(self.code)
-            self.log("Start downloading area info: %s" % search_url)
-            response = self.make_request(search_url)
-            resp = response
-            data = json.loads(resp)
+            if not data:
+                search_url = self.feature_info_url + self.clear_code(self.code)
+                self.log("Start downloading area info: %s" % search_url)
+                resp = self.make_request(search_url)
+                data = json.loads(resp)
+                self.log("Area info downloaded.")
+                with open(feature_info_path, 'w') as outfile:
+                    json.dump(data, outfile)
+            else:
+                self.log("Area info loaded from file: {}".format(feature_info_path))
             if data:
                 feature = data.get("feature")
                 if feature:
@@ -242,7 +224,6 @@ class Area:
                             (x, y) = xy2lonlat(x, y)
                         self.center = {"x": x, "y": y}
                         self.attrs["center"] = self.center
-                        self.log("Area info downloaded.")
                 return feature
         except TimeoutException:
             raise TimeoutException()
@@ -265,7 +246,8 @@ class Area:
         ex = self.extent
         buf = self.buffer
         if ex and ex["xmin"]:
-            ex = [ex["xmin"] - buf, ex["ymin"] - buf, ex["xmax"] + buf, ex["ymax"] + buf]
+            ex = [ex["xmin"] - buf, ex["ymin"] - buf,
+                  ex["xmax"] + buf, ex["ymax"] + buf]
         else:
             self.log("Area has no coordinates")
             # raise NoCoordinatesException()
@@ -279,15 +261,13 @@ class Area:
 
     def parse_geometry_from_image(self):
         formats = ["png"]
-        tmp_dir = os.path.join(self.media_path, "tmp")
-        if not os.path.isdir(tmp_dir):
-            os.makedirs(tmp_dir)
+
         for f in formats:
             bbox = self.get_buffer_extent_list()
             if bbox:
                 image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=self.with_log,
-                                      clear_code=self.clear_code(self.code_id), output_dir=tmp_dir,
-                                      requester=self.make_request)
+                                      clear_code=self.clear_code(self.code_id), output_dir=self.workspace,
+                                      requester=self.make_request, use_cache=self.use_cache)
                 image.download()
                 self.image_path = image.merge_tiles()
                 self.width = image.real_width
@@ -333,12 +313,13 @@ class Area:
         try:
             img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
             imagem = (255 - img)
-
             ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
             try:
-                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                contours, hierarchy = cv2.findContours(
+                    thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             except Exception:
-                im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+                im2, contours, hierarchy = cv2.findContours(
+                    thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
             hierarchy = hierarchy[0]
             hierarchy_contours = [[] for _ in range(len(hierarchy))]
@@ -385,9 +366,10 @@ class Area:
             raise ImportError('Matplotlib is not installed.')
 
         img = cv2.imread(self.image_path)
-        for corners in self.image_xy_corner:
-            for x, y in corners:
-                cv2.circle(img, (x, y), 3, 255, -1)
+        for polygones in self.image_xy_corner:
+            for corners in polygones:
+                for x, y in corners:
+                    cv2.circle(img, (x, y), 3, 255, -1)
         plt.imshow(img), plt.show()
 
     def log(self, msg):

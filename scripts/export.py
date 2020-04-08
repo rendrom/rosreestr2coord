@@ -56,7 +56,7 @@ def batch_csv_output(output, areas, file_name):
     return path
 
 
-def batch_json_output(output, areas, file_name, with_attrs=False, crs_name="EPSG:3857"):
+def batch_json_output(output, areas, file_name, with_attrs=False, crs_name="EPSG:4326"):
     features = []
     feature_collection = {
         "type": "FeatureCollection",

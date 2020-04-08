@@ -30,27 +30,21 @@ def getopts():
                         help='media path')
     parser.add_argument('-o', '--output', action='store', type=str, required=False,
                         help='output path')
-    parser.add_argument('-w', '--wgs', action='store_const', const=True, required=False,
-                        help='use WGS84 coordinate system')
     parser.add_argument('-l', '--list', action='store', type=str, required=False,
                         help='path of file with cadastral codes list')
-    parser.add_argument('-a', '--attrs', action='store_const', const=True, required=False,
-                        help='insert the area attributes in the geojson output')
     parser.add_argument('-d', '--display', action='store_const', const=True, required=False,
                         help='display plot (only for --code mode)')
     parser.add_argument('-D', '--delay', action='store', type=int, required=False, default=1,
                         help='delay between request (only for --list mode)')
     parser.add_argument('-r', '--refresh', action='store_const', const=True, required=False,
-                        help='do not use catalog')
-    # parser.add_argument('-x', '--csv', action='store_const', const=True, required=False,
-    #                     help='create CSV table output, use only with --list')
+                        help='do not use cache')
     parser.add_argument('-e', '--epsilon', action='store', type=float, required=False, default=5,
-                        help='Parameter specifying the approximation accuracy'
+                        help='parameter specifying the approximation accuracy'
                              'This is the maximum distance between the original curve and its approximation. '
                              'Small value = high detail = more points. '
                              '(default %(default).2f)')
     parser.add_argument('-C', '--center_only', action='store_const', const=True, required=False,
-                        help='Use only the center of area')
+                        help='use only the center of area')
     parser.add_argument('-P', '--proxy', action='store_const', const=True, required=False,
                         help='use proxies')
     opts = parser.parse_args()
@@ -66,21 +60,20 @@ def _main():
     # 47:16:0650002:317  # multipolygon
 
     # code, output, path, epsilon, area_type = "38:06:144003:4723", "", "", 5, 1)
-
     opt = getopts()
     code = opt.code
     output = opt.output if opt.output else os.path.join("output")
     delay = getattr(opt, "delay", 1000)
-    path = opt.path
-    epsilon = opt.epsilon if opt.epsilon else 5
-    area_type = opt.area_type if opt.area_type else 1
-    with_attrs = opt.attrs if opt.attrs else False
-    center_only = opt.center_only if opt.center_only else False
-    refresh = opt.refresh
-    display = opt.display
-    coord_out = "EPSG:4326" if opt.wgs else "EPSG:3857"
-    # csv = opt.csv
-    catalog_path = "" if refresh else os.path.join(os.getcwd(), "catalog.json")
+    kwargs = {
+        "media_path": opt.path,
+        "with_proxy": opt.proxy,
+        "epsilon": opt.epsilon if opt.epsilon else 5,
+        "area_type": opt.area_type if opt.area_type else 1,
+        "center_only": opt.center_only if opt.center_only else False,
+        "use_cache": False if opt.refresh else True,
+        "coord_out": "EPSG:4326",
+    }
+
     if opt.list:
         file_name = os.path.splitext(os.path.basename(opt.list))[0]
         f = open(opt.list, 'r')
@@ -91,22 +84,16 @@ def _main():
         #     return not s
         # codes = filter(code_filter, codes)
         f.close()
-        batch_parser(codes, media_path=path, area_type=area_type, catalog_path=catalog_path, coord_out=coord_out,
-                     output=output, file_name=file_name, with_attrs=with_attrs, delay=delay, center_only=center_only,
-                     with_proxy=opt.proxy)
+        batch_parser(codes, output=output, delay=delay, file_name=file_name, **kwargs)
 
     elif code:
-        get_by_code(code, path, area_type, catalog_path, with_attrs, epsilon, coord_out, output, display, center_only,
-                    with_proxy=opt.proxy)
+        get_by_code(code, output, display=opt.display, **kwargs)
 
 
-def get_by_code(code, path, area_type, catalog_path, with_attrs=False, epsilon=5,
-                coord_out='EPSG:3857', output="output", display=False, center_only=False, with_log=True,
-                with_proxy=False):
-    area = Area(code, media_path=path, area_type=area_type, epsilon=epsilon, with_log=with_log, catalog=catalog_path,
-                coord_out=coord_out, center_only=center_only, with_proxy=with_proxy)
+def get_by_code(code, output, display, **kwargs):
+    area = Area(code, **kwargs)
     abspath = os.path.abspath(output)
-    geojson = area.to_geojson_poly(with_attrs=with_attrs)
+    geojson = area.to_geojson_poly()
     if geojson:
         filename = '%s.geojson' % area.file_name.replace(":", "_")
         geojson_path = os.path.join(abspath, "geojson")
@@ -116,7 +103,7 @@ def get_by_code(code, path, area_type, catalog_path, with_attrs=False, epsilon=5
         f = open(file_path, 'w')
         f.write(geojson)
         f.close()
-        print(file_path)
+        print("Vector - {}".format(file_path))
         if display:
             area.show_plot()
     return area
