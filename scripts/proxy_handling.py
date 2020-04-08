@@ -7,6 +7,9 @@ import urllib.parse
 import urllib.request
 from urllib.parse import urlparse
 
+import ssl
+from urllib.request import Request, urlopen
+
 PROXY_PATH = 'proxy.txt'
 
 
@@ -26,8 +29,8 @@ def update_proxies(path=PROXY_PATH):
 
 
 def download_proxies(path=PROXY_PATH):
-    # found = ip_adress_proxies()
-    found = free_proxies()
+    found = ip_adress_proxies()
+    # found = free_proxies()
     dump_proxies_to_file(found[:20], path)  # 20 top proxies
 
 def ip_adress_proxies(url = 'https://www.ip-adress.com/proxy_list/'):
@@ -40,9 +43,14 @@ def ip_adress_proxies(url = 'https://www.ip-adress.com/proxy_list/'):
     parsed_uri = urlparse(url)
     host = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
     request.add_header('referer', host)
-    f = urllib.request.urlopen(request)
+    s = False
+    try:
+        context = ssl._create_unverified_context()
+        with urlopen(request, context=context, timeout=3000) as response:
+            s = response.read().decode('utf-8')
+    except Exception as er:
+        print(er)
     pattern = r'\d*\.\d*\.\d*\.\d*\</a>:\d*'
-    s = f.read().decode('utf-8')
     found = [i.replace('</a>', '') + '\n' for i in re.findall(pattern, s)]
     return found
 

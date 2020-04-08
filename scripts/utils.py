@@ -79,7 +79,7 @@ def make_request_with_proxy(url):
     if not proxies:
         proxy_handling.update_proxies()
         proxies = proxy_handling.load_proxies_from_file()
-    tries = 1  # number of tries for each proxy
+    tries = 3  # number of tries for each proxy
     for proxy in reversed(proxies):
         for i in range(1, tries + 1):  # how many tries for each proxy
             try:
@@ -93,10 +93,9 @@ def make_request_with_proxy(url):
                 context = ssl._create_unverified_context()
                 with urlopen(request, context=context, timeout=3000) as response:
                     read = response.read()
-
-                if read.find('400 Bad Request') == -1:
-                    return read
+                return read
             except Exception as er:
+                print(er)
                 logger.warning(er)
             if i == tries:
                 proxies.remove(proxy)
