@@ -13,6 +13,8 @@ from itertools import chain, product
 from urllib.parse import urlencode
 
 from PIL import Image
+Image.MAX_IMAGE_PIXELS = 1000000000
+Image.warnings.simplefilter('error', Image.DecompressionBombWarning)
 
 from scripts.utils import make_request, TimeoutException
 from .logger import logger

@@ -74,7 +74,7 @@ def batch_json_output(output, areas, file_name, with_attrs=False, crs_name="EPSG
     return feature_collection
 
 
-def area_json_output(output, area, with_attrs=False):
+def area_json_output(output, area, with_attrs=True):
     geojson = area.to_geojson_poly(with_attrs)
     if geojson:
         f = open(make_output(output, area.file_name, "geojson"), 'w')
