@@ -50,7 +50,7 @@ def batch_parser(codes, with_log=False, file_name="example", areas=None,
             feature = area_json_output(output, area)
             if feature:
                 features.append(feature)
-            area_csv_output(output, area)
+            # area_csv_output(output, area)
 
     print("=================")
     print("Parsing complete:")
@@ -66,13 +66,13 @@ def batch_parser(codes, with_log=False, file_name="example", areas=None,
                      delay=delay, **kwargs)
     else:
         path = batch_csv_output(output, areas, file_name)
-        print("Create output complete: %s" % path)
         if len(with_no_coord):
             path = batch_csv_output(
                 output, with_no_coord, "%s_no_coord" % file_name)
             print("Create output for no_coord complete: %s" % path)
         if len(features):
-            batch_json_output(output, areas, file_name)
+            path = batch_json_output(output, areas, file_name)
+            print("Create output complete: %s" % path)
         if len(with_error):
             print("-----------------")
             print("Error list:")

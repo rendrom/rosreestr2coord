@@ -44,34 +44,35 @@ def _write_csv_row(f, area, header=False):
 
 def area_csv_output(output, area):
     path = make_output(output, area.file_name, "csv")
-    f = csv.writer(open(path, "w+"))
+    f = csv.writer(open(path, "w+", encoding='utf-8'))
     _write_csv_row(f, area)
 
 
 def batch_csv_output(output, areas, file_name):
     path = make_output(output, file_name, "csv")
-    f = csv.writer(open(path, "w+"))
+    f = csv.writer(open(path, "w+", encoding='utf-8'))
     for a in range(len(areas)):
         _write_csv_row(f, areas[a], a == 0)
     return path
 
 
-def batch_json_output(output, areas, file_name, with_attrs=False, crs_name="EPSG:4326"):
+def batch_json_output(output, areas, file_name, with_attrs=True, crs_name="EPSG:4326"):
     features = []
     feature_collection = {
         "type": "FeatureCollection",
         "crs": {"type": "name", "properties": {"name": crs_name}},
         "features": features
     }
+    path = make_output(output, file_name, "geojson")
     for a in areas:
         feature = a.to_geojson_poly(with_attrs, dumps=False)
         if feature:
             features.append(feature)
-    if feature_collection:
-        f = open(make_output(output, file_name, "geojson"), 'w')
-        f.write(json.dumps(feature_collection))
-        f.close()
-    return feature_collection
+
+    f = open(path, 'w', encoding='utf-8')
+    f.write(json.dumps(feature_collection))
+    f.close()
+    return path
 
 
 def area_json_output(output, area, with_attrs=True):
