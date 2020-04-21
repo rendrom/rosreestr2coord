@@ -52,7 +52,7 @@ pip install -r requirements.txt
 rosreestr2coord -c 38:06:144003:4723
 rosreestr2coord -l ./cadastral_numbers_list.txt
 # или
-python rosreestr2coord.py -c 38:06:144003:4723
+python rosreestr2coord/console.py -c 38:06:144003:4723
 ```
 
 Во время выполнения скрипта, в директории откуда был произведен запуск будут созданы файлы и папки.
@@ -80,7 +80,7 @@ python rosreestr2coord.py -c 38:06:144003:4723
 ### Программно
 
 ```python
-from scripts.parser import Area
+from rosreestr2coord.parser import Area
 
 area = Area("38:06:144003:4723") # дополнительные аргументы coord_out="EPSG:3857", area_type=1, media-path=MEDIA,
 area.to_geojson()
@@ -90,7 +90,11 @@ area.get_attrs()
 ```
 
 ## Журнал
-
+* 21.04.2020 - ВЕРСИЯ 4.0.4
+  * небольшой рефакторинг - подготовка к type и pep тестам
+  * добавлен poetry
+  * добавлен Makefile
+  * добавлены тесты (pytest)
 * 08.04.2020 - ВЕРСИЯ 4.0.0
   * Координаты всегда в WGS84
   * Всегда добавляются атрибуты

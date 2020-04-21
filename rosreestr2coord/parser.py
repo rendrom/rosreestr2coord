@@ -5,7 +5,7 @@ import json
 import os
 import string
 
-from scripts.merge_tiles import PkkAreaMerger
+from rosreestr2coord.merge_tiles import PkkAreaMerger
 from .export import coords2geojson
 from .logger import logger
 from .utils import xy2lonlat, make_request, TimeoutException
@@ -78,8 +78,10 @@ class Area:
     image_url = IMAGE_URL
     buffer = 10
 
-    def __init__(self, code="", area_type=1, epsilon=5, media_path="", with_log=True,
-                 coord_out="EPSG:4326", center_only=False, with_proxy=False, use_cache=True):
+    def __init__(self, code="", area_type=1, epsilon=5, media_path="",
+                 with_log=True,
+                 coord_out="EPSG:4326", center_only=False, with_proxy=False,
+                 use_cache=True):
         self.with_log = with_log
         self.area_type = area_type
         self.media_path = media_path
@@ -207,7 +209,8 @@ class Area:
                 with open(feature_info_path, 'w') as outfile:
                     json.dump(data, outfile)
             else:
-                self.log("Area info loaded from file: {}".format(feature_info_path))
+                self.log(
+                    "Area info loaded from file: {}".format(feature_info_path))
             if data:
                 feature = data.get("feature")
                 if feature:
@@ -265,9 +268,12 @@ class Area:
         for f in formats:
             bbox = self.get_buffer_extent_list()
             if bbox:
-                image = PkkAreaMerger(bbox=self.get_buffer_extent_list(), output_format=f, with_log=self.with_log,
-                                      clear_code=self.clear_code(self.code_id), output_dir=self.workspace,
-                                      requester=self.make_request, use_cache=self.use_cache)
+                image = PkkAreaMerger(bbox=self.get_buffer_extent_list(),
+                                      output_format=f, with_log=self.with_log,
+                                      clear_code=self.clear_code(self.code_id),
+                                      output_dir=self.workspace,
+                                      requester=self.make_request,
+                                      use_cache=self.use_cache)
                 image.download()
                 self.image_path = image.merge_tiles()
                 self.width = image.real_width

@@ -1,9 +1,9 @@
 # coding=utf-8
 
 
+import base64
 import json
 import math
-import base64
 import os
 import queue
 import random
@@ -13,24 +13,22 @@ from itertools import chain, product
 from urllib.parse import urlencode
 
 from PIL import Image
+
+from rosreestr2coord.utils import make_request, TimeoutException
+from .logger import logger
+
 Image.MAX_IMAGE_PIXELS = 1000000000
 Image.warnings.simplefilter('error', Image.DecompressionBombWarning)
 
-from scripts.utils import make_request, TimeoutException
-from .logger import logger
 
-VERSION = "1.0.0"
-
-
-def chunks(l, n):
-    """ Yield successive n-sized chunks from l.
-    """
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
+def chunks(m, n):
+    """Yield successive n-sized chunks from m."""
+    for i in range(0, len(m), n):
+        yield m[i:i + n]
 
 
 def has_live_threads(threads):
-    return True in [t.isAlive() for t in threads]
+    return True in [t.is_alive() for t in threads]
 
 
 def thread_download(target, xy_tile, total, thread_count=4):
@@ -53,7 +51,7 @@ def thread_download(target, xy_tile, total, thread_count=4):
         try:
             # synchronization timeout of threads kill
             [t.join(1) for t in threads
-             if t is not None and t.isAlive()]
+             if t is not None and t.is_alive()]
         except KeyboardInterrupt:
             # Ctrl-C handling and send kill to threads
             for t in threads:
@@ -76,7 +74,8 @@ class TileMerger:
     image_size = tuple()
     use_cache = True
 
-    def __init__(self, zoom, bbox, tile_format='.jpg', threads=1, file_name_prefix=None, output_dir=None,
+    def __init__(self, zoom, bbox, tile_format='.jpg', threads=1,
+                 file_name_prefix=None, output_dir=None,
                  with_log=True, requester=make_request):
         if output_dir:
             self.output_dir = output_dir
@@ -98,7 +97,8 @@ class TileMerger:
             os.makedirs(self.tile_dir)
 
     def get_tile_dir(self, zoom):
-        return os.path.join(self.output_dir, "%s_%s" % (self.file_name_prefix, zoom))
+        return os.path.join(self.output_dir,
+                            "%s_%s" % (self.file_name_prefix, zoom))
 
     @staticmethod
     def write_image(image, path):
@@ -112,7 +112,9 @@ class TileMerger:
         keys = ("xMin", "xMax", "yMin", "yMax")
         if bbox:
             xy = list(
-                chain(*list(map(sorted, list(zip(*[deg2num(l[0], l[1], self.zoom) for l in (bbox[:2], bbox[2:])]))))))
+                chain(*list(map(sorted, list(zip(
+                    *[deg2num(l[0], l[1], self.zoom) for l in
+                      (bbox[:2], bbox[2:])]))))))
             return dict(list(zip(keys, xy)))
         else:
             return dict.fromkeys(keys, 0)
@@ -169,7 +171,8 @@ class TileMerger:
                     self.count += 1
                 if self.with_log:
                     print("\r%d%% %d/%d" % ((self.count / self.total)
-                                            * 100, self.count, self.total), end='')
+                                            * 100, self.count, self.total),
+                          end='')
 
     def lazy_download(self):
         row, col = True, True
@@ -199,9 +202,12 @@ class TileMerger:
             self.log('Merging tiles...')
             xy_range = self.xy_range
             filename = '%s_%d_%s%s' % (self.file_name_prefix, self.zoom,
-                                       ''.join(set([str(int(g)) for g in xy_range.values()])), self.tile_format)
-            out = Image.new('RGB', ((xy_range["xMax"] + 1 - xy_range["xMin"]) * self.image_size[0],
-                                    (xy_range["yMax"] + 1 - xy_range["yMin"]) * self.image_size[1]))
+                                       ''.join(set([str(int(g)) for g in
+                                                    xy_range.values()])),
+                                       self.tile_format)
+            out = Image.new('RGB', (
+                (xy_range["xMax"] + 1 - xy_range["xMin"]) * self.image_size[0],
+                (xy_range["yMax"] + 1 - xy_range["yMin"]) * self.image_size[1]))
             imx = 0
             for x in range(xy_range["xMin"], xy_range["xMax"] + 1):
                 imy = 0
@@ -277,8 +283,10 @@ class PkkAreaMerger(TileMerger, object):
     max_count = 50
 
     def __init__(self, output_format, clear_code, use_cache, **kwargs):
-        super(PkkAreaMerger, self).__init__(zoom=0, tile_format='.%s' % output_format,
-                                            file_name_prefix=clear_code, **kwargs)
+        super(PkkAreaMerger, self).__init__(zoom=0,
+                                            tile_format='.%s' % output_format,
+                                            file_name_prefix=clear_code,
+                                            **kwargs)
         self.file_name_prefix = clear_code.replace(":", "_")
         self.output_format = output_format
         self.clear_code = clear_code
@@ -293,7 +301,8 @@ class PkkAreaMerger(TileMerger, object):
         if self.total == 1:
             xy = self.xy_range
             max_size = max(int(math.ceil(
-                (xy["xMax"] - xy["xMin"]))), int(math.ceil((xy["yMax"] - xy["yMin"]))))
+                (xy["xMax"] - xy["xMin"]))),
+                int(math.ceil((xy["yMax"] - xy["yMin"]))))
             self.tile_size = (max_size, max_size)
         elif self.total > self.max_count:
             self._optimize_tile_size(self.max_count)
@@ -321,7 +330,8 @@ class PkkAreaMerger(TileMerger, object):
 
                 if self.with_log:
                     print("\r%d%% %d/%d" % ((self.count / self.total)
-                                            * 100, self.count, self.total), end='')
+                                            * 100, self.count, self.total),
+                          end='')
 
     def get_url(self, x, y, z=None):
         return self.get_image_url(x, y)
@@ -384,7 +394,8 @@ class PkkAreaMerger(TileMerger, object):
                 "bboxSR": 102100,
                 "imageSR": 102100,
                 "size": "%s,%s" % (dx, dy),
-                "layerDefs": {layer: str("ID = '%s'" % code) for layer in layers},
+                "layerDefs": {layer: str("ID = '%s'" % code) for layer in
+                              layers},
                 "f": "json"
             }
             if output_format:
@@ -447,7 +458,6 @@ class PkkAreaMerger(TileMerger, object):
                     except Exception as er:
                         logger.warning(er)
                 imx += height
-
 
             self.real_width = imx
             self.real_height = imy

@@ -1,0 +1,10 @@
+[flake8]
+max-line-length = 120
+# F401: module imported but unused
+# E402: module level import not at top of file
+# E203 whitespace before ':'
+# C901 ...exprt... is too complex
+# W504 line break after binary operator
+ignore = F401,E402,E203,W504
+format = %(path)s:%(row)d:%(col)d: %(code)s %(text)s
+max-complexity = 15

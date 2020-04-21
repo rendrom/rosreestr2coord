@@ -1,14 +1,12 @@
 import os
 import re
+import ssl
 import time
-
 import urllib.error
 import urllib.parse
 import urllib.request
 from urllib.parse import urlparse
-
-import ssl
-from urllib.request import Request, urlopen
+from urllib.request import urlopen
 
 PROXY_PATH = 'proxy.txt'
 
@@ -33,7 +31,8 @@ def download_proxies(path=PROXY_PATH):
     # found = free_proxies()
     dump_proxies_to_file(found[:20], path)  # 20 top proxies
 
-def ip_adress_proxies(url = 'https://www.ip-adress.com/proxy_list/'):
+
+def ip_adress_proxies(url='https://www.ip-adress.com/proxy_list/'):
     # Downloading without proxy
     opener = urllib.request.build_opener(urllib.request.ProxyHandler())
     urllib.request.install_opener(opener)
@@ -54,7 +53,8 @@ def ip_adress_proxies(url = 'https://www.ip-adress.com/proxy_list/'):
     found = [i.replace('</a>', '') + '\n' for i in re.findall(pattern, s)]
     return found
 
-def free_proxies(url = 'https://free-proxy-list.net/'):
+
+def free_proxies(url='https://free-proxy-list.net/'):
     # Downloading without proxy
     opener = urllib.request.build_opener(urllib.request.ProxyHandler())
     urllib.request.install_opener(opener)
@@ -69,6 +69,7 @@ def free_proxies(url = 'https://free-proxy-list.net/'):
     s = f.read().decode('utf-8')
     found = [i.replace('</td><td>', ':') + '\n' for i in re.findall(pattern, s)]
     return found
+
 
 def load_proxies(path=PROXY_PATH):
     if not os.path.exists(PROXY_PATH):

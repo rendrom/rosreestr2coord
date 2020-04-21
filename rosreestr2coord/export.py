@@ -56,7 +56,8 @@ def batch_csv_output(output, areas, file_name):
     return path
 
 
-def batch_json_output(output, areas, file_name, with_attrs=True, crs_name="EPSG:4326"):
+def batch_json_output(output, areas, file_name, with_attrs=True,
+                      crs_name="EPSG:4326"):
     features = []
     feature_collection = {
         "type": "FeatureCollection",
@@ -102,7 +103,8 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
                         for x, y in xy:
                             point = {"type": "Feature",
                                      "properties": {"hole": j > 0},
-                                     "geometry": {"type": "Point", "coordinates": [x, y]}}
+                                     "geometry": {"type": "Point",
+                                                  "coordinates": [x, y]}}
                             features.append(point)
         elif geom_type.upper() == "POLYGON":
             close_xy = []
@@ -115,8 +117,10 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
                 multi_polygon.append(close_xy)
             feature = {"type": "Feature",
                        "properties": attrs,
-                       "geometry": {"type": "MultiPolygon", "coordinates": multi_polygon}}
+                       "geometry": {"type": "MultiPolygon",
+                                    "coordinates": multi_polygon}}
             feature_collection = feature
-        feature_collection["crs"] = {"type": "name", "properties": {"name": crs_name}}
+        feature_collection["crs"] = {"type": "name",
+                                     "properties": {"name": crs_name}}
         return feature_collection
     return False

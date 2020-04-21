@@ -4,8 +4,8 @@ import os
 import signal
 import sys
 
-from scripts.batch import batch_parser
-from scripts.parser import Area, TYPES
+from rosreestr2coord.batch import batch_parser
+from rosreestr2coord.parser import Area, TYPES
 
 
 def getopts():
@@ -17,35 +17,45 @@ def getopts():
     """
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent("""\
-        Get geojson with coordinates of area by cadastral number.
-        https://pkk.rosreestr.ru/
-        """)
+        description=textwrap.dedent("""Get geojson with coordinates of area by cadastral number.
+        https://pkk.rosreestr.ru/""")
     )
-    parser.add_argument('-c', '--code', action='store', type=str, required=False,
+    parser.add_argument('-c', '--code', action='store', type=str,
+                        required=False,
                         help='area cadastral number')
-    parser.add_argument('-t', '--area_type', action='store', type=int, required=False, default=1,
-                        help='area types: %s' % "; ".join(["%s:%s" % (k, v) for k, v in list(TYPES.items())]))
-    parser.add_argument('-p', '--path', action='store', type=str, required=False,
+    parser.add_argument('-t', '--area_type', action='store', type=int,
+                        required=False, default=1,
+                        help='area types: %s' % "; ".join(
+                            ["%s:%s" % (k, v) for k, v in list(TYPES.items())]))
+    parser.add_argument('-p', '--path', action='store', type=str,
+                        required=False,
                         help='media path')
-    parser.add_argument('-o', '--output', action='store', type=str, required=False,
+    parser.add_argument('-o', '--output', action='store', type=str,
+                        required=False,
                         help='output path')
-    parser.add_argument('-l', '--list', action='store', type=str, required=False,
+    parser.add_argument('-m', '--list', action='store', type=str,
+                        required=False,
                         help='path of file with cadastral codes list')
-    parser.add_argument('-d', '--display', action='store_const', const=True, required=False,
+    parser.add_argument('-d', '--display', action='store_const', const=True,
+                        required=False,
                         help='display plot (only for --code mode)')
-    parser.add_argument('-D', '--delay', action='store', type=int, required=False, default=1,
+    parser.add_argument('-D', '--delay', action='store', type=int,
+                        required=False, default=1,
                         help='delay between request (only for --list mode)')
-    parser.add_argument('-r', '--refresh', action='store_const', const=True, required=False,
+    parser.add_argument('-r', '--refresh', action='store_const', const=True,
+                        required=False,
                         help='do not use cache')
-    parser.add_argument('-e', '--epsilon', action='store', type=float, required=False, default=5,
+    parser.add_argument('-e', '--epsilon', action='store', type=float,
+                        required=False, default=5,
                         help='parameter specifying the approximation accuracy'
                              'This is the maximum distance between the original curve and its approximation. '
                              'Small value = high detail = more points. '
                              '(default %(default).2f)')
-    parser.add_argument('-C', '--center_only', action='store_const', const=True, required=False,
+    parser.add_argument('-C', '--center_only', action='store_const', const=True,
+                        required=False,
                         help='use only the center of area')
-    parser.add_argument('-P', '--proxy', action='store_const', const=True, required=False,
+    parser.add_argument('-P', '--proxy', action='store_const', const=True,
+                        required=False,
                         help='use proxies')
     opts = parser.parse_args()
 
@@ -84,7 +94,8 @@ def _main():
         #     return not s
         # codes = filter(code_filter, codes)
         f.close()
-        batch_parser(codes, output=output, delay=delay, file_name=file_name, **kwargs)
+        batch_parser(codes, output=output, delay=delay, file_name=file_name,
+                     **kwargs)
 
     elif code:
         get_by_code(code, output, display=opt.display, **kwargs)

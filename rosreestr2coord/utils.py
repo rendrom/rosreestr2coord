@@ -1,8 +1,8 @@
 # import urllib
 import math
+import ssl
 import urllib.error
 import urllib.parse
-import ssl
 from urllib.request import Request, urlopen
 
 from . import proxy_handling
@@ -27,7 +27,8 @@ from .logger import logger
 
 
 def y2lat(y):
-    return (2 * math.atan(math.exp(y / 6378137)) - math.pi / 2) / (math.pi / 180)
+    return (2 * math.atan(math.exp(y / 6378137)) - math.pi / 2) / (
+            math.pi / 180)
 
 
 def x2lon(x):
@@ -84,14 +85,16 @@ def make_request_with_proxy(url):
         for i in range(1, tries + 1):  # how many tries for each proxy
             try:
                 # print('%i iteration of proxy %s' % (i, proxy), end="")
-                proxy_handler = urllib.request.ProxyHandler({'http': proxy, 'https': proxy})
+                proxy_handler = urllib.request.ProxyHandler(
+                    {'http': proxy, 'https': proxy})
                 opener = urllib.request.build_opener(proxy_handler)
                 urllib.request.install_opener(opener)
                 headers = get_rosreestr_headers()
 
                 request = Request(url, headers=headers)
                 context = ssl._create_unverified_context()
-                with urlopen(request, context=context, timeout=3000) as response:
+                with urlopen(request, context=context,
+                             timeout=3000) as response:
                     read = response.read()
                 return read
             except Exception as er:
