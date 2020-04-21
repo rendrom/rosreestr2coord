@@ -52,7 +52,7 @@ pip install -r requirements.txt
 rosreestr2coord -c 38:06:144003:4723
 rosreestr2coord -l ./cadastral_numbers_list.txt
 # или
-python rosreestr2coord/console.py -c 38:06:144003:4723
+python rosreestr2coord -c 38:06:144003:4723
 ```
 
 Во время выполнения скрипта, в директории откуда был произведен запуск будут созданы файлы и папки.

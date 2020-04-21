@@ -24,15 +24,15 @@ setup:
 	poetry install -v
 
 # usual unit-tests with coverage
-unit:
+unit-tests:
 	poetry run pytest --cov=$(PACKAGE_NAME) -o log_cli=true --log-cli-level=INFO tests/
 
 # run tests against all supported python versions
-tox:
+tox-tests:
 	poetry run tox
 
-type:
+type-checking:
 	poetry run mypy --config-file pyproject.toml $(PACKAGE_NAME)/*.py tests/
 
-pep:
+pep-checking:
 	poetry run flake8 --format='%(path)s:%(row)d:%(col)d: %(text)s' $(PACKAGE_NAME)
