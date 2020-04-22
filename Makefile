@@ -6,6 +6,7 @@ PACKAGE_NAME := rosreestr2coord
 #PYPI_USER := some_user
 #PYPI_PASSWORD := some_pwd
 
+# Run cleanup of tmp files
 clean:
 	find . -name ".pytest_cache" -exec rm -rf "{}" +
 	find . -name \*.log -delete
