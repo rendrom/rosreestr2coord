@@ -43,7 +43,7 @@ setup(
     author_email='rendrom@gmail.com',
     entry_points={
         'console_scripts': [
-            'rosreestr2coord=rosreestr2coord.console:main',
+            'rosreestr2coord=rosreestr2coord.console:console',
         ],
     },
 )

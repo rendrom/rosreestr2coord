@@ -35,7 +35,7 @@ python setup.py install # py -3 setup.py install
 git clone https://github.com/rendrom/rosreestr2coord
 cd ./rosreestr2coord
 # создание виртуального окружения
-python -v venv ./.env # or py -3 -v venv ./.env
+python -m venv ./.env
 # активация виртуального окружения Linux and MacOS
 . ./.env/bin/activate
 # активация виртуального окружения для Windows
@@ -81,7 +81,7 @@ python -m rosreestr2coord -c 38:06:144003:4723
 ### Программно
 
 ```python
-from rosreestr2coord.parser import Area
+from rosreestr2coord import Area
 
 area = Area("38:06:144003:4723") # дополнительные аргументы coord_out="EPSG:3857", area_type=1, media-path=MEDIA,
 area.to_geojson()
@@ -121,4 +121,4 @@ area.get_attrs()
 
 ## Разработка
 
-...
+[INSTALL.md](https://github.com/nextgis/nextgisweb_frontend/blob/master/INSTALL.md)
