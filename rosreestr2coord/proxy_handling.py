@@ -9,6 +9,8 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 
 PROXY_PATH = 'proxy.txt'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) \
+    Chrome/64.0.3282.186 Safari/537.36'
 
 
 def update_proxies(path=PROXY_PATH):
@@ -37,8 +39,7 @@ def ip_adress_proxies(url='https://www.ip-adress.com/proxy_list/'):
     opener = urllib.request.build_opener(urllib.request.ProxyHandler())
     urllib.request.install_opener(opener)
     request = urllib.request.Request(url)
-    request.add_header('user-agent',
-                       'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36')
+    request.add_header('user-agent', USER_AGENT)
     parsed_uri = urlparse(url)
     host = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
     request.add_header('referer', host)
@@ -59,21 +60,22 @@ def free_proxies(url='https://free-proxy-list.net/'):
     opener = urllib.request.build_opener(urllib.request.ProxyHandler())
     urllib.request.install_opener(opener)
     request = urllib.request.Request(url)
-    request.add_header('user-agent',
-                       'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36')
+    request.add_header('user-agent', USER_AGENT)
     parsed_uri = urlparse(url)
     host = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
     request.add_header('referer', host)
     f = urllib.request.urlopen(request)
     pattern = r'\d*\.\d*\.\d*\.\d*\</td><td>\d*'
     s = f.read().decode('utf-8')
-    found = [i.replace('</td><td>', ':') + '\n' for i in re.findall(pattern, s)]
+    found = [i.replace('</td><td>', ':') +
+             '\n' for i in re.findall(pattern, s)]
     return found
 
 
 def load_proxies(path=PROXY_PATH):
     if not os.path.exists(PROXY_PATH):
-        with open(PROXY_PATH, 'w'): pass
+        with open(PROXY_PATH, 'w'):
+            pass
     update_proxies(path)
     return load_proxies_from_file(path)
 

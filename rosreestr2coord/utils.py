@@ -27,8 +27,7 @@ from .logger import logger
 
 
 def y2lat(y):
-    return (2 * math.atan(math.exp(y / 6378137)) - math.pi / 2) / (
-            math.pi / 180)
+    return (2 * math.atan(math.exp(y / 6378137)) - math.pi / 2) / (math.pi / 180)
 
 
 def x2lon(x):
@@ -39,7 +38,8 @@ def xy2lonlat(x, y):
     return [x2lon(x), y2lat(y)]
 
 
-USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 \
+    Safari/537.36'
 
 
 class TimeoutException(Exception):
@@ -50,7 +50,7 @@ def get_rosreestr_headers():
     return {
         'pragma': 'no-cache',
         'referer': 'https://pkk.rosreestr.ru/',
-        'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36',
+        'user-agent': USER_AGENT,
         'x-requested-with': 'XMLHttpRequest',
     }
 

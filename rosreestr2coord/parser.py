@@ -113,7 +113,7 @@ class Area:
         self.workspace = self.create_workspace()
         feature_info = self.download_feature_info()
         if feature_info:
-            geometry = self.get_geometry()
+            self.get_geometry()
         else:
             self.log("Nothing found")
 
@@ -146,7 +146,7 @@ class Area:
                     try:
                         attr = attr.strip()
                         self.attrs[a] = attr
-                    except:
+                    except Exception:
                         pass
         return self.attrs
 
@@ -197,7 +197,7 @@ class Area:
             try:
                 with open(feature_info_path, 'r') as data_file:
                     data = json.loads(data_file.read())
-            except:
+            except Exception:
                 pass
         try:
             if not data:

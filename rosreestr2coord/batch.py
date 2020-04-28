@@ -36,8 +36,7 @@ def batch_parser(codes, with_log=False, file_name="example", areas=None,
             print(" - error")
             print("Your IP is probably blocked. Try later or use proxy")
             break
-
-        except Exception as er:
+        except Exception:
             print(" - error", end="")
             with_error.append(code)
 

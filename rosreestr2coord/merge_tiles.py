@@ -138,7 +138,7 @@ class TileMerger:
                     break
             first_img_path = os.path.join(self.tile_dir, first_image_name)
             im = Image.open(first_img_path)
-            buffer = im.load()
+            im.load()
             self.image_size = im.size
         print("")
         self.log('Completed, %s tiles received' % self.count)
@@ -170,8 +170,7 @@ class TileMerger:
                 else:
                     self.count += 1
                 if self.with_log:
-                    print("\r%d%% %d/%d" % ((self.count / self.total)
-                                            * 100, self.count, self.total),
+                    print("\r%d%% %d/%d" % ((self.count / self.total) * 100, self.count, self.total),
                           end='')
 
     def lazy_download(self):
@@ -225,48 +224,6 @@ class TileMerger:
             outpath = os.path.abspath(path)
             self.log('You raster - %s' % outpath)
             return outpath
-
-            # def create_raster_worldfile(self, path, xy_range=None):
-            #     from globalmaptiles import GlobalMercator
-            #     x_y = xy_range or self.xy_range
-            #     im = Image.open(path)
-            #     gw_path = ''.join(os.path.split(path)[-1].split('.')[:-1])
-            #     world_file_path = os.path.join(os.path.curdir, os.path.join(self.output_dir, "%s.jgw" % gw_path))
-            #     with open(world_file_path, 'w') as world:
-            #         min_y, min_x = num2deg(x_y['xMin'], x_y['yMax'] + 1, self.zoom)
-            #         max_y, max_x = num2deg(x_y['xMax'] + 1, x_y['yMin'], self.zoom)
-            #         gm = GlobalMercator()
-            #         min_x, min_y = gm.LatLonToMeters(min_y, min_x)
-            #         max_x, max_y = gm.LatLonToMeters(max_y, max_x)
-            #         x_pixel_size = (max_x - min_x) / im.size[0]
-            #         y_pixel_size = (max_y - min_y) / im.size[1]
-            #         world.write(b"%f\n" % x_pixel_size)  # pixel size in the x-direction in map units/pixel
-            #         world.write(b"%f\n" % 0)  # rotation about y-axis
-            #         world.write(b"%f\n" % 0)  # rotation about x-axis
-            #         world.write(b"%f\n" % -(abs(y_pixel_size)))  # pixel size in the y-direction in map units. Always negative
-            #         world.write(b"%f\n" % min_x)  # x-coordinate of the center of the upper left pixel
-            #         world.write(b"%f\n" % max_y)  # y-coordinate of the center of the upper left pixel
-            #
-            # def create_prj_file(self, path, crs=None):
-            #     crs = crs or self.crs
-            #     prj_str = {
-            #         4326: b"""
-            #         GEOGCS["GCS_WGS_1984",DATUM["D_WGS84",SPHEROID["WGS84",6378137,298.257223563]],
-            #         PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]
-            #         """,
-            #         3857: b"""
-            #         PROJCS["WGS_1984_Web_Mercator_Auxiliary_Sphere",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",
-            #         SPHEROID["WGS_1984",6378137,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],
-            #         PROJECTION["Mercator"],PARAMETER["central_meridian",0],PARAMETER["standard_parallel_1",0],
-            #         PARAMETER["false_easting",0],PARAMETER["false_northing",0],PARAMETER["Auxiliary_Sphere_Type",0],
-            #         UNIT["Meter",1]]
-            #         """
-            #     }
-            #     prj_path = ''.join(os.path.split(path)[-1].split('.')[:-1])
-            #     prj_file_path = os.path.join(os.path.curdir, os.path.join(self.output_dir, "%s.prj" % prj_path))
-            #     prj = open(prj_file_path, 'w')
-            #     prj.write(prj_str[crs])
-            #     prj.close()
 
     def log(self, msg):
         if self.with_log:
@@ -329,8 +286,7 @@ class PkkAreaMerger(TileMerger, object):
                         self.count += 1
 
                 if self.with_log:
-                    print("\r%d%% %d/%d" % ((self.count / self.total)
-                                            * 100, self.count, self.total),
+                    print("\r%d%% %d/%d" % ((self.count / self.total) * 100, self.count, self.total),
                           end='')
 
     def get_url(self, x, y, z=None):
@@ -412,7 +368,7 @@ class PkkAreaMerger(TileMerger, object):
                 try:
                     with open(cache_path, 'r') as data_file:
                         data = json.loads(data_file.read())
-                except:
+                except Exception:
                     pass
                 try:
                     if not data:
@@ -484,8 +440,52 @@ class PkkAreaMerger(TileMerger, object):
             self.image_extent = {
                 "xmin": bb[0], "ymin": bb[1], "xmax": xmax, "ymax": ymax}
             outpath = os.path.abspath(path)
+            create_raster_worldfile(path, self.image_extent)
+            create_prj_file(path)
             self.log('You raster - %s' % outpath)
             return outpath
+
+
+def create_raster_worldfile(path, xy_range):
+    x_y = xy_range
+    im = Image.open(path)
+    output_dir = os.path.dirname(path)
+    gw_path = ''.join(os.path.split(path)[-1].split('.')[:-1])
+    world_file_path = os.path.join(output_dir, '%s.pgw' % gw_path)
+    with open(world_file_path, 'w') as world:
+        min_x, max_x = x_y['xmin'], x_y['xmax']
+        min_y, max_y = x_y['ymin'], x_y['ymax']
+
+        x_pixel_size = (max_x - min_x) / im.size[0]
+        y_pixel_size = (max_y - min_y) / im.size[1]
+        world.write('%s\n' % x_pixel_size)  # pixel size in the x-direction in map units/pixel
+        world.write('%s\n' % 0)  # rotation about y-axis
+        world.write('%s\n' % 0)  # rotation about x-axis
+        world.write('%s\n' % -(abs(y_pixel_size)))  # pixel size in the y-direction in map units. Always negative
+        world.write('%s\n' % min_x)  # x-coordinate of the center of the upper left pixel
+        world.write('%s\n' % max_y)  # y-coordinate of the center of the upper left pixel
+
+
+def create_prj_file(path, crs=3857):
+    output_dir = os.path.dirname(path)
+    prj_str = {
+        4326: """
+        GEOGCS["GCS_WGS_1984",DATUM["D_WGS84",SPHEROID["WGS84",6378137,298.257223563]],
+        PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]
+        """,
+        3857: """
+        PROJCS["WGS_1984_Web_Mercator_Auxiliary_Sphere",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",
+        SPHEROID["WGS_1984",6378137,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],
+        PROJECTION["Mercator"],PARAMETER["central_meridian",0],PARAMETER["standard_parallel_1",0],
+        PARAMETER["false_easting",0],PARAMETER["false_northing",0],PARAMETER["Auxiliary_Sphere_Type",0],
+        UNIT["Meter",1]]
+        """
+    }
+    prj_path = ''.join(os.path.split(path)[-1].split('.')[:-1])
+    prj_file_path = os.path.join(output_dir, '%s.prj' % prj_path)
+    prj = open(prj_file_path, 'w')
+    prj.write(prj_str[crs])
+    prj.close()
 
 
 def deg2num(lat_deg, lon_deg, zoom):
