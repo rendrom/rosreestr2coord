@@ -3,6 +3,7 @@
 import copy
 import json
 import os
+import re
 import string
 
 from rosreestr2coord.merge_tiles import PkkAreaMerger
@@ -237,7 +238,9 @@ class Area:
     @staticmethod
     def clear_code(code):
         """remove first nulls from code  xxxx:00xx >> xxxx:xx"""
-        return ":".join([str(int(x)) for x in code.split(":")])
+        if re.match(r'^\d+(\:\d+)', code):
+            return ":".join([str(int(x)) for x in code.split(":")])
+        return code
 
     @staticmethod
     def get_extent_list(extent):

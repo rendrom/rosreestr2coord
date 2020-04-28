@@ -352,6 +352,7 @@ class PkkAreaMerger(TileMerger, object):
                 "size": "%s,%s" % (dx, dy),
                 "layerDefs": {layer: str("ID = '%s'" % code) for layer in
                               layers},
+                # "layerDefs": '{"0":"ID = %s","1":"objectid = -1","2":"objectid = -1"}' % (str("'%s'" % code)),
                 "f": "json"
             }
             if output_format:
@@ -458,12 +459,16 @@ def create_raster_worldfile(path, xy_range):
 
         x_pixel_size = (max_x - min_x) / im.size[0]
         y_pixel_size = (max_y - min_y) / im.size[1]
-        world.write('%s\n' % x_pixel_size)  # pixel size in the x-direction in map units/pixel
+        # pixel size in the x-direction in map units/pixel
+        world.write('%s\n' % x_pixel_size)
         world.write('%s\n' % 0)  # rotation about y-axis
         world.write('%s\n' % 0)  # rotation about x-axis
-        world.write('%s\n' % -(abs(y_pixel_size)))  # pixel size in the y-direction in map units. Always negative
-        world.write('%s\n' % min_x)  # x-coordinate of the center of the upper left pixel
-        world.write('%s\n' % max_y)  # y-coordinate of the center of the upper left pixel
+        # pixel size in the y-direction in map units. Always negative
+        world.write('%s\n' % -(abs(y_pixel_size)))
+        # x-coordinate of the center of the upper left pixel
+        world.write('%s\n' % min_x)
+        # y-coordinate of the center of the upper left pixel
+        world.write('%s\n' % max_y)
 
 
 def create_prj_file(path, crs=3857):
