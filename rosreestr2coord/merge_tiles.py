@@ -238,8 +238,9 @@ class PkkAreaMerger(TileMerger, object):
     tile_size = (1000, 1000)
     use_cache = True
     max_count = 50
+    area_type = 1
 
-    def __init__(self, output_format, clear_code, use_cache, **kwargs):
+    def __init__(self, output_format, clear_code, use_cache, area_type=1, **kwargs):
         super(PkkAreaMerger, self).__init__(zoom=0,
                                             tile_format='.%s' % output_format,
                                             file_name_prefix=clear_code,
@@ -248,6 +249,7 @@ class PkkAreaMerger(TileMerger, object):
         self.output_format = output_format
         self.clear_code = clear_code
         self.extent = self.bbox
+        self.area_type = area_type
 
         self.real_width = 0
         self.real_height = 0
@@ -357,7 +359,12 @@ class PkkAreaMerger(TileMerger, object):
             }
             if output_format:
                 params["format"] = output_format
-            url_parts = list(urllib.parse.urlparse(self.url))
+
+            url = self.url
+            if self.area_type == 10:
+                url = url.replace('CadastreSelected', 'ZONESSelected')
+
+            url_parts = list(urllib.parse.urlparse(url))
             query = dict(urllib.parse.parse_qsl(url_parts[4]))
             query.update(params)
             url_parts[4] = urlencode(query)
@@ -405,7 +412,7 @@ class PkkAreaMerger(TileMerger, object):
                 height = 0
                 for y in reversed(range(dy)):
                     tile_file = os.path.join(
-                        self.tile_dir, "%s_%s%s" % (x, y, self.tile_format))
+                        self.tile_dir, '%s_%s%s' % (x, y, self.tile_format))
                     try:
                         tile = Image.open(tile_file)
                         tiles.append((tile, (imx, imy)))
