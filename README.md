@@ -9,7 +9,7 @@
 
 ## Зависимости
 
-* Python 3.x.x (для Python 2.7.x используйте версии 1.x.x)
+* Python3
 * [OpenCV](http://opencv.org/)
 * Pillow
 
@@ -26,7 +26,7 @@ pip install rosreestr2coord
 ```bash
 git clone https://github.com/rendrom/rosreestr2coord
 cd ./rosreestr2coord
-python setup.py install # py -3 setup.py install
+python setup.py install
 ```
 
 Установка через виртуальное окружение
@@ -73,7 +73,7 @@ python -m rosreestr2coord -c 38:06:144003:4723
   * 4 - Округа
   * 5 - ОКС
   * 6 - Тер. зоны; 7 - Границы; 9 - ГОК; 10 - ЗОУИТ; 12 - Лес; 13 - Красные линии; 15 - СРЗУ; 16 - ОЭЗ 16
-* -l - пакетная загрузка из списка в текстовом файле ( `rosreestr2coord.py -m -l list_example.txt` )
+* -l - пакетная загрузка из списка в текстовом файле ( `rosreestr2coord -l list_example.txt` )
 * -d - визуализация распознанных точек (для режима --code)
 * -r - не использовать кэширование
 * -P - загрузка через прокси
