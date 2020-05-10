@@ -1,4 +1,5 @@
 # import urllib
+import json
 import math
 import ssl
 import urllib.error
@@ -67,6 +68,9 @@ def make_request(url, with_proxy=False):
             context = ssl._create_unverified_context()
             with urlopen(request, context=context, timeout=3000) as response:
                 read = response.read()
+            is_error = is_error_response(url, read)
+            if is_error:
+                raise Exception(is_error)
             return read
         except Exception as er:
             logger.warning(er)
@@ -96,6 +100,9 @@ def make_request_with_proxy(url):
                 with urlopen(request, context=context,
                              timeout=3000) as response:
                     read = response.read()
+                is_error = is_error_response(url, read)
+                if is_error:
+                    raise Exception(is_error)
                 return read
             except Exception as er:
                 print(er)
@@ -107,3 +114,16 @@ def make_request_with_proxy(url):
     # if here, the result is not received
     # try with the new proxy list
     return make_request_with_proxy(url)
+
+
+def is_error_response(url, response):
+    is_error = False
+    try:
+        data = json.loads(response)
+        error = data.get('error')
+        if error:
+            message = error.get('message')
+            is_error = message if message else 'error'
+    except Exception:
+        pass
+    return is_error
