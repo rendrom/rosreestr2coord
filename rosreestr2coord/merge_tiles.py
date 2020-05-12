@@ -222,7 +222,7 @@ class TileMerger:
             # self.create_raster_worldfile(path)
             # self.create_prj_file(path)
             outpath = os.path.abspath(path)
-            self.log('You raster - %s' % outpath)
+            self.log('raster - %s' % outpath)
             return outpath
 
     def log(self, msg):
@@ -454,7 +454,7 @@ class PkkAreaMerger(TileMerger, object):
             outpath = os.path.abspath(path)
             create_raster_worldfile(path, self.image_extent)
             create_prj_file(path)
-            self.log('You raster - %s' % outpath)
+            self.log('raster - %s' % outpath)
             return outpath
 
 

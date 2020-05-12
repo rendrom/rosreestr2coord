@@ -105,6 +105,18 @@ def get_by_code(code, output, display, **kwargs):
     area = Area(code, **kwargs)
     abspath = os.path.abspath(output)
     geojson = area.to_geojson_poly()
+
+    kml = area.to_kml()
+    if kml:
+        filename = '%s.kml' % area.file_name.replace(":", "_")
+        kml_path = os.path.join(abspath, "kml")
+        if not os.path.isdir(kml_path):
+            os.makedirs(kml_path)
+        file_path = os.path.join(kml_path, filename)
+        f = open(file_path, 'wb')
+        f.write(kml)
+        f.close()
+        print("kml - {}".format(file_path))
     if geojson:
         filename = '%s.geojson' % area.file_name.replace(":", "_")
         geojson_path = os.path.join(abspath, "geojson")
@@ -114,9 +126,9 @@ def get_by_code(code, output, display, **kwargs):
         f = open(file_path, 'w')
         f.write(geojson)
         f.close()
-        print("Vector - {}".format(file_path))
-        if display:
-            area.show_plot()
+        print("geojson - {}".format(file_path))
+    if display:
+        area.show_plot()
     return area
 
 
