@@ -6,6 +6,8 @@ import csv
 import json
 import os
 
+import xml.etree.cElementTree as ET
+
 
 def make_output(output, file_name, file_format, out_path=""):
     out_path = out_path if out_path else file_format
@@ -101,26 +103,74 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
                     for j in range(len(coords[i])):
                         xy = coords[i][j]
                         for x, y in xy:
-                            point = {"type": "Feature",
-                                     "properties": {"hole": j > 0},
-                                     "geometry": {"type": "Point",
-                                                  "coordinates": [x, y]}}
+                            point = {
+                                "type": "Feature",
+                                "properties": {"hole": j > 0},
+                                "geometry": {
+                                    "type": "Point",
+                                    "coordinates": [x, y]
+                                }
+                            }
                             features.append(point)
         elif geom_type.upper() == "POLYGON":
-            close_xy = []
             multi_polygon = []
             for fry in range(len(coords)):
+                polygon = []
                 for j in range(len(coords[fry])):
                     xy = coords[fry][j]
+                    # close polygon
                     xy.append(xy[0])
-                    close_xy.append(xy)
-                multi_polygon.append(close_xy)
-            feature = {"type": "Feature",
-                       "properties": attrs,
-                       "geometry": {"type": "MultiPolygon",
-                                    "coordinates": multi_polygon}}
+                    polygon.append(xy)
+                multi_polygon.append(polygon)
+            feature = {
+                "type": "Feature",
+                "properties": attrs,
+                "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": multi_polygon
+                }}
             feature_collection = feature
-        feature_collection["crs"] = {"type": "name",
-                                     "properties": {"name": crs_name}}
+        feature_collection["crs"] = {
+            "type": "name",
+            "properties": {"name": crs_name}
+        }
         return feature_collection
+    return False
+
+
+def coords2kml(coords, attrs):
+
+    if len(coords):
+        kml = ET.Element("kml", attrib={"xmlns":"http://www.opengis.net/kml/2.2"})
+        doc = ET.SubElement(kml, "Document")
+        folder = ET.SubElement(doc, "Folder")
+        name = ET.SubElement(folder, "name").text = "test"
+        placemark = ET.SubElement(folder, "Placemark")
+
+        style = ET.SubElement(placemark, "Style")
+
+        line_style = ET.SubElement(style, "LineStyle")
+        line_style_color = ET.SubElement(line_style, "color").text = "ff0000ff"
+
+        poly_style = ET.SubElement(style, "PolyStyle")
+        poly_style_fill = ET.SubElement(poly_style, "fill").text = "0"
+
+        multi_geometry = ET.SubElement(placemark, "MultiGeometry")
+
+        for i in range(len(coords)):
+
+            polygon = ET.SubElement(multi_geometry, "Polygon")
+            for j in range(len(coords[i])):
+                if j:
+                    boundary = ET.SubElement(polygon, "outerBoundaryIs")
+                else:
+                    # for holes
+                    boundary = ET.SubElement(polygon, "innerBoundaryIs")
+                xy = coords[i][j]
+                xy.append(xy[0])
+                linear_ring = ET.SubElement(boundary, "LinearRing")
+                coordinates = ET.SubElement(linear_ring, "coordinates").text = ' '.join(
+                    map(lambda c: ','.join(map(str, c)), xy)
+                )
+        return ET.tostring(kml, encoding='utf8', method='xml')
     return False

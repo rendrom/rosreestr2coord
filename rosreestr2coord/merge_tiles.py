@@ -222,7 +222,7 @@ class TileMerger:
             # self.create_raster_worldfile(path)
             # self.create_prj_file(path)
             outpath = os.path.abspath(path)
-            self.log('You raster - %s' % outpath)
+            self.log('raster - %s' % outpath)
             return outpath
 
     def log(self, msg):
@@ -376,14 +376,18 @@ class PkkAreaMerger(TileMerger, object):
                 try:
                     with open(cache_path, 'r') as data_file:
                         data = json.loads(data_file.read())
+                        if not data.get("imageData") or not data.get("extent"):
+                            data = False
+                            raise Exception
                 except Exception:
                     pass
                 try:
                     if not data:
                         response = self.make_request(meta_url)
                         data = json.loads(response)
-                        with open(cache_path, 'w') as outfile:
-                            json.dump(data, outfile)
+                        if data.get("imageData") and data.get("extent"):
+                            with open(cache_path, 'w') as outfile:
+                                json.dump(data, outfile)
                     if data and data.get("imageData"):
                         self._image_extent_list.append(data.get("extent"))
                         return data.get("imageData")
@@ -452,7 +456,7 @@ class PkkAreaMerger(TileMerger, object):
             outpath = os.path.abspath(path)
             create_raster_worldfile(path, self.image_extent)
             create_prj_file(path)
-            self.log('Your raster - %s' % outpath)
+            self.log('raster - %s' % outpath)
             return outpath
 
 

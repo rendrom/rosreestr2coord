@@ -10,6 +10,7 @@ from rosreestr2coord.merge_tiles import PkkAreaMerger
 from .export import coords2geojson
 from .logger import logger
 from .utils import xy2lonlat, make_request, TimeoutException
+from rosreestr2coord.export import coords2kml
 
 try:
     import urllib.parse
@@ -36,7 +37,7 @@ FEATURE_INFO_URL = 'https://pkk.rosreestr.ru/api/features/$area_type/'
 #########################
 # URL to get area image #
 #########################
-# https://pkk.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export
+# https://pkk.rosreestr.ru/arcgis/rest/services/PKK6/CadastreSelected/MapServer/export
 #   ?dpi=96
 #   &transparent=true
 #   &format=png32
@@ -145,7 +146,7 @@ class Area:
     def get_attrs(self):
         return self.attrs
 
-    def _get_attrs_to_geojson(self):
+    def _prepare_attrs(self):
         if self.attrs:
             for a in self.attrs:
                 attr = self.attrs[a]
@@ -170,7 +171,7 @@ class Area:
     def to_geojson(self, geom_type='point', with_attrs=True, dumps=True):
         attrs = False
         if with_attrs:
-            attrs = self._get_attrs_to_geojson()
+            attrs = self._prepare_attrs()
         xy = []
         if self.center_only:
             xy = self.get_center_xy()
@@ -185,6 +186,9 @@ class Area:
                     return json.dumps(feature_collection)
                 return feature_collection
         return False
+
+    def to_kml(self):
+        return coords2kml(self.xy, self._prepare_attrs())
 
     def get_center_xy(self):
         center = self.attrs.get('center')
