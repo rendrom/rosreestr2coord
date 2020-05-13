@@ -451,7 +451,7 @@ class PkkAreaMerger(TileMerger, object):
             outpath = os.path.abspath(path)
             create_raster_worldfile(path, self.image_extent)
             create_prj_file(path)
-            self.log('You raster - %s' % outpath)
+            self.log('Your raster - %s' % outpath)
             return outpath
 
 
