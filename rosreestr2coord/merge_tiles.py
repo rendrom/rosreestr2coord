@@ -443,6 +443,7 @@ class PkkAreaMerger(TileMerger, object):
             tile = Image.open(path)
             self.real_width = tile.width
             self.real_height = tile.height
+            tile.close()
             bb = self.bbox
             xmax = max([x["xmax"] for x in self._image_extent_list])
             ymax = max([x["ymax"] for x in self._image_extent_list])
