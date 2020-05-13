@@ -426,9 +426,10 @@ class PkkAreaMerger(TileMerger, object):
             self.real_width = imx
             self.real_height = imy
 
-            out = Image.new('RGB', (self.real_width, self.real_height))
+            out = Image.new('L', (self.real_width, self.real_height))
             for t in tiles:
-                out.paste(t[0], t[1])
+                out.paste(t[0].convert('L'), t[1])
+                t[0].close()
             out.save(path)
         return path
 
