@@ -92,6 +92,8 @@ area.get_attrs()
 
 ## Журнал
 
+* 14.05.2020 - **v.4.0.8** by [alexandervlpl](https://github.com/alexandervlpl)
+  * Оптимизировать склеивание тайлов [#30](https://github.com/rendrom/rosreestr2coord/issues/30).
 * 12.05.2020 - **v.4.0.7**
   * Исправление экспорта мультиполигональной геометрии.
   * Экспорт в KML [#31](https://github.com/rendrom/rosreestr2coord/issues/31).
