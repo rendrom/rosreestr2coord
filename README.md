@@ -83,7 +83,7 @@ python -m rosreestr2coord -c 38:06:144003:4723
 ```python
 from rosreestr2coord import Area
 
-area = Area("38:06:144003:4723") # дополнительные аргументы coord_out="EPSG:3857", area_type=1, media-path=MEDIA,
+area = Area("38:06:144003:4723") # дополнительные аргументы coord_out="EPSG:3857", area_type=1, media_path=MEDIA,
 area.to_geojson()
 area.to_geojson_poly()
 area.get_coord() # [[[area1_xy], [hole1_xy], [hole2_xy]], [[area2_xyl]]]
