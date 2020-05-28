@@ -83,7 +83,17 @@ python -m rosreestr2coord -c 38:06:144003:4723
 ```python
 from rosreestr2coord import Area
 
-area = Area("38:06:144003:4723") # дополнительные аргументы coord_out="EPSG:3857", area_type=1, media_path=MEDIA,
+area = Area("38:06:144003:4723")
+# аргументы
+#   code='' - кадастровый номер участка
+#   area_type=1 - тип площади
+#   epsilon=5 - точность аппроксимации
+#   media_path='' - путь для временных файлов
+#   with_log=True - логирование
+#   coord_out='EPSG:4326' - или EPSG:3857 (будет удалена в последующих версиях)
+#   center_only=False - экспорт координат центров участка
+#   with_proxy=False - запросы через прокси
+#   use_cache=True - использовать кэширование запросов
 area.to_geojson()
 area.to_geojson_poly()
 area.get_coord() # [[[area1_xy], [hole1_xy], [hole2_xy]], [[area2_xyl]]]
