@@ -326,13 +326,18 @@ class Area:
     def get_image_xy_corner(self):
         '''get сartesian coordinates from raster'''
         import cv2
+        import numpy
 
         if not self.image_path:
             return False
         image_xy_corners = []
 
         try:
-            img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
+            # img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
+            stream = open(self.image_path, "rb")
+            bytes = bytearray(stream.read())
+            numpyarray = numpy.asarray(bytes, dtype=numpy.uint8)
+            img = cv2.imdecode(numpyarray, cv2.IMREAD_GRAYSCALE)
             imagem = (255 - img)
             ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
             try:

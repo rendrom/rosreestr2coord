@@ -141,19 +141,19 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
 def coords2kml(coords, attrs):
 
     if len(coords):
-        kml = ET.Element("kml", attrib={"xmlns":"http://www.opengis.net/kml/2.2"})
+        kml = ET.Element("kml", attrib={"xmlns": "http://www.opengis.net/kml/2.2"})
         doc = ET.SubElement(kml, "Document")
         folder = ET.SubElement(doc, "Folder")
-        name = ET.SubElement(folder, "name").text = "test"
+        ET.SubElement(folder, "name").text = "test"
         placemark = ET.SubElement(folder, "Placemark")
 
         style = ET.SubElement(placemark, "Style")
 
         line_style = ET.SubElement(style, "LineStyle")
-        line_style_color = ET.SubElement(line_style, "color").text = "ff0000ff"
+        ET.SubElement(line_style, "color").text = "ff0000ff"
 
         poly_style = ET.SubElement(style, "PolyStyle")
-        poly_style_fill = ET.SubElement(poly_style, "fill").text = "0"
+        ET.SubElement(poly_style, "fill").text = "0"
 
         multi_geometry = ET.SubElement(placemark, "MultiGeometry")
 
@@ -169,7 +169,7 @@ def coords2kml(coords, attrs):
                 xy = coords[i][j]
                 xy.append(xy[0])
                 linear_ring = ET.SubElement(boundary, "LinearRing")
-                coordinates = ET.SubElement(linear_ring, "coordinates").text = ' '.join(
+                ET.SubElement(linear_ring, "coordinates").text = ' '.join(
                     map(lambda c: ','.join(map(str, c)), xy)
                 )
         return ET.tostring(kml, encoding='utf8', method='xml')

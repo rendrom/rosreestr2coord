@@ -87,6 +87,6 @@ goto :EOF
 :pep-checking
 echo executing pep-checking...
 set "format=^"%%^(path^)s:%%^(row^)d:%%^(col^)d: %%^(text^)s"
-call poetry run flake8 --format=%%format%% rosreestr2coord
+call poetry run flake8 --format=%%format%% ./rosreestr2coord
 echo done pep-checking
 goto :EOF

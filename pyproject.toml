@@ -21,6 +21,7 @@ pytest-cov = '^2.4'
 tox = '^3.4'
 mypy = '*'
 flake8 = '*'
+flake8-quotes = '*'
 
 [tool.poetry.scripts]
 rosreestr2coord = 'scripts.console:main'

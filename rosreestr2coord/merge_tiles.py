@@ -113,7 +113,7 @@ class TileMerger:
         if bbox:
             xy = list(
                 chain(*list(map(sorted, list(zip(
-                    *[deg2num(l[0], l[1], self.zoom) for l in
+                    *[deg2num(coord[0], coord[1], self.zoom) for coord in
                       (bbox[:2], bbox[2:])]))))))
             return dict(list(zip(keys, xy)))
         else:
