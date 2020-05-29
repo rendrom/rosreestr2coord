@@ -47,9 +47,9 @@ def getopts():
                         help='do not use cache')
     parser.add_argument('-e', '--epsilon', action='store', type=float,
                         required=False, default=5,
-                        help='parameter specifying the approximation accuracy'
+                        help='parameter specifying the approximation accuracy. '
                              'This is the maximum distance between the original curve and its approximation. '
-                             'Small value = high detail = more points. '
+                             'Small value = high detail = more points '
                              '(default %(default).2f)')
     parser.add_argument('-C', '--center_only', action='store_const', const=True,
                         required=False,

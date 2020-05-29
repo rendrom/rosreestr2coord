@@ -353,8 +353,12 @@ class Area:
                 currentContour = contours[fry]
                 currentHierarchy = hierarchy[fry]
                 cc = []
-                # epsilon = 0.0005 * cv2.arcLength(contours[len(contours) - 1], True)
-                approx = cv2.approxPolyDP(currentContour, self.epsilon, True)
+
+                perimeter = cv2.arcLength(currentContour, True)
+                # epsilon = 0.001 * cv2.arcLength(currentContour, True)
+                # epsilon = epsilon * self.epsilon
+                epsilon = self.epsilon
+                approx = cv2.approxPolyDP(currentContour, epsilon, True)
                 if len(approx) > 2:
                     for c in approx:
                         cc.append([c[0][0], c[0][1]])
