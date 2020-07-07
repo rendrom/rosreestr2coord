@@ -144,7 +144,7 @@ def coords2kml(coords, attrs):
         kml = ET.Element("kml", attrib={"xmlns": "http://www.opengis.net/kml/2.2"})
         doc = ET.SubElement(kml, "Document")
         folder = ET.SubElement(doc, "Folder")
-        ET.SubElement(folder, "name").text = "test"
+        ET.SubElement(folder, "name").text = attrs['cn']
         placemark = ET.SubElement(folder, "Placemark")
 
         style = ET.SubElement(placemark, "Style")

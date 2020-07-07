@@ -103,6 +103,7 @@ area.get_attrs()
 
 ## Журнал
 
+* 07.07.2020 - Исправлен экспорт в KML [#36](https://github.com/rendrom/rosreestr2coord/issues/36).
 * 14.05.2020 - **v.4.0.8** by [alexandervlpl](https://github.com/alexandervlpl)
   * Оптимизировать склеивание тайлов [#30](https://github.com/rendrom/rosreestr2coord/issues/30).
 * 12.05.2020 - **v.4.0.7**
