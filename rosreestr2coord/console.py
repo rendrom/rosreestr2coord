@@ -12,21 +12,21 @@ def getopts():
     import argparse
     import textwrap
 
-    """
+    '''
     Get the command line options.
-    """
+    '''
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent("""Get geojson with coordinates of area by cadastral number.
-        https://pkk.rosreestr.ru/""")
+        description=textwrap.dedent('''Get geojson with coordinates of area by cadastral number.
+        https://pkk.rosreestr.ru/''')
     )
     parser.add_argument('-c', '--code', action='store', type=str,
                         required=False,
                         help='area cadastral number')
     parser.add_argument('-t', '--area_type', action='store', type=int,
                         required=False, default=1,
-                        help='area types: %s' % "; ".join(
-                            ["%s:%s" % (k, v) for k, v in list(TYPES.items())]))
+                        help='area types: %s' % '; '.join(
+                            ['%s:%s' % (k, v) for k, v in list(TYPES.items())]))
     parser.add_argument('-p', '--path', action='store', type=str,
                         required=False,
                         help='media path')
@@ -63,25 +63,25 @@ def getopts():
 
 
 def run_console():
-    # area = Area("38:36:000021:1106")
-    # area = Area("38:06:144003:4723")
-    # area = Area("38:36:000033:375")
-    # area = Area("38:06:143519:6153", area_type=5)
+    # area = Area('38:36:000021:1106')
+    # area = Area('38:06:144003:4723')
+    # area = Area('38:36:000033:375')
+    # area = Area('38:06:143519:6153', area_type=5)
     # 47:16:0650002:317  # multipolygon
 
-    # code, output, path, epsilon, area_type = "38:06:144003:4723", "", "", 5, 1)
+    # code, output, path, epsilon, area_type = '38:06:144003:4723', '', '', 5, 1)
     opt = getopts()
     code = opt.code
-    output = opt.output if opt.output else os.path.join("output")
-    delay = getattr(opt, "delay", 1000)
+    output = opt.output if opt.output else os.path.join('output')
+    delay = getattr(opt, 'delay', 1000)
     kwargs = {
-        "media_path": opt.path,
-        "with_proxy": opt.proxy,
-        "epsilon": opt.epsilon if opt.epsilon else 5,
-        "area_type": opt.area_type if opt.area_type else 1,
-        "center_only": opt.center_only if opt.center_only else False,
-        "use_cache": False if opt.refresh else True,
-        "coord_out": "EPSG:4326",
+        'media_path': opt.path,
+        'with_proxy': opt.proxy,
+        'epsilon': opt.epsilon if opt.epsilon else 5,
+        'area_type': opt.area_type if opt.area_type else 1,
+        'center_only': opt.center_only if opt.center_only else False,
+        'use_cache': False if opt.refresh else True,
+        'coord_out': 'EPSG:4326',
     }
 
     if opt.list:
@@ -108,25 +108,26 @@ def get_by_code(code, output, display, **kwargs):
 
     kml = area.to_kml()
     if kml:
-        filename = '%s.kml' % area.file_name.replace(":", "_")
-        kml_path = os.path.join(abspath, "kml")
+        filename = '%s.kml' % area.file_name.replace(':', '_')
+        kml_path = os.path.join(abspath, 'kml')
         if not os.path.isdir(kml_path):
             os.makedirs(kml_path)
         file_path = os.path.join(kml_path, filename)
-        f = open(file_path, 'wb')
-        f.write(kml)
-        f.close()
-        print("kml - {}".format(file_path))
+        # f = open(file_path, 'wb')
+        # f.write(kml)
+        # f.close()
+        kml.write(file_path, encoding='UTF-8', xml_declaration=True)
+        print('kml - {}'.format(file_path))
     if geojson:
-        filename = '%s.geojson' % area.file_name.replace(":", "_")
-        geojson_path = os.path.join(abspath, "geojson")
+        filename = '%s.geojson' % area.file_name.replace(':', '_')
+        geojson_path = os.path.join(abspath, 'geojson')
         if not os.path.isdir(geojson_path):
             os.makedirs(geojson_path)
         file_path = os.path.join(geojson_path, filename)
         f = open(file_path, 'w')
         f.write(geojson)
         f.close()
-        print("geojson - {}".format(file_path))
+        print('geojson - {}'.format(file_path))
     if display:
         area.show_plot()
     return area

@@ -162,15 +162,16 @@ def coords2kml(coords, attrs):
             polygon = ET.SubElement(multi_geometry, "Polygon")
             for j in range(len(coords[i])):
                 if j:
-                    boundary = ET.SubElement(polygon, "outerBoundaryIs")
-                else:
                     # for holes
                     boundary = ET.SubElement(polygon, "innerBoundaryIs")
+                else:
+                    boundary = ET.SubElement(polygon, "outerBoundaryIs")
                 xy = coords[i][j]
                 xy.append(xy[0])
                 linear_ring = ET.SubElement(boundary, "LinearRing")
                 ET.SubElement(linear_ring, "coordinates").text = ' '.join(
                     map(lambda c: ','.join(map(str, c)), xy)
                 )
-        return ET.tostring(kml, encoding='utf8', method='xml')
+        # return ET.tostring(kml, encoding='utf8', method='xml')
+        return ET.ElementTree(kml)
     return False
