@@ -140,8 +140,9 @@ class TileMerger:
             im = Image.open(first_img_path)
             im.load()
             self.image_size = im.size
-        print("")
-        self.log('Completed, %s tiles received' % self.count)
+        print('')
+        s = 's' if self.count > 1 else ''
+        self.log('Completed, %s tile%s received' % (self.count, s))
         return self.count
 
     @staticmethod

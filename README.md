@@ -78,6 +78,7 @@ python -m rosreestr2coord -c 38:06:144003:4723
 * -d - визуализация распознанных точек (для режима --code)
 * -r - не использовать кэширование
 * -P - загрузка через прокси
+* -v - показать версию
 
 ### Программно
 
@@ -103,7 +104,11 @@ area.get_attrs()
 
 ## Журнал
 
-* 07.07.2020 - Исправлен экспорт в KML [#36](https://github.com/rendrom/rosreestr2coord/issues/36).
+* 09.07.2020 - **v.4.0.10**
+  * Исправлен экспорт в KML [#36](https://github.com/rendrom/rosreestr2coord/issues/36).
+  * Добавлена опция консоли `-v` для вывода текущей версии библиотеки
+* 28.05.2020 - **v.4.0.9**
+  * Исправлена проблема с путями в Windows [#34](https://github.com/rendrom/rosreestr2coord/issues/30).
 * 14.05.2020 - **v.4.0.8** by [alexandervlpl](https://github.com/alexandervlpl)
   * Оптимизировать склеивание тайлов [#30](https://github.com/rendrom/rosreestr2coord/issues/30).
 * 12.05.2020 - **v.4.0.7**

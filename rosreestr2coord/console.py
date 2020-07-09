@@ -6,6 +6,7 @@ import sys
 
 from rosreestr2coord.batch import batch_parser
 from rosreestr2coord.parser import Area, TYPES
+from rosreestr2coord.version import VERSION
 
 
 def getopts():
@@ -57,20 +58,13 @@ def getopts():
     parser.add_argument('-P', '--proxy', action='store_const', const=True,
                         required=False,
                         help='use proxies')
+    parser.add_argument('-v', '--version', action='store_const', const=True,
+                        required=False, help='show current version')
     opts = parser.parse_args()
-
     return opts
 
 
-def run_console():
-    # area = Area('38:36:000021:1106')
-    # area = Area('38:06:144003:4723')
-    # area = Area('38:36:000033:375')
-    # area = Area('38:06:143519:6153', area_type=5)
-    # 47:16:0650002:317  # multipolygon
-
-    # code, output, path, epsilon, area_type = '38:06:144003:4723', '', '', 5, 1)
-    opt = getopts()
+def run_console(opt):
     code = opt.code
     output = opt.output if opt.output else os.path.join('output')
     delay = getattr(opt, 'delay', 1000)
@@ -134,11 +128,17 @@ def get_by_code(code, output, display, **kwargs):
 
 
 def console():
-    def signal_handler(signalnum, frame):
-        print('You pressed Ctrl+C')
-        sys.exit(0)
 
-    signal.signal(signal.SIGINT, signal_handler)
-    print('Press Ctrl+C to exit')
+    opt = getopts()
+    show_version = opt.version
+    if show_version:
+        print(VERSION)
+    else:
+        def signal_handler(signalnum, frame):
+            print('You pressed Ctrl+C')
+            sys.exit(0)
 
-    run_console()
+        signal.signal(signal.SIGINT, signal_handler)
+        print('Press Ctrl+C to exit')
+
+        run_console(opt)
