@@ -5,6 +5,8 @@
 
 Результат работы скрипта __не соответствует информации в кадастровой выписке__
 
+Актуальные КПТ/КВЗУ в удобном формате ГИС из официального источника можно заказать на [data.nextgis.com/cadaster](data.nextgis.com/cadaster)
+
 ![Plot output](https://raw.githubusercontent.com/rendrom/rosreestr2coord/master/images/plot_example.png)
 
 ## Зависимости
