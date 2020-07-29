@@ -1,11 +1,13 @@
 # ROSREESTR TO COORDINATE
 
+![PyPI](https://img.shields.io/pypi/v/rosreestr2coord?style=flat-square)
+
 Инструмент, позволяющий вычислять координаты участка по его кадастровому номеру.
 Данные берутся с сайта публичной кадастровой карты [http://pkk.rosreestr.ru/](http://pkk.rosreestr.ru/).
 
 Результат работы скрипта __не соответствует информации в кадастровой выписке__
 
-Актуальные КПТ/КВЗУ в удобном формате ГИС из официального источника можно заказать на [data.nextgis.com/cadaster](data.nextgis.com/cadaster)
+Актуальные КПТ/КВЗУ в удобном формате ГИС __соответствующие официальным данным__ можно заказать на [data.nextgis.com](https://data.nextgis.com/ru/cadastre/)
 
 ![Plot output](https://raw.githubusercontent.com/rendrom/rosreestr2coord/master/images/plot_example.png)
 
