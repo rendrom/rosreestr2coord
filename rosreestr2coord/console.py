@@ -5,7 +5,7 @@ import signal
 import sys
 
 from rosreestr2coord.batch import batch_parser
-from rosreestr2coord.parser import Area, TYPESf
+from rosreestr2coord.parser import Area, TYPES
 from rosreestr2coord.version import VERSION
 
 
