@@ -40,9 +40,9 @@ def getopts():
     parser.add_argument('-d', '--display', action='store_const', const=True,
                         required=False,
                         help='display plot (only for --code mode)')
-    parser.add_argument('-D', '--delay', action='store', type=int,
+    parser.add_argument('-D', '--delay', action='store', type=float,
                         required=False, default=1,
-                        help='delay between request (only for --list mode)')
+                        help='delay between requests (only for --list mode)')
     parser.add_argument('-r', '--refresh', action='store_const', const=True,
                         required=False,
                         help='do not use cache')
