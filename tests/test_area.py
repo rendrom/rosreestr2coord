@@ -4,12 +4,25 @@ import pytest
 
 
 def test_multipolygon_with_holes(area, area_coords):
+    """
+    Multipoly area with area area.
+
+    Args:
+        area: (todo): write your description
+        area_coords: (todo): write your description
+    """
     _coords = area.xy
     assert len(_coords[0][0]) == 4
     assert _coords[0][0][0] == area_coords[0][0][0]
 
 
 def test_to_geojson(area):
+    """
+    Convert a geojson - like geojsonjson.
+
+    Args:
+        area: (todo): write your description
+    """
     _json = area.to_geojson()
 
     # Проверяем, что в Area есть все необходимые атрибуты
@@ -22,6 +35,13 @@ def test_to_geojson(area):
 
 
 def test_to_geojson_poly(area, area_geometry):
+    """
+    Convert a geojson geometry to a polygon.
+
+    Args:
+        area: (todo): write your description
+        area_geometry: (todo): write your description
+    """
     _poly = area.to_geojson_poly()
 
     # Проверяем, что в Area есть все необходимые атрибуты

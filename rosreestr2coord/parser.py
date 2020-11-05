@@ -100,6 +100,21 @@ class Area:
                  with_proxy=False,
                  use_cache=True
                  ):
+        """
+        Initialize a new featureinfo object.
+
+        Args:
+            self: (todo): write your description
+            code: (int): write your description
+            area_type: (str): write your description
+            epsilon: (float): write your description
+            media_path: (str): write your description
+            with_log: (todo): write your description
+            coord_out: (str): write your description
+            center_only: (bool): write your description
+            with_proxy: (str): write your description
+            use_cache: (bool): write your description
+        """
         self.with_log = with_log
         self.area_type = area_type
         self.media_path = media_path
@@ -126,6 +141,12 @@ class Area:
             self.log('Nothing found')
 
     def create_workspace(self):
+        """
+        Create the workspace.
+
+        Args:
+            self: (todo): write your description
+        """
         if not self.media_path:
             self.media_path = os.getcwd()
         area_path_name = self.clear_code(self.code).replace(':', '_')
@@ -136,6 +157,12 @@ class Area:
         return workspace
 
     def get_coord(self):
+        """
+        Get coordinates : class : class
+
+        Args:
+            self: (todo): write your description
+        """
         if self.xy:
             return self.xy
         center = self.get_center_xy()
@@ -144,9 +171,21 @@ class Area:
         return []
 
     def get_attrs(self):
+        """
+        Return the : attrs. attrs
+
+        Args:
+            self: (todo): write your description
+        """
         return self.attrs
 
     def _prepare_attrs(self):
+        """
+        Prepare the attrs. attrs.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.attrs:
             for a in self.attrs:
                 attr = self.attrs[a]
@@ -159,9 +198,25 @@ class Area:
         return self.attrs
 
     def to_geojson_poly(self, with_attrs=True, dumps=True):
+        """
+        Convert a geojson representation of this object as polygon object to a geojson.
+
+        Args:
+            self: (todo): write your description
+            with_attrs: (bool): write your description
+            dumps: (todo): write your description
+        """
         return self.to_geojson('polygon', with_attrs, dumps)
 
     def to_geojson_center(self, with_attrs=True, dumps=True):
+        """
+        Return a geojson representation of the geojson.
+
+        Args:
+            self: (todo): write your description
+            with_attrs: (todo): write your description
+            dumps: (todo): write your description
+        """
         current_center_status = self.center_only
         self.center_only = True
         to_return = self.to_geojson('point', with_attrs, dumps)
@@ -169,6 +224,15 @@ class Area:
         return to_return
 
     def to_geojson(self, geom_type='point', with_attrs=True, dumps=True):
+        """
+        Return a geojson representation of a geojson feature.
+
+        Args:
+            self: (todo): write your description
+            geom_type: (str): write your description
+            with_attrs: (bool): write your description
+            dumps: (todo): write your description
+        """
         attrs = False
         if with_attrs:
             attrs = self._prepare_attrs()
@@ -188,9 +252,21 @@ class Area:
         return False
 
     def to_kml(self):
+        """
+        Converts the kml coordinates to a kml coordinates.
+
+        Args:
+            self: (todo): write your description
+        """
         return coords2kml(self.xy, self._prepare_attrs())
 
     def get_center_xy(self):
+        """
+        Get the center of the image
+
+        Args:
+            self: (todo): write your description
+        """
         center = self.attrs.get('center')
         if center:
             xy = [[[[center['x'], center['y']]]]]
@@ -198,10 +274,23 @@ class Area:
         return False
 
     def make_request(self, url):
+        """
+        Make a request.
+
+        Args:
+            self: (todo): write your description
+            url: (str): write your description
+        """
         response = make_request(url, self.with_proxy)
         return response
 
     def download_feature_info(self):
+        """
+        Download feature information
+
+        Args:
+            self: (todo): write your description
+        """
         feature_info_path = os.path.join(self.workspace, 'feature_info.json')
         data = False
         if self.use_cache:
@@ -270,12 +359,24 @@ class Area:
         return ex
 
     def get_geometry(self):
+        """
+        Get the center of the image
+
+        Args:
+            self: (todo): write your description
+        """
         if self.center_only:
             return self.get_center_xy()
         else:
             return self.parse_geometry_from_image()
 
     def parse_geometry_from_image(self):
+        """
+        Parse image geometry.
+
+        Args:
+            self: (todo): write your description
+        """
         formats = ['png']
 
         for f in formats:
@@ -403,9 +504,23 @@ class Area:
         plt.imshow(img), plt.show()
 
     def log(self, msg):
+        """
+        Log a message
+
+        Args:
+            self: (todo): write your description
+            msg: (str): write your description
+        """
         if self.with_log:
             print(msg)
 
     def error(self, msg):
+        """
+        Log an error.
+
+        Args:
+            self: (todo): write your description
+            msg: (str): write your description
+        """
         if self.with_log:
             logger.warning(msg)

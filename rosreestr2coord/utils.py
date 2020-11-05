@@ -28,14 +28,33 @@ from .logger import logger
 
 
 def y2lat(y):
+    """
+    Convert y - axis to y - axis.
+
+    Args:
+        y: (todo): write your description
+    """
     return (2 * math.atan(math.exp(y / 6378137)) - math.pi / 2) / (math.pi / 180)
 
 
 def x2lon(x):
+    """
+    Convert longitude to longitude
+
+    Args:
+        x: (int): write your description
+    """
     return x / (math.pi / 180.0) / 6378137.0
 
 
 def xy2lonlat(x, y):
+    """
+    Convert x y - axis to longitude.
+
+    Args:
+        x: (int): write your description
+        y: (int): write your description
+    """
     return [x2lon(x), y2lat(y)]
 
 
@@ -48,6 +67,11 @@ class TimeoutException(Exception):
 
 
 def get_rosreestr_headers():
+    """
+    Return the headers for the request.
+
+    Args:
+    """
     return {
         'pragma': 'no-cache',
         'referer': 'https://pkk.rosreestr.ru/',
@@ -57,6 +81,13 @@ def get_rosreestr_headers():
 
 
 def make_request(url, with_proxy=False):
+    """
+    Make a request to the given url.
+
+    Args:
+        url: (str): write your description
+        with_proxy: (bool): write your description
+    """
     # original function
     if url:
         logger.debug(url)
@@ -80,6 +111,12 @@ def make_request(url, with_proxy=False):
 
 
 def make_request_with_proxy(url):
+    """
+    Make a http proxy.
+
+    Args:
+        url: (str): write your description
+    """
     proxies = proxy_handling.load_proxies()
     if not proxies:
         proxy_handling.update_proxies()
@@ -117,6 +154,13 @@ def make_request_with_proxy(url):
 
 
 def is_error_response(url, response):
+    """
+    Check if the given url is an error.
+
+    Args:
+        url: (str): write your description
+        response: (todo): write your description
+    """
     is_error = False
     try:
         data = json.loads(response)
