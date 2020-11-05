@@ -10,6 +10,15 @@ import xml.etree.cElementTree as ET
 
 
 def make_output(output, file_name, file_format, out_path=""):
+    """
+    Make output directory.
+
+    Args:
+        output: (todo): write your description
+        file_name: (str): write your description
+        file_format: (str): write your description
+        out_path: (str): write your description
+    """
     out_path = out_path if out_path else file_format
     abspath = os.path.abspath(output)
     filename = '%s.%s' % (file_name, file_format)
@@ -20,6 +29,14 @@ def make_output(output, file_name, file_format, out_path=""):
 
 
 def _write_csv_row(f, area, header=False):
+    """
+    Writes a csv file
+
+    Args:
+        f: (todo): write your description
+        area: (todo): write your description
+        header: (str): write your description
+    """
     try:
         xy = copy.deepcopy(list(area.get_coord()))
         for geom in xy:
@@ -45,12 +62,27 @@ def _write_csv_row(f, area, header=False):
 
 
 def area_csv_output(output, area):
+    """
+    Write area to csv.
+
+    Args:
+        output: (todo): write your description
+        area: (todo): write your description
+    """
     path = make_output(output, area.file_name, "csv")
     f = csv.writer(open(path, "w+", encoding='utf-8'))
     _write_csv_row(f, area)
 
 
 def batch_csv_output(output, areas, file_name):
+    """
+    Writes a csv file.
+
+    Args:
+        output: (todo): write your description
+        areas: (todo): write your description
+        file_name: (str): write your description
+    """
     path = make_output(output, file_name, "csv")
     f = csv.writer(open(path, "w+", encoding='utf-8'))
     for a in range(len(areas)):
@@ -60,6 +92,16 @@ def batch_csv_output(output, areas, file_name):
 
 def batch_json_output(output, areas, file_name, with_attrs=True,
                       crs_name="EPSG:4326"):
+    """
+    Write features ascii - formatted json object.
+
+    Args:
+        output: (todo): write your description
+        areas: (todo): write your description
+        file_name: (str): write your description
+        with_attrs: (todo): write your description
+        crs_name: (str): write your description
+    """
     features = []
     feature_collection = {
         "type": "FeatureCollection",
@@ -79,6 +121,14 @@ def batch_json_output(output, areas, file_name, with_attrs=True,
 
 
 def area_json_output(output, area, with_attrs=True):
+    """
+    Write a geojson - like object to a geojson file.
+
+    Args:
+        output: (todo): write your description
+        area: (todo): write your description
+        with_attrs: (todo): write your description
+    """
     geojson = area.to_geojson_poly(with_attrs)
     if geojson:
         f = open(make_output(output, area.file_name, "geojson"), 'w')
@@ -88,6 +138,15 @@ def area_json_output(output, area, with_attrs=True):
 
 
 def coords2geojson(coords, geom_type, crs_name, attrs=None):
+    """
+    Convert a geojson feature to a geojson.
+
+    Args:
+        coords: (array): write your description
+        geom_type: (str): write your description
+        crs_name: (str): write your description
+        attrs: (dict): write your description
+    """
     if attrs is False:
         attrs = {}
 
@@ -139,6 +198,13 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
 
 
 def coords2kml(coords, attrs):
+    """
+    Convert a kml element to kml
+
+    Args:
+        coords: (array): write your description
+        attrs: (dict): write your description
+    """
 
     if len(coords):
         kml = ET.Element("kml", attrib={"xmlns": "http://www.opengis.net/kml/2.2"})

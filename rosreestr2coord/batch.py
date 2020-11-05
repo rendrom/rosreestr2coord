@@ -8,6 +8,21 @@ from rosreestr2coord.utils import TimeoutException
 
 def batch_parser(codes, with_log=False, file_name="example", areas=None,
                  output=os.path.join("output"), repeat=0, delay=1, **kwargs):
+    """
+    Print a list of - features.
+
+    Args:
+        codes: (todo): write your description
+        with_log: (todo): write your description
+        file_name: (str): write your description
+        areas: (todo): write your description
+        output: (todo): write your description
+        os: (todo): write your description
+        path: (str): write your description
+        join: (todo): write your description
+        repeat: (int): write your description
+        delay: (todo): write your description
+    """
     if areas is None:
         areas = []
     with_error = []

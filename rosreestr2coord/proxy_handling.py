@@ -14,6 +14,13 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML
 
 
 def update_proxies(path=PROXY_PATH):
+    """
+    Updates the proxies file
+
+    Args:
+        path: (str): write your description
+        PROXY_PATH: (str): write your description
+    """
     # Getting proxy list from address if file is old
     proxies = load_proxies_from_file(path)
     if not proxies:
@@ -29,12 +36,25 @@ def update_proxies(path=PROXY_PATH):
 
 
 def download_proxies(path=PROXY_PATH):
+    """
+    Download all proxies to disk.
+
+    Args:
+        path: (str): write your description
+        PROXY_PATH: (str): write your description
+    """
     found = ip_adress_proxies()
     # found = free_proxies()
     dump_proxies_to_file(found[:20], path)  # 20 top proxies
 
 
 def ip_adress_proxies(url='https://www.ip-adress.com/proxy_list/'):
+    """
+    Build a list of adress policies.
+
+    Args:
+        url: (str): write your description
+    """
     # Downloading without proxy
     opener = urllib.request.build_opener(urllib.request.ProxyHandler())
     urllib.request.install_opener(opener)
@@ -56,6 +76,12 @@ def ip_adress_proxies(url='https://www.ip-adress.com/proxy_list/'):
 
 
 def free_proxies(url='https://free-proxy-list.net/'):
+    """
+    Build a list of free proxies.
+
+    Args:
+        url: (str): write your description
+    """
     # Downloading without proxy
     opener = urllib.request.build_opener(urllib.request.ProxyHandler())
     urllib.request.install_opener(opener)
@@ -73,6 +99,13 @@ def free_proxies(url='https://free-proxy-list.net/'):
 
 
 def load_proxies(path=PROXY_PATH):
+    """
+    Loads the proxies file. ini.
+
+    Args:
+        path: (str): write your description
+        PROXY_PATH: (str): write your description
+    """
     if not os.path.exists(PROXY_PATH):
         with open(PROXY_PATH, 'w'):
             pass
@@ -81,6 +114,13 @@ def load_proxies(path=PROXY_PATH):
 
 
 def load_proxies_from_file(path=PROXY_PATH):
+    """
+    Load proxies from a file.
+
+    Args:
+        path: (str): write your description
+        PROXY_PATH: (str): write your description
+    """
     try:
         with open(path) as outfile:
             return outfile.readlines()
@@ -89,6 +129,14 @@ def load_proxies_from_file(path=PROXY_PATH):
 
 
 def dump_proxies_to_file(proxies, path=PROXY_PATH):
+    """
+    Write proxies to a file.
+
+    Args:
+        proxies: (todo): write your description
+        path: (str): write your description
+        PROXY_PATH: (str): write your description
+    """
     with open(path, 'w') as outfile:
         for proxy in proxies:
             outfile.write(proxy)

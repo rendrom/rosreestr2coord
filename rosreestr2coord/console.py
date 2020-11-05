@@ -65,6 +65,12 @@ def getopts():
 
 
 def run_console(opt):
+    """
+    Run the console.
+
+    Args:
+        opt: (todo): write your description
+    """
     code = opt.code
     output = opt.output if opt.output else os.path.join('output')
     delay = getattr(opt, 'delay', 1000)
@@ -96,6 +102,14 @@ def run_console(opt):
 
 
 def get_by_code(code, output, display, **kwargs):
+    """
+    Get a geojson object
+
+    Args:
+        code: (str): write your description
+        output: (str): write your description
+        display: (todo): write your description
+    """
     area = Area(code, **kwargs)
     abspath = os.path.abspath(output)
     geojson = area.to_geojson_poly()
@@ -128,6 +142,11 @@ def get_by_code(code, output, display, **kwargs):
 
 
 def console():
+    """
+    Run the console.
+
+    Args:
+    """
 
     opt = getopts()
     show_version = opt.version
@@ -135,6 +154,13 @@ def console():
         print(VERSION)
     else:
         def signal_handler(signalnum, frame):
+            """
+            Signal handler.
+
+            Args:
+                signalnum: (int): write your description
+                frame: (todo): write your description
+            """
             print('You pressed Ctrl+C')
             sys.exit(0)
 

@@ -28,13 +28,33 @@ def chunks(m, n):
 
 
 def has_live_threads(threads):
+    """
+    Check if threads are threads.
+
+    Args:
+        threads: (int): write your description
+    """
     return True in [t.is_alive() for t in threads]
 
 
 def thread_download(target, xy_tile, total, thread_count=4):
+    """
+    Download threads from a thread
+
+    Args:
+        target: (str): write your description
+        xy_tile: (str): write your description
+        total: (str): write your description
+        thread_count: (int): write your description
+    """
     result = queue.Queue()
 
     def task_wrapper(*args):
+        """
+        Decorator to run task
+
+        Args:
+        """
         try:
             result.put(target(*args))
         except TimeoutException:
@@ -77,6 +97,21 @@ class TileMerger:
     def __init__(self, zoom, bbox, tile_format='.jpg', threads=1,
                  file_name_prefix=None, output_dir=None,
                  with_log=True, requester=make_request):
+        """
+        Initialize tile
+
+        Args:
+            self: (todo): write your description
+            zoom: (todo): write your description
+            bbox: (array): write your description
+            tile_format: (str): write your description
+            threads: (int): write your description
+            file_name_prefix: (str): write your description
+            output_dir: (str): write your description
+            with_log: (todo): write your description
+            requester: (todo): write your description
+            make_request: (str): write your description
+        """
         if output_dir:
             self.output_dir = output_dir
         if file_name_prefix:
@@ -97,15 +132,35 @@ class TileMerger:
             os.makedirs(self.tile_dir)
 
     def get_tile_dir(self, zoom):
+        """
+        Get the directory of the tile.
+
+        Args:
+            self: (todo): write your description
+            zoom: (str): write your description
+        """
         return os.path.join(self.output_dir,
                             "%s_%s" % (self.file_name_prefix, zoom))
 
     @staticmethod
     def write_image(image, path):
+        """
+        Write image to disk.
+
+        Args:
+            image: (array): write your description
+            path: (str): write your description
+        """
         with open(path, 'wb') as im:
             im.write(image)
 
     def set_xy_range(self):
+        """
+        Set the coordinates of the bounding box
+
+        Args:
+            self: (todo): write your description
+        """
         if len(self.bbox) != 4:
             raise Exception("Coordinate input error!")
         bbox = self.bbox
@@ -120,10 +175,22 @@ class TileMerger:
             return dict.fromkeys(keys, 0)
 
     def calc_total(self):
+        """
+        Calculate the total number of points.
+
+        Args:
+            self: (todo): write your description
+        """
         xy = self.xy_range
         return (xy["xMax"] - xy["xMin"] + 1) * (xy["yMax"] - xy["yMin"] + 1)
 
     def download(self):
+        """
+        Downloads the tile
+
+        Args:
+            self: (todo): write your description
+        """
         self.log('Get tiles:')
         self.stop = False
         if self.bbox:
@@ -147,9 +214,20 @@ class TileMerger:
 
     @staticmethod
     def stream(*args, **kwargs):
+        """
+        Wraps wrapper around a file.
+
+        Args:
+        """
         thread_download(*args, **kwargs)
 
     def bbox_download(self):
+        """
+        Retrieve the bounding box.
+
+        Args:
+            self: (todo): write your description
+        """
         xy = self.xy_range
         p = list(product(range(xy['xMin'], xy['xMax'] + 1),
                          range(xy['yMin'], xy['yMax'] + 1)))
@@ -158,6 +236,13 @@ class TileMerger:
             pass
 
     def fetch_tile(self, porties):
+        """
+        Fetches and downloads tile
+
+        Args:
+            self: (todo): write your description
+            porties: (str): write your description
+        """
         for x, y in sorted(porties, key=lambda k: random.random()):
             if not self.stop:
                 file_name = "%s_%s%s" % (x, y, self.tile_format)
@@ -175,6 +260,12 @@ class TileMerger:
                           end='')
 
     def lazy_download(self):
+        """
+        Lazy images from the tile
+
+        Args:
+            self: (todo): write your description
+        """
         row, col = True, True
         x, y, count = 0, 0, 0
         while row:
@@ -198,6 +289,12 @@ class TileMerger:
         return count
 
     def merge_tiles(self):
+        """
+        Merge tiles in image tiles.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.count == self.total:
             self.log('Merging tiles...')
             xy_range = self.xy_range
@@ -227,6 +324,13 @@ class TileMerger:
             return outpath
 
     def log(self, msg):
+        """
+        Log a message
+
+        Args:
+            self: (todo): write your description
+            msg: (str): write your description
+        """
         if self.with_log:
             print(msg)
 
@@ -242,6 +346,16 @@ class PkkAreaMerger(TileMerger, object):
     area_type = 1
 
     def __init__(self, output_format, clear_code, use_cache, area_type=1, **kwargs):
+        """
+        Initialize the image.
+
+        Args:
+            self: (todo): write your description
+            output_format: (str): write your description
+            clear_code: (str): write your description
+            use_cache: (bool): write your description
+            area_type: (str): write your description
+        """
         super(PkkAreaMerger, self).__init__(zoom=0,
                                             tile_format='.%s' % output_format,
                                             file_name_prefix=clear_code,
@@ -268,14 +382,34 @@ class PkkAreaMerger(TileMerger, object):
             self._optimize_tile_size(self.max_count)
 
     def get_tile_dir(self, zoom):
+        """
+        Return the directory of the tile.
+
+        Args:
+            self: (todo): write your description
+            zoom: (str): write your description
+        """
         return os.path.join(self.output_dir, "{}_{}".format(*self.tile_size))
 
     def bbox_download(self):
+        """
+        Retrieve the bounding.
+
+        Args:
+            self: (todo): write your description
+        """
         dx, dy = self._get_delta()
         p = list(product(range(dx), range(dy)))
         self.stream(target=self.fetch_tile, xy_tile=p, total=self.total)
 
     def fetch_tile(self, porties):
+        """
+        Fetch all tiles
+
+        Args:
+            self: (todo): write your description
+            porties: (str): write your description
+        """
         for x, y in sorted(porties, key=lambda k: random.random()):
             if not self.stop:
                 file_name = "%s_%s%s" % (x, y, self.tile_format)
@@ -293,9 +427,24 @@ class PkkAreaMerger(TileMerger, object):
                           end='')
 
     def get_url(self, x, y, z=None):
+        """
+        Get the url of the image
+
+        Args:
+            self: (todo): write your description
+            x: (todo): write your description
+            y: (todo): write your description
+            z: (todo): write your description
+        """
         return self.get_image_url(x, y)
 
     def set_xy_range(self):
+        """
+        Set the x y and y - axis range
+
+        Args:
+            self: (todo): write your description
+        """
         if len(self.bbox) != 4:
             raise Exception("Coordinate input error!")
         bb = self.bbox
@@ -304,6 +453,13 @@ class PkkAreaMerger(TileMerger, object):
             return dict(zip(keys, [bb[0], bb[2], bb[1], bb[3]]))
 
     def _get_delta(self, tile_size=False):
+        """
+        Calculate delta.
+
+        Args:
+            self: (todo): write your description
+            tile_size: (int): write your description
+        """
         tile_size = tile_size if tile_size else self.tile_size
         xy = self.xy_range
         dx = int(math.ceil((xy["xMax"] - xy["xMin"]) / tile_size[0]))
@@ -311,6 +467,13 @@ class PkkAreaMerger(TileMerger, object):
         return dx, dy
 
     def _optimize_tile_size(self, count):
+        """
+        Calculate the tile size.
+
+        Args:
+            self: (todo): write your description
+            count: (int): write your description
+        """
         h = count ** 0.5
         xy = self.xy_range
         x = int((xy["xMax"] - xy["xMin"]) / h)
@@ -320,6 +483,13 @@ class PkkAreaMerger(TileMerger, object):
         self.total = self.calc_total()
 
     def calc_total(self, d=False):
+        """
+        Calculate the total delta.
+
+        Args:
+            self: (todo): write your description
+            d: (array): write your description
+        """
         d = d if d else self._get_delta()
         total = 1
         for x in d:
@@ -327,6 +497,14 @@ class PkkAreaMerger(TileMerger, object):
         return total
 
     def _get_bbox_by_xy(self, x, y):
+        """
+        Get the bounding box for a bounding box.
+
+        Args:
+            self: (todo): write your description
+            x: (todo): write your description
+            y: (todo): write your description
+        """
         bbox = self.xy_range
         xMin = bbox["xMin"] + (x * self.tile_size[0])
         xMax = bbox["xMin"] + ((x + 1) * self.tile_size[0])
@@ -335,6 +513,14 @@ class PkkAreaMerger(TileMerger, object):
         return [xMax, yMax, xMin, yMin]
 
     def get_image(self, x, y):
+        """
+        Return a single image
+
+        Args:
+            self: (todo): write your description
+            x: (int): write your description
+            y: (int): write your description
+        """
         output_format = self.output_format
         if self.clear_code and self.extent:
             if self.total == 1:
@@ -402,6 +588,12 @@ class PkkAreaMerger(TileMerger, object):
         return False
 
     def _merge_tiles(self):
+        """
+        Merge tiles from the tiles.
+
+        Args:
+            self: (todo): write your description
+        """
         dx, dy = self._get_delta()
 
         filename = '%s%s' % (self.file_name_prefix, self.tile_format)
@@ -439,6 +631,12 @@ class PkkAreaMerger(TileMerger, object):
         return path
 
     def merge_tiles(self):
+        """
+        Merge all tiles.
+
+        Args:
+            self: (todo): write your description
+        """
         if self.count == self.total:
             if self.count > 1:
                 path = self._merge_tiles()
@@ -462,6 +660,13 @@ class PkkAreaMerger(TileMerger, object):
 
 
 def create_raster_worldfile(path, xy_range):
+    """
+    Creates an raster file. raster.
+
+    Args:
+        path: (str): write your description
+        xy_range: (str): write your description
+    """
     x_y = xy_range
     im = Image.open(path)
     output_dir = os.path.dirname(path)
@@ -486,6 +691,13 @@ def create_raster_worldfile(path, xy_range):
 
 
 def create_prj_file(path, crs=3857):
+    """
+    Create prj file
+
+    Args:
+        path: (str): write your description
+        crs: (str): write your description
+    """
     output_dir = os.path.dirname(path)
     prj_str = {
         4326: """
@@ -508,6 +720,14 @@ def create_prj_file(path, crs=3857):
 
 
 def deg2num(lat_deg, lon_deg, zoom):
+    """
+    Return the number of points in meters.
+
+    Args:
+        lat_deg: (str): write your description
+        lon_deg: (str): write your description
+        zoom: (int): write your description
+    """
     lat_rad = math.radians(lat_deg)
     n = 2.0 ** zoom
     xtile = int((lon_deg + 180.0) / 360.0 * n)
@@ -530,6 +750,12 @@ def num2deg(xtile, ytile, zoom):
 
 
 def check_bbox_str(bbox):
+    """
+    Check if a string is a string.
+
+    Args:
+        bbox: (str): write your description
+    """
     b = map(float, bbox.split())
     if len(b) != 4:
         return False
