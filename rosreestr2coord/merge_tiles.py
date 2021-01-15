@@ -343,7 +343,7 @@ class PkkAreaMerger(TileMerger, object):
                 dx, dy = self.tile_size
             code = self.clear_code
 
-            layers = list(map(str, range(0, 20)))
+            layers = list(map(str, range(0, 21))) #добавлен Layer: Кадастровые кварталы (ID: 20), ранняя версия генерировала ID от 0 до 19, что на некоторых ЗУ выдавало ошибку "Invalid 'layerDefs' is specified"
             params = {
                 "dpi": 96,
                 "transparent": "false",
