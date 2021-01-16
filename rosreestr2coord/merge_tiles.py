@@ -343,7 +343,8 @@ class PkkAreaMerger(TileMerger, object):
                 dx, dy = self.tile_size
             code = self.clear_code
 
-            layers = list(map(str, range(0, 20)))
+            layers = list(map(str, range(6, 10)))
+            print(layers)
             params = {
                 "dpi": 96,
                 "transparent": "false",
@@ -355,7 +356,6 @@ class PkkAreaMerger(TileMerger, object):
                 "size": "%s,%s" % (dx, dy),
                 "layerDefs": {layer: str("ID = '%s'" % code) for layer in
                               layers},
-                # "layerDefs": '{"0":"ID = %s","1":"objectid = -1","2":"objectid = -1"}' % (str("'%s'" % code)),
                 "f": "json"
             }
             if output_format:
