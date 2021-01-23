@@ -344,7 +344,6 @@ class PkkAreaMerger(TileMerger, object):
             code = self.clear_code
 
             layers = list(map(str, range(6, 10)))
-            print(layers)
             params = {
                 "dpi": 96,
                 "transparent": "false",
