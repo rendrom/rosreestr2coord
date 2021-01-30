@@ -52,3 +52,4 @@ setup(
 
 # python setup.py sdist bdist_wheel
 # twine upload dist/*
+# twine upload -u 'rendrom' -p 'YOUR-PASSWORD'  --repository-url https://test.pypi.org/legacy/ dist/*
