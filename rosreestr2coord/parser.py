@@ -393,7 +393,7 @@ class Area:
             from matplotlib import pyplot as plt
         except ImportError:
             self.error('Matplotlib is not installed.')
-            raise ImportError('Matplotlib is not installed.')
+            raise ImportError('matplotlib is not installed.')
 
         img = cv2.imread(self.image_path)
         for polygones in self.image_xy_corner:
