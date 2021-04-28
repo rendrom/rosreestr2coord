@@ -153,4 +153,4 @@ area.get_attrs()
 
 ## Разработка
 
-[INSTALL.md](https://github.com/nextgis/nextgisweb_frontend/blob/master/INSTALL.md)
+[INSTALL.md](https://github.com/rendrom/rosreestr2coord/edit/master/README.md)
