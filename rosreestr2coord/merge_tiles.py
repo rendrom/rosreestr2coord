@@ -384,7 +384,7 @@ class PkkAreaMerger(TileMerger, object):
                 try:
                     if not data:
                         response = self.make_request(meta_url)
-                        data = json.loads(response)
+                        data = json.loads(response.decode('utf-8'))
                         if data.get("imageData") and data.get("extent"):
                             with open(cache_path, 'w') as outfile:
                                 json.dump(data, outfile)

@@ -215,7 +215,7 @@ class Area:
                 search_url = self.feature_info_url + self.clear_code(self.code)
                 self.log('Start downloading area info: %s' % search_url)
                 resp = self.make_request(search_url)
-                data = json.loads(resp)
+                data = json.loads(resp.decode('utf-8'))
                 self.log('Area info downloaded.')
                 with open(feature_info_path, 'w') as outfile:
                     json.dump(data, outfile)
