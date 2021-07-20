@@ -109,9 +109,9 @@ area.get_attrs()
 
 ## Журнал
 
-- 20.07.2021 - **v.4.0.13**
-  - Изменение параметров загрузки изображений
-- 20.07.2021 - **v.4.0.12**
+- 20.07.2021 - **v.4.0.12** - **v.4.0.14**
+  - [Fix "Invalid 'layerDefs' is specified" error](https://github.com/rendrom/rosreestr2coord/pull/45) by [sergeybarkov](https://github.com/sergeybarkov)
+  - Обработка ошибок загрузки данных
   - Декодирование ответа в utf-8 by [jonimnim](https://github.com/jonimnim)
 - 30.01.2021 - **v.4.0.11**
 - 09.07.2020 - **v.4.0.10**
