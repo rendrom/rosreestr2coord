@@ -346,7 +346,10 @@ class PkkAreaMerger(TileMerger, object):
             # TODO: Understand how the parameter works.
             # 6 10 no for -t 2
             # layers = list(map(str, range(6, 10)))
-            layers = list(map(str, range(0, 20)))
+            # добавлен Layer: Кадастровые кварталы (ID: 20), 
+            # ранняя версия генерировала ID от 0 до 19, что на некоторых ЗУ выдавало ошибку "Invalid 'layerDefs' is specified"
+            layers = list(map(str, range(0, 21))) 
+
             params = {
                 "dpi": 96,
                 "transparent": "false",
