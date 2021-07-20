@@ -73,8 +73,8 @@ def make_request(url, with_proxy=False):
                 raise Exception(is_error)
             return read
         except Exception as er:
-            logger.warning(er)
-            print(er)
+            logger.error(er)
+            # print(er)
             # raise TimeoutException()
     return False
 
@@ -102,11 +102,11 @@ def make_request_with_proxy(url):
                     read = response.read()
                 is_error = is_error_response(url, read)
                 if is_error:
-                    raise Exception(is_error)
+                    logger.error(is_error)
+                    # raise Exception(is_error)
                 return read
             except Exception as er:
-                print(er)
-                logger.warning(er)
+                logger.error(er)
             if i == tries:
                 proxies.remove(proxy)
                 proxy_handling.dump_proxies_to_file(proxies)
