@@ -7,7 +7,7 @@
 
 Результат работы скрипта **не соответствует информации в кадастровой выписке**
 
-<!-- Актуальные КПТ/КВЗУ в удобном формате ГИС __соответствующие официальным данным__ можно заказать на [data.nextgis.com](https://data.nextgis.com/ru/cadastre/) -->
+__Удобно получать данные прямо в QGIS можно с помощью [вот этого инструмента](https://nextgis.ru/blog/ngq-rr/)__ (нужна подписка)
 
 ![Plot output](https://raw.githubusercontent.com/rendrom/rosreestr2coord/master/images/plot_example.png)
 
