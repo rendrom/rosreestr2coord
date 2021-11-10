@@ -12,7 +12,7 @@ import xml.etree.cElementTree as ET
 def make_output(output, file_name, file_format, out_path=""):
     out_path = out_path if out_path else file_format
     abspath = os.path.abspath(output)
-    filename = '%s.%s' % (file_name, file_format)
+    filename = "%s.%s" % (file_name, file_format)
     path = os.path.join(abspath, out_path)
     if not os.path.isdir(path):
         os.makedirs(path)
@@ -46,25 +46,24 @@ def _write_csv_row(f, area, header=False):
 
 def area_csv_output(output, area):
     path = make_output(output, area.file_name, "csv")
-    f = csv.writer(open(path, "w+", encoding='utf-8'))
+    f = csv.writer(open(path, "w+", encoding="utf-8"))
     _write_csv_row(f, area)
 
 
 def batch_csv_output(output, areas, file_name):
     path = make_output(output, file_name, "csv")
-    f = csv.writer(open(path, "w+", encoding='utf-8'))
+    f = csv.writer(open(path, "w+", encoding="utf-8"))
     for a in range(len(areas)):
         _write_csv_row(f, areas[a], a == 0)
     return path
 
 
-def batch_json_output(output, areas, file_name, with_attrs=True,
-                      crs_name="EPSG:4326"):
+def batch_json_output(output, areas, file_name, with_attrs=True, crs_name="EPSG:4326"):
     features = []
     feature_collection = {
         "type": "FeatureCollection",
         "crs": {"type": "name", "properties": {"name": crs_name}},
-        "features": features
+        "features": features,
     }
     path = make_output(output, file_name, "geojson")
     for a in areas:
@@ -72,7 +71,7 @@ def batch_json_output(output, areas, file_name, with_attrs=True,
         if feature:
             features.append(feature)
 
-    f = open(path, 'w', encoding='utf-8')
+    f = open(path, "w", encoding="utf-8")
     f.write(json.dumps(feature_collection))
     f.close()
     return path
@@ -81,7 +80,7 @@ def batch_json_output(output, areas, file_name, with_attrs=True,
 def area_json_output(output, area, with_attrs=True):
     geojson = area.to_geojson_poly(with_attrs)
     if geojson:
-        f = open(make_output(output, area.file_name, "geojson"), 'w')
+        f = open(make_output(output, area.file_name, "geojson"), "w")
         f.write(geojson)
         f.close()
     return geojson
@@ -93,10 +92,7 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
 
     if len(coords):
         features = []
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features
-        }
+        feature_collection = {"type": "FeatureCollection", "features": features}
         if geom_type.upper() == "POINT":
             for i in range(len(coords)):
                 if coords[i]:
@@ -106,10 +102,7 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
                             point = {
                                 "type": "Feature",
                                 "properties": {"hole": j > 0},
-                                "geometry": {
-                                    "type": "Point",
-                                    "coordinates": [x, y]
-                                }
+                                "geometry": {"type": "Point", "coordinates": [x, y]},
                             }
                             features.append(point)
         elif geom_type.upper() == "POLYGON":
@@ -125,15 +118,10 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
             feature = {
                 "type": "Feature",
                 "properties": attrs,
-                "geometry": {
-                    "type": "MultiPolygon",
-                    "coordinates": multi_polygon
-                }}
+                "geometry": {"type": "MultiPolygon", "coordinates": multi_polygon},
+            }
             feature_collection = feature
-        feature_collection["crs"] = {
-            "type": "name",
-            "properties": {"name": crs_name}
-        }
+        feature_collection["crs"] = {"type": "name", "properties": {"name": crs_name}}
         return feature_collection
     return False
 
@@ -144,7 +132,8 @@ def coords2kml(coords, attrs):
         kml = ET.Element("kml", attrib={"xmlns": "http://www.opengis.net/kml/2.2"})
         doc = ET.SubElement(kml, "Document")
         folder = ET.SubElement(doc, "Folder")
-        ET.SubElement(folder, "name").text = attrs['cn']
+        name = attrs["cn"] if "cn" in attrs else attrs["id"]
+        ET.SubElement(folder, "name").text = name
         placemark = ET.SubElement(folder, "Placemark")
 
         style = ET.SubElement(placemark, "Style")
@@ -169,8 +158,8 @@ def coords2kml(coords, attrs):
                 xy = coords[i][j]
                 xy.append(xy[0])
                 linear_ring = ET.SubElement(boundary, "LinearRing")
-                ET.SubElement(linear_ring, "coordinates").text = ' '.join(
-                    map(lambda c: ','.join(map(str, c)), xy)
+                ET.SubElement(linear_ring, "coordinates").text = " ".join(
+                    map(lambda c: ",".join(map(str, c)), xy)
                 )
         # return ET.tostring(kml, encoding='utf8', method='xml')
         return ET.ElementTree(kml)
