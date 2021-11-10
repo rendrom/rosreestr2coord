@@ -7,7 +7,7 @@
 
 Результат работы скрипта **не соответствует информации в кадастровой выписке**
 
-__Удобно получать данные прямо в QGIS можно с помощью [вот этого инструмента](https://nextgis.ru/blog/ngq-rr/)__ (нужна подписка)
+**Удобно получать данные прямо в QGIS можно с помощью [вот этого инструмента](https://nextgis.ru/blog/ngq-rr/)** (нужна подписка)
 
 ![Plot output](https://raw.githubusercontent.com/rendrom/rosreestr2coord/master/images/plot_example.png)
 
@@ -109,14 +109,17 @@ area.get_attrs()
 
 ## Журнал
 
+- 10.11.2021 - **v.4.0.15**
+  - [Обработка ЗОУИТ в формате 02:52-6.667](https://github.com/rendrom/rosreestr2coord/issues/53).
+  - Исправлено отображение лога для пакетной загрузки.
 - 20.07.2021 - **v.4.0.12** - **v.4.0.14**
-  - [Fix "Invalid 'layerDefs' is specified" error](https://github.com/rendrom/rosreestr2coord/pull/45) by [sergeybarkov](https://github.com/sergeybarkov)
-  - Обработка ошибок загрузки данных
-  - Декодирование ответа в utf-8 by [jonimnim](https://github.com/jonimnim)
+  - [Fix "Invalid 'layerDefs' is specified" error](https://github.com/rendrom/rosreestr2coord/pull/45) by [sergeybarkov](https://github.com/sergeybarkov).
+  - Обработка ошибок загрузки данных.
+  - Декодирование ответа в utf-8 by [jonimnim](https://github.com/jonimnim).
 - 30.01.2021 - **v.4.0.11**
 - 09.07.2020 - **v.4.0.10**
   - Исправлен экспорт в KML [#36](https://github.com/rendrom/rosreestr2coord/issues/36).
-  - Добавлена опция консоли `-v` для вывода текущей версии библиотеки
+  - Добавлена опция консоли `-v` для вывода текущей версии библиотеки.
 - 28.05.2020 - **v.4.0.9**
   - Исправлена проблема с путями в Windows [#34](https://github.com/rendrom/rosreestr2coord/issues/30).
 - 14.05.2020 - **v.4.0.8** by [alexandervlpl](https://github.com/alexandervlpl)
