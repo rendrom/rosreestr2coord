@@ -1,4 +1,5 @@
 import os
+import sys
 from time import sleep
 
 from rosreestr2coord.export import area_json_output, batch_csv_output, batch_json_output
@@ -21,17 +22,17 @@ def batch_parser(codes, with_log=False, file_name="example", areas=None,
     for c in codes:
         area = None
         code = c.strip()
-        print("%s" % code, end="")
+        print("{}".format(code), end="")
         try:
             sleep(need_sleep)
             area = Area(code, with_log=with_log, **kwargs)
             need_sleep = delay
-            if not (len(area.get_coord()) > 0):
-                print(" - no coord", end="")
-                with_no_coord.append(area)
-            else:
+            if len(area.get_coord()):
                 print(" - ok", end="")
                 success += 1
+            else:
+                print(" - no coord", end="")
+                with_no_coord.append(area)
         except TimeoutException:
             print(" - error")
             print("Your IP is probably blocked. Try later or use proxy")

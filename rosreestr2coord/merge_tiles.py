@@ -140,7 +140,7 @@ class TileMerger:
             im = Image.open(first_img_path)
             im.load()
             self.image_size = im.size
-        print('')
+        self.log('')
         s = 's' if self.count > 1 else ''
         self.log('Completed, %s tile%s received' % (self.count, s))
         return self.count
@@ -346,9 +346,9 @@ class PkkAreaMerger(TileMerger, object):
             # TODO: Understand how the parameter works.
             # 6 10 no for -t 2
             # layers = list(map(str, range(6, 10)))
-            # добавлен Layer: Кадастровые кварталы (ID: 20), 
+            # добавлен Layer: Кадастровые кварталы (ID: 20),
             # ранняя версия генерировала ID от 0 до 19, что на некоторых ЗУ выдавало ошибку "Invalid 'layerDefs' is specified"
-            layers = list(map(str, range(0, 21))) 
+            layers = list(map(str, range(0, 21)))
 
             params = {
                 "dpi": 96,

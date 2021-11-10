@@ -34,7 +34,7 @@ def getopts():
     parser.add_argument('-o', '--output', action='store', type=str,
                         required=False,
                         help='output path')
-    parser.add_argument('-m', '--list', action='store', type=str,
+    parser.add_argument('-l', '--list', action='store', type=str,
                         required=False,
                         help='path of file with cadastral codes list')
     parser.add_argument('-d', '--display', action='store_const', const=True,
