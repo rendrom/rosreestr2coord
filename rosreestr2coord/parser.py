@@ -248,13 +248,21 @@ class Area:
     @staticmethod
     def clear_code(code):
         """
-        remove first nulls from code xxxx:00xx >> xxxx:xx
+        Remove first nulls from code xxxx:00xx >> xxxx:xx
         but not for first value 02:xxxx >> 02:xxxx
         """
         if re.match(r"^\d+(\:\d+)", code):
-            return ":".join(
-                [x.strip("0") if i else x for i, x in enumerate(code.split(":"))]
-            )
+            parts = []
+            for i, x in enumerate(code.split(":")):
+                if i:
+                    strip_zeros = x.strip("0")
+                    if strip_zeros:
+                        parts.append(strip_zeros)
+                    else:
+                        parts.append("0")
+                else:
+                    parts.append(x)
+            return ":".join(parts)
         return code
 
     @staticmethod

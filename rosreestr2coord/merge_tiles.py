@@ -1,12 +1,11 @@
 # coding=utf-8
-
-
-import base64
-import json
-import math
 import os
+import json
+import time
+import math
 import queue
 import random
+import base64
 import threading
 import urllib.parse
 from itertools import chain, product
@@ -422,6 +421,7 @@ class PkkAreaMerger(TileMerger, object):
                 "size": "%s,%s" % (dx, dy),
                 "layerDefs": layerDefs,
                 "f": "json",
+                "timestamp": int(round(time.time() * 1000)),
             }
             if output_format:
                 params["format"] = output_format
