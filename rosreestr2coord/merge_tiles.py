@@ -325,9 +325,9 @@ class PkkAreaMerger(TileMerger, object):
                 file_name = "%s_%s%s" % (x, y, self.tile_format)
                 file_path = os.path.join(self.tile_dir, file_name)
 
-                imgstring = self.get_image(x, y)
-                if imgstring:
-                    tile = base64.b64decode(imgstring)
+                img = self.get_image(x, y)
+                if img:
+                    tile = base64.b64decode(img) if isinstance(img, str) else img
                     if tile:
                         self.write_image(tile, file_path)
                         self.count += 1
@@ -438,6 +438,8 @@ class PkkAreaMerger(TileMerger, object):
             url = self.url
             if self.area_type == 10:
                 url = url.replace("CadastreSelected", "ZONESSelected")
+            elif self.area_type == 7:
+                url = url.replace("CadastreSelected", "BordersGKNSelected")
 
             meta_url = url + "?" + urllib.parse.urlencode(params)
             if meta_url:
@@ -456,12 +458,18 @@ class PkkAreaMerger(TileMerger, object):
                     if not data:
                         response = self.make_request(meta_url)
                         data = json.loads(response.decode("utf-8"))
-                        if data.get("imageData") and data.get("extent"):
-                            with open(cache_path, "w") as outfile:
-                                json.dump(data, outfile)
-                    if data and data.get("imageData"):
+                        if data.get("extent"):
+                            if data.get("imageData") or data.get("href"):
+                                with open(cache_path, "w") as outfile:
+                                    json.dump(data, outfile)
+
+                    if data:
                         self._image_extent_list.append(data.get("extent"))
-                        return data.get("imageData")
+                        if data.get("imageData"):
+                            return data.get("imageData")
+                        elif data.get("href"):
+                            image_resp = self.make_request(data.get("href"))
+                            return image_resp
                     else:
                         logger.warning("Can't get image meta data from: %s" % meta_url)
                 except Exception as er:
