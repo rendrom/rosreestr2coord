@@ -9,7 +9,6 @@ import base64
 import threading
 import urllib.parse
 from itertools import chain, product
-from urllib.parse import urlencode
 
 from PIL import Image
 
@@ -395,18 +394,27 @@ class PkkAreaMerger(TileMerger, object):
                 dx, dy = self.tile_size
             code = self.clear_code
 
-            # TODO: Understand how the parameter works.
-            # 6 10 no for -t 2
-            # layers = list(map(str, range(6, 10)))
-            # добавлен Layer: Кадастровые кварталы (ID: 20),
-            # ранняя версия генерировала ID от 0 до 19, что на некоторых ЗУ выдавало ошибку "Invalid 'layerDefs' is specified"
+            layerDefs = ""
+            # TODO: Understand how the layerDefs parameter works.
             if self.area_type == 10:
                 layers = [0, 1, 2, 6]
                 layerDefs = (
                     '{"0":"ID = \'%s\'","1":"objectid = -1","2":"objectid = -1","6":"objectid = -1"}'
                     % code
                 )
+            elif self.area_type == 7:
+                layers = [0, 1, 5, 2, 6, 3, 7, 4]
 
+                # This formatting does not work for area_type = 1
+                format_layer_defs = "{"
+                id_format = [
+                    ('"%s":"' % layer) + ("ID = '%s'" % code) + '"'
+                    for layer in sorted(layers)
+                ]
+                format_layer_defs += ",".join(id_format)
+                format_layer_defs += "}"
+                safe_string = urllib.parse.quote_plus(format_layer_defs)
+                layerDefs = safe_string.replace("+", "%20")
             else:
                 layers = list(map(str, range(0, 21)))
                 layerDefs = {layer: str("ID = '{}'".format(code)) for layer in layers}
@@ -422,7 +430,7 @@ class PkkAreaMerger(TileMerger, object):
                 "size": "%s,%s" % (dx, dy),
                 "layerDefs": layerDefs,
                 "f": "json",
-                "_ts": int(round(time.time() * 1000)),
+                "timestamp": int(round(time.time() * 1000)),
             }
             if output_format:
                 params["format"] = output_format
@@ -431,11 +439,7 @@ class PkkAreaMerger(TileMerger, object):
             if self.area_type == 10:
                 url = url.replace("CadastreSelected", "ZONESSelected")
 
-            url_parts = list(urllib.parse.urlparse(url))
-            query = dict(urllib.parse.parse_qsl(url_parts[4]))
-            query.update(params)
-            url_parts[4] = urlencode(query)
-            meta_url = urllib.parse.urlunparse(url_parts)
+            meta_url = url + "?" + urllib.parse.urlencode(params)
             if meta_url:
                 data = False
                 cache_path = os.path.join(self.tile_dir, "{}_{}.json".format(x, y))
