@@ -1,23 +1,17 @@
 # coding: utf-8
 
-import copy
-import json
 import os
 import re
+import copy
+import json
 import string
 
 from rosreestr2coord.merge_tiles import PkkAreaMerger
+from rosreestr2coord.export import coords2kml
+from .utils import xy2lonlat, make_request, TimeoutException
 from .export import coords2geojson
 from .logger import logger
-from .utils import xy2lonlat, make_request, TimeoutException
-from rosreestr2coord.export import coords2kml
 
-try:
-    import urllib.parse
-    from urllib.parse import urlencode
-except ImportError:  # For Python 3
-    import urllib.parse as urlparse
-    from urllib.parse import urlencode
 
 ##############
 # SEARCH URL #
@@ -152,7 +146,7 @@ class Area:
                 attr = self.attrs[a]
                 if isinstance(attr, str):
                     try:
-                        attr = attr.strip()
+                        attr = attr.lstrip()
                         self.attrs[a] = attr
                     except Exception:
                         pass
@@ -249,19 +243,19 @@ class Area:
     def clear_code(code):
         """
         Remove first nulls from code xxxx:00xx >> xxxx:xx
-        but not for first value 02:xxxx >> 02:xxxx
+        but if the cadastral number, for example "02:02-6.667",
+        then the all parts will remain zeros
         """
-        if re.match(r"^\d+(\:\d+)", code):
+        is_delimited_code = re.match(r"^\d+(\:\d+)", code)
+        leave_zeros = "." in code
+        if is_delimited_code and not leave_zeros:
             parts = []
-            for i, x in enumerate(code.split(":")):
-                if i:
-                    strip_zeros = x.strip("0")
-                    if strip_zeros:
-                        parts.append(strip_zeros)
-                    else:
-                        parts.append("0")
+            for x in code.split(":"):
+                strip_zeros = x.lstrip("0")
+                if strip_zeros:
+                    parts.append(strip_zeros)
                 else:
-                    parts.append(x)
+                    parts.append("0")
             return ":".join(parts)
         return code
 

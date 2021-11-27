@@ -294,6 +294,7 @@ class PkkAreaMerger(TileMerger, object):
         self.clear_code = clear_code
         self.extent = self.bbox
         self.area_type = area_type
+        self.use_cache = use_cache
 
         self.real_width = 0
         self.real_height = 0
@@ -421,7 +422,7 @@ class PkkAreaMerger(TileMerger, object):
                 "size": "%s,%s" % (dx, dy),
                 "layerDefs": layerDefs,
                 "f": "json",
-                "timestamp": int(round(time.time() * 1000)),
+                "_ts": int(round(time.time() * 1000)),
             }
             if output_format:
                 params["format"] = output_format
@@ -438,14 +439,15 @@ class PkkAreaMerger(TileMerger, object):
             if meta_url:
                 data = False
                 cache_path = os.path.join(self.tile_dir, "{}_{}.json".format(x, y))
-                try:
-                    with open(cache_path, "r") as data_file:
-                        data = json.loads(data_file.read())
-                        if not data.get("imageData") or not data.get("extent"):
-                            data = False
-                            raise Exception
-                except Exception:
-                    pass
+                if self.use_cache:
+                    try:
+                        with open(cache_path, "r") as data_file:
+                            data = json.loads(data_file.read())
+                            if not data.get("imageData") or not data.get("extent"):
+                                data = False
+                    except Exception:
+                        # not in cache yet
+                        pass
                 try:
                     if not data:
                         response = self.make_request(meta_url)
