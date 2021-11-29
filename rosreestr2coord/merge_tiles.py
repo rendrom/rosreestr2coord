@@ -325,16 +325,19 @@ class PkkAreaMerger(TileMerger, object):
                 file_name = "%s_%s%s" % (x, y, self.tile_format)
                 file_path = os.path.join(self.tile_dir, file_name)
 
-                img = self.get_image(x, y)
+                tries = 5
+                for i in range(1, tries + 1):
+                    try:
+                        img = self.get_image(x, y)
+                        if img:
+                            break
+                    except urllib.error.HTTPError as er:
+                        pass
                 if img:
                     tile = base64.b64decode(img) if isinstance(img, str) else img
                     if tile:
                         self.write_image(tile, file_path)
                         self.count += 1
-                #     else:
-                #         self.log("Tile {} not loaded".format(file_path))
-                # else:
-                #     self.log("Tile {} not loaded".format(file_path))
 
                 if self.with_log:
                     print(
@@ -402,19 +405,19 @@ class PkkAreaMerger(TileMerger, object):
                     '{"0":"ID = \'%s\'","1":"objectid = -1","2":"objectid = -1","6":"objectid = -1"}'
                     % code
                 )
-            elif self.area_type == 7:
-                layers = [0, 1, 5, 2, 6, 3, 7, 4]
+            # elif self.area_type == 7:
+            #     layers = [0, 1, 5, 2, 6, 3, 7, 4]
 
-                # This formatting does not work for area_type = 1
-                format_layer_defs = "{"
-                id_format = [
-                    ('"%s":"' % layer) + ("ID = '%s'" % code) + '"'
-                    for layer in sorted(layers)
-                ]
-                format_layer_defs += ",".join(id_format)
-                format_layer_defs += "}"
-                safe_string = urllib.parse.quote_plus(format_layer_defs)
-                layerDefs = safe_string.replace("+", "%20")
+            #     # This formatting does not work for area_type = 1
+            #     format_layer_defs = "{"
+            #     id_format = [
+            #         ('"%s":"' % layer) + ("ID = '%s'" % code) + '"'
+            #         for layer in sorted(layers)
+            #     ]
+            #     format_layer_defs += ",".join(id_format)
+            #     format_layer_defs += "}"
+            #     safe_string = urllib.parse.quote_plus(format_layer_defs)
+            #     layerDefs = safe_string.replace("+", "%20")
             else:
                 layers = list(map(str, range(0, 21)))
                 layerDefs = {layer: str("ID = '{}'".format(code)) for layer in layers}
@@ -454,29 +457,33 @@ class PkkAreaMerger(TileMerger, object):
                     except Exception:
                         # not in cache yet
                         pass
-                try:
-                    if not data:
-                        response = self.make_request(meta_url)
-                        data = json.loads(response.decode("utf-8"))
-                        if data.get("extent"):
-                            if data.get("imageData") or data.get("href"):
-                                with open(cache_path, "w") as outfile:
-                                    json.dump(data, outfile)
 
+                    if not data:
+                        data = self._load_image_data(meta_url, cache_path)
                     if data:
                         self._image_extent_list.append(data.get("extent"))
                         if data.get("imageData"):
                             return data.get("imageData")
-                        elif data.get("href"):
-                            image_resp = self.make_request(data.get("href"))
-                            return image_resp
                     else:
                         logger.warning("Can't get image meta data from: %s" % meta_url)
-                except Exception as er:
-                    logger.warning(er)
+
         elif not self.extent:
             logger.warning("Can't get image without extent")
         return False
+
+    def _load_image_data(self, url, cache_path):
+        response = self.make_request(url)
+        data = json.loads(response.decode("utf-8"))
+        if data.get("extent"):
+            if data.get("href"):
+                image_resp = self.make_request(data.get("href"))
+                if image_resp:
+                    base64_bytes = base64.b64encode(image_resp)
+                    base64_img = base64_bytes.decode("ascii")
+                    data["imageData"] = base64_img
+            if data.get("imageData"):
+                with open(cache_path, "w") as outfile:
+                    json.dump(data, outfile)
 
     def _merge_tiles(self):
         dx, dy = self._get_delta()

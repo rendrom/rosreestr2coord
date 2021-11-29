@@ -39,8 +39,8 @@ def xy2lonlat(x, y):
     return [x2lon(x), y2lat(y)]
 
 
-USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 \
-    Safari/537.36'
+USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 \
+    Safari/537.36"
 
 
 class TimeoutException(Exception):
@@ -49,10 +49,10 @@ class TimeoutException(Exception):
 
 def get_rosreestr_headers():
     return {
-        'pragma': 'no-cache',
-        'referer': 'https://pkk.rosreestr.ru/',
-        'user-agent': USER_AGENT,
-        'x-requested-with': 'XMLHttpRequest',
+        "pragma": "no-cache",
+        "referer": "https://pkk.rosreestr.ru/",
+        "user-agent": USER_AGENT,
+        "x-requested-with": "XMLHttpRequest",
     }
 
 
@@ -90,26 +90,33 @@ def make_request_with_proxy(url):
             try:
                 # print('%i iteration of proxy %s' % (i, proxy), end="")
                 proxy_handler = urllib.request.ProxyHandler(
-                    {'http': proxy, 'https': proxy})
+                    {"http": proxy, "https": proxy}
+                )
                 opener = urllib.request.build_opener(proxy_handler)
                 urllib.request.install_opener(opener)
                 headers = get_rosreestr_headers()
 
                 request = Request(url, headers=headers)
                 context = ssl._create_unverified_context()
-                with urlopen(request, context=context,
-                             timeout=3000) as response:
+                with urlopen(request, context=context, timeout=3000) as response:
                     read = response.read()
                 is_error = is_error_response(url, read)
                 if is_error:
                     logger.error(is_error)
                     # raise Exception(is_error)
                 return read
+            except urllib.error.HTTPError as er:
+                # 400 is not proxy problem
+                if er.code == 400:
+                    raise er
             except Exception as er:
                 logger.error(er)
             if i == tries:
-                proxies.remove(proxy)
-                proxy_handling.dump_proxies_to_file(proxies)
+                # Update allowed proxies list as it may change when downloads in another thread
+                proxies = proxy_handling.load_proxies()
+                if proxies and proxy in proxies:
+                    proxies.remove(proxy)
+                    proxy_handling.dump_proxies_to_file(proxies)
 
     # if here, the result is not received
     # try with the new proxy list
@@ -120,10 +127,10 @@ def is_error_response(url, response):
     is_error = False
     try:
         data = json.loads(response)
-        error = data.get('error')
+        error = data.get("error")
         if error:
-            message = error.get('message')
-            is_error = message if message else 'error'
+            message = error.get("message")
+            is_error = message if message else "error"
     except Exception:
         pass
     return is_error
