@@ -21,7 +21,7 @@ def batch_parser(codes, with_log=False, file_name="example", areas=None,
     features = []
     for c in codes:
         area = None
-        code = c.strip()
+        code = c.strip('\'\" \t\n\r')
         print("{}".format(code), end="")
         try:
             sleep(need_sleep)
