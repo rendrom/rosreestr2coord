@@ -352,7 +352,9 @@ class Area:
             numpyarray = numpy.asarray(bytes, dtype=numpy.uint8)
             img = cv2.imdecode(numpyarray, cv2.IMREAD_GRAYSCALE)
             imagem = 255 - img
+            del img
             ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
+            del imagem
             try:
                 contours, hierarchy = cv2.findContours(
                     thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
@@ -361,6 +363,7 @@ class Area:
                 im2, contours, hierarchy = cv2.findContours(
                     thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
                 )
+            del thresh
 
             hierarchy = hierarchy[0]
             hierarchy_contours = [[] for _ in range(len(hierarchy))]
