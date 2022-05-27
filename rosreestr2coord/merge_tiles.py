@@ -458,14 +458,14 @@ class PkkAreaMerger(TileMerger, object):
                         # not in cache yet
                         pass
 
-                    if not data:
-                        data = self._load_image_data(meta_url, cache_path)
-                    if data:
-                        self._image_extent_list.append(data.get("extent"))
-                        if data.get("imageData"):
-                            return data.get("imageData")
-                    else:
-                        logger.warning("Can't get image meta data from: %s" % meta_url)
+                if not data:
+                    data = self._load_image_data(meta_url, cache_path)
+                if data:
+                    self._image_extent_list.append(data.get("extent"))
+                    if data.get("imageData"):
+                        return data.get("imageData")
+                else:
+                    logger.warning("Can't get image meta data from: %s" % meta_url)
 
         elif not self.extent:
             logger.warning("Can't get image without extent")
@@ -484,6 +484,7 @@ class PkkAreaMerger(TileMerger, object):
             if data.get("imageData"):
                 with open(cache_path, "w") as outfile:
                     json.dump(data, outfile)
+                    return data
 
     def _merge_tiles(self):
         dx, dy = self._get_delta()
