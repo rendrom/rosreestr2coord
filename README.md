@@ -109,6 +109,8 @@ area.get_attrs()
 
 ## Журнал
 
+- 27.05.2022 - **v.4.1.1**
+  - Исправлена работа ключа `-r` `--refresh` [#61](https://github.com/rendrom/rosreestr2coord/issues/61)
 - 21.05.2022 - **v.4.1.0**
   - Во время получения геометрии удаляем неиспользуемые промежуточные изображения [#60](https://github.com/rendrom/rosreestr2coord/pull/60) by [2joy](https://github.com/2joy)
 - 18.04.2022 - **v.4.0.20**

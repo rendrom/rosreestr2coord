@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rosreestr2coord"
-version = "4.1.0"
+version = "4.1.1"
 license = "MIT"
 description = "Get geojson with coordinates of area by cadastral number."
 authors = ["Artemiy Doroshkov <rendrom@gmail.com>"]
