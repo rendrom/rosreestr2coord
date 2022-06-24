@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "rosreestr2coord"
-version = "4.1.1"
+version = "4.1.2"
 license = "MIT"
-description = "Get geojson with coordinates of area by cadastral number."
+description = "Get coordinates of area by cadastral number"
 authors = ["Artemiy Doroshkov <rendrom@gmail.com>"]
 readme = 'README.md'
 repository = "https://github.com/rendrom/rosreestr2coord"
@@ -10,10 +10,10 @@ homepage = "https://github.com/rendrom/rosreestr2coord"
 
 [tool.poetry.dependencies]
 python = "^3.6"
-numpy = "^1.17"
-opencv-python = "^4.0"
-Pillow = "^9.0"
-matplotlib = "^3.2"
+numpy = "^1.24"
+opencv-python = "^4.6"
+Pillow = "^9.1"
+matplotlib = "^3.5"
 
 [tool.poetry.dev-dependencies]
 pytest = '^5.0'
