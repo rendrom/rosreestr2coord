@@ -211,9 +211,16 @@ class Area:
                 self.log("Start downloading area info: %s" % search_url)
                 resp = self.make_request(search_url)
                 data = json.loads(resp.decode("utf-8"))
-                self.log("Area info downloaded.")
-                with open(feature_info_path, "w") as outfile:
-                    json.dump(data, outfile)
+                if data and "feature" in data:
+                    feature = data["feature"]
+                    if feature:
+                        self.log("Area info downloaded.")
+                        with open(feature_info_path, "w") as outfile:
+                            json.dump(data, outfile)
+                    else:
+                        self.log(
+                            "Area info is not loaded. Check the area type and try again"
+                        )
             else:
                 self.log("Area info loaded from file: {}".format(feature_info_path))
             if data:

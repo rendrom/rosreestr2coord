@@ -109,6 +109,8 @@ area.get_attrs()
 
 ## Журнал
 
+- 16.09.2022 - **v.4.1.4**
+  - Исправлено кэширование пустых ответов [#63](https://github.com/rendrom/rosreestr2coord/issues/63)
 - 05.07.2022 - **v.4.1.3**
   - Заменён механизм загрузки списка адресов прокси-серверов [#62](https://github.com/rendrom/rosreestr2coord/issues/62)
 - 27.05.2022 - **v.4.1.1**
