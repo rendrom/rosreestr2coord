@@ -1,14 +1,13 @@
 # coding: utf-8
 
 import os
-import re
 import copy
 import json
 import string
 
 from rosreestr2coord.merge_tiles import PkkAreaMerger
 from rosreestr2coord.export import coords2kml
-from .utils import xy2lonlat, make_request, TimeoutException
+from .utils import clear_code, code_to_filename, xy2lonlat, make_request, TimeoutException
 from .export import coords2geojson
 from .logger import logger
 
@@ -102,7 +101,7 @@ class Area:
         self.epsilon = epsilon
         self.code = code
 
-        self.file_name = self.code[:].replace(":", "_")
+        self.file_name = code_to_filename(self.code[:])
         self.with_proxy = with_proxy
         self.use_cache = use_cache
         self.coord_out = coord_out
@@ -123,7 +122,7 @@ class Area:
     def create_workspace(self):
         if not self.media_path:
             self.media_path = os.getcwd()
-        area_path_name = self.clear_code(self.code).replace(":", "_")
+        area_path_name = code_to_filename(clear_code(self.code))
         workspace = os.path.join(self.media_path, "tmp", area_path_name)
         if not os.path.isdir(workspace):
             os.makedirs(workspace)
@@ -248,23 +247,7 @@ class Area:
 
     @staticmethod
     def clear_code(code):
-        """
-        Remove first nulls from code xxxx:00xx >> xxxx:xx
-        but if the cadastral number, for example "02:02-6.667",
-        then the all parts will remain zeros
-        """
-        is_delimited_code = re.match(r"^\d+(\:\d+)", code)
-        leave_zeros = "." in code
-        if is_delimited_code and not leave_zeros:
-            parts = []
-            for x in code.split(":"):
-                strip_zeros = x.lstrip("0")
-                if strip_zeros:
-                    parts.append(strip_zeros)
-                else:
-                    parts.append("0")
-            return ":".join(parts)
-        return code
+        return clear_code(code)
 
     @staticmethod
     def get_extent_list(extent):

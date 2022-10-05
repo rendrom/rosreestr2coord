@@ -12,7 +12,7 @@ from itertools import chain, product
 
 from PIL import Image
 
-from rosreestr2coord.utils import make_request, TimeoutException
+from rosreestr2coord.utils import code_to_filename, make_request, TimeoutException
 from .logger import logger
 
 Image.MAX_IMAGE_PIXELS = 1000000000
@@ -288,7 +288,7 @@ class PkkAreaMerger(TileMerger, object):
             file_name_prefix=clear_code,
             **kwargs
         )
-        self.file_name_prefix = clear_code.replace(":", "_")
+        self.file_name_prefix = code_to_filename(clear_code)
         self.output_format = output_format
         self.clear_code = clear_code
         self.extent = self.bbox
@@ -420,7 +420,14 @@ class PkkAreaMerger(TileMerger, object):
             #     layerDefs = safe_string.replace("+", "%20")
             else:
                 layers = list(map(str, range(0, 21)))
-                layerDefs = {layer: str("ID = '{}'".format(code)) for layer in layers}
+                # layerDefs = {layer: str("ID = '{}'".format(code)) for layer in layers}
+                layerDefs = {}
+                for layer in layers:
+                    code_part, *contour_num = code.split("/")
+                    layerDef = str("ID = '{}'".format(code_part))
+                    if contour_num:
+                        layerDef += " and contour_num = {}".format(contour_num[0])
+                    layerDefs[layer] = layerDef
 
             params = {
                 "dpi": 96,

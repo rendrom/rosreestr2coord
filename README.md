@@ -109,6 +109,8 @@ area.get_attrs()
 
 ## Журнал
 
+- 05.10.2022 - **v.4.1.5**
+  - Добавлена поддержка кадастровых номеров с номером контура (...:XXXX/C) ()[#65](https://github.com/rendrom/rosreestr2coord/issues/65)
 - 16.09.2022 - **v.4.1.4**
   - Исправлено кэширование пустых ответов [#63](https://github.com/rendrom/rosreestr2coord/issues/63)
 - 05.07.2022 - **v.4.1.3**

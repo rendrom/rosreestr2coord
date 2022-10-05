@@ -1,7 +1,7 @@
-# import urllib
+import re
+import ssl
 import json
 import math
-import ssl
 import urllib.error
 import urllib.parse
 from urllib.request import Request, urlopen
@@ -134,3 +134,27 @@ def is_error_response(url, response):
     except Exception:
         pass
     return is_error
+
+
+def code_to_filename(code):
+    return code.replace(":", "_").replace("/", "-")
+
+
+def clear_code(code):
+    """
+    Remove first nulls from code xxxx:00xx >> xxxx:xx
+    but if the cadastral number, for example "02:02-6.667",
+    then the all parts will remain zeros
+    """
+    is_delimited_code = re.match(r"^\d+(\:\d+)", code)
+    leave_zeros = "." in code
+    if is_delimited_code and not leave_zeros:
+        parts = []
+        for x in code.split(":"):
+            strip_zeros = x.lstrip("0")
+            if strip_zeros:
+                parts.append(strip_zeros)
+            else:
+                parts.append("0")
+        return ":".join(parts)
+    return code
