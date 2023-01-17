@@ -72,11 +72,15 @@ def make_request(url, with_proxy=False):
             if is_error:
                 raise Exception(is_error)
             return read
+        # except urllib.error.HTTPError as er:
+        #     raise er
+        # except urllib.error.URLError as er:
+        #     logger.error(er)
+        #     raise er
         except Exception as er:
             logger.error(er)
-            # print(er)
-            # raise TimeoutException()
-    return False
+            raise er
+    raise Exception("The url is not set")
 
 
 def make_request_with_proxy(url):

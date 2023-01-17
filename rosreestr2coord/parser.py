@@ -7,7 +7,13 @@ import string
 
 from rosreestr2coord.merge_tiles import PkkAreaMerger
 from rosreestr2coord.export import coords2kml
-from .utils import clear_code, code_to_filename, xy2lonlat, make_request, TimeoutException
+from .utils import (
+    clear_code,
+    code_to_filename,
+    xy2lonlat,
+    make_request,
+    TimeoutException,
+)
 from .export import coords2geojson
 from .logger import logger
 
@@ -113,11 +119,17 @@ class Area:
         if not code:
             return
         self.workspace = self.create_workspace()
-        feature_info = self.download_feature_info()
-        if feature_info:
-            self.get_geometry()
-        else:
-            self.log("Nothing found")
+        try:
+            feature_info = self.download_feature_info()
+            if feature_info:
+                self.get_geometry()
+            else:
+                self.log("Nothing found")
+        except Exception as er:
+            if er.reason:
+                self.log(er.reason)
+            else:
+                self.log(er.reason)
 
     def create_workspace(self):
         if not self.media_path:
@@ -243,6 +255,7 @@ class Area:
             raise TimeoutException()
         except Exception as error:
             self.error(error)
+            raise error
         return False
 
     @staticmethod
