@@ -190,49 +190,51 @@ class Area:
         response = make_request(url, self.with_proxy)
         return response
 
-    def download_feature_info(self):
+    def _get_feature_data(self):
         feature_info_path = os.path.join(self.workspace, 'feature_info.json')
         data = False
         if self.use_cache:
             try:
                 with open(feature_info_path, 'r') as data_file:
                     data = json.loads(data_file.read())
-            except:
-                pass
-        try:
-            if not data:
-                search_url = self.feature_info_url + self.clear_code(self.code)
-                self.log("Start downloading area info: %s" % search_url)
-                resp = self.make_request(search_url)
-                data = json.loads(resp)
-                self.log("Area info downloaded.")
-                with open(feature_info_path, 'w') as outfile:
-                    json.dump(data, outfile)
-            else:
                 self.log(
                     "Area info loaded from file: {}".format(feature_info_path))
-            if data:
-                feature = data.get("feature")
-                if feature:
-                    attrs = feature.get("attrs")
-                    if attrs:
-                        self.attrs = attrs
-                        self.code_id = attrs["id"]
-                    if feature.get("extent"):
-                        self.extent = feature["extent"]
-                    if feature.get("center"):
-                        x = feature["center"]["x"]
-                        y = feature["center"]["y"]
-                        if self.coord_out == "EPSG:4326":
-                            (x, y) = xy2lonlat(x, y)
-                        self.center = {"x": x, "y": y}
-                        self.attrs["center"] = self.center
-                return feature
-        except TimeoutException:
-            raise TimeoutException()
-        except Exception as error:
-            self.error(error)
-        return False
+                return data
+            except:
+                pass
+
+        search_url = self.feature_info_url + self.clear_code(self.code)
+        self.log("Start downloading area info: %s" % search_url)
+        resp = self.make_request(search_url)
+        data = json.loads(resp)
+        self.log("Area info downloaded.")
+        with open(feature_info_path, 'w') as outfile:
+            json.dump(data, outfile)
+        return data
+
+
+    def download_feature_info(self):
+        data = self._get_feature_data()
+
+        if not data:
+            return data
+
+        feature = data.get("feature")
+        if feature:
+            attrs = feature.get("attrs")
+            if attrs:
+                self.attrs = attrs
+                self.code_id = attrs["id"]
+            if feature.get("extent"):
+                self.extent = feature["extent"]
+            if feature.get("center"):
+                x = feature["center"]["x"]
+                y = feature["center"]["y"]
+                if self.coord_out == "EPSG:4326":
+                    (x, y) = xy2lonlat(x, y)
+                self.center = {"x": x, "y": y}
+                self.attrs["center"] = self.center
+        return feature
 
     @staticmethod
     def clear_code(code):
