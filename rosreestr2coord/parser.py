@@ -1,21 +1,22 @@
 # coding: utf-8
 
+import os
 import copy
 import json
-import os
 import string
 
 from rosreestr2coord.merge_tiles import PkkAreaMerger
+from rosreestr2coord.export import coords2kml
+from .utils import (
+    clear_code,
+    code_to_filename,
+    xy2lonlat,
+    make_request,
+    TimeoutException,
+)
 from .export import coords2geojson
 from .logger import logger
-from .utils import xy2lonlat, make_request, TimeoutException
 
-try:
-    import urllib.parse
-    from urllib.parse import urlencode
-except ImportError:  # For Python 3
-    import urllib.parse as urlparse
-    from urllib.parse import urlencode
 
 ##############
 # SEARCH URL #
@@ -35,7 +36,7 @@ FEATURE_INFO_URL = "https://pkk.rosreestr.ru/api/features/$area_type/"
 #########################
 # URL to get area image #
 #########################
-# https://pkk.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export
+# https://pkk.rosreestr.ru/arcgis/rest/services/PKK6/CadastreSelected/MapServer/export
 #   ?dpi=96
 #   &transparent=true
 #   &format=png32
@@ -47,11 +48,9 @@ FEATURE_INFO_URL = "https://pkk.rosreestr.ru/api/features/$area_type/"
 #   &layerDefs=%7B%226%22%3A%22ID%20%3D%20%2738%3A36%3A21%3A1106%27%22%2C%227%22%3A%22ID%20%3D%20%2738%3A36%3A21%3A1106%27%22%7D
 #   &f=image
 # WHERE:
-#    "layerDefs" decode to {"6":"ID = '38:36:21:1106'","7":"ID = '38:36:21:1106'"}
-#    "f" may be `json` or `html`
+#    'layerDefs' decode to {'6':'ID = '38:36:21:1106'','7':'ID = '38:36:21:1106''}
+#    'f' may be `json` or `html`
 #    set `&format=svg&f=json` to export image in svg !closed by rosreestr, now only PNG
-# IMAGE_URL = "https://pkk.rosreestr.ru/arcgis/rest/services/Cadastre/CadastreSelected/MapServer/export"
-IMAGE_URL = "https://pkk.rosreestr.ru/arcgis/rest/services/PKK6/CadastreSelected/MapServer/export"
 
 TYPES = {
     "Участки": 1,
@@ -75,31 +74,40 @@ class NoCoordinatesException(Exception):
 
 
 class Area:
-    image_url = IMAGE_URL
-    buffer = 10
 
-    def __init__(self, code="", area_type=1, epsilon=5, media_path="",
-                 with_log=True,
-                 coord_out="EPSG:4326", center_only=False, with_proxy=False,
-                 use_cache=True):
+    code = ""
+    code_id = ""  # from feature info attr id
+    buffer = 10
+    xy = []  # [[[area1], [hole1], [holeN]], [[area2]]]
+    image_xy_corner = []  # cartesian coord from image, for draw plot
+    width = 0
+    height = 0
+    image_path = ""
+    extent = {}
+    image_extent = {}
+    center = {"x": None, "y": None}
+    attrs = {}
+
+    def __init__(
+        self,
+        code="",
+        area_type=1,
+        epsilon=5,
+        media_path="",
+        with_log=True,
+        coord_out="EPSG:4326",
+        center_only=False,
+        with_proxy=False,
+        use_cache=True,
+    ):
         self.with_log = with_log
         self.area_type = area_type
         self.media_path = media_path
-        self.image_url = ""
-        self.xy = []  # [[[area1], [hole1], [holeN]], [[area2]]]
-        self.image_xy_corner = []  # cartesian coord from image, for draw plot
-        self.width = 0
-        self.height = 0
-        self.image_path = ""
-        self.extent = {}
-        self.image_extent = {}
-        self.center = {'x': None, 'y': None}
         self.center_only = center_only
-        self.attrs = {}
         self.epsilon = epsilon
         self.code = code
-        self.code_id = ""
-        self.file_name = self.code[:].replace(":", "_")
+
+        self.file_name = code_to_filename(self.code[:])
         self.with_proxy = with_proxy
         self.use_cache = use_cache
         self.coord_out = coord_out
@@ -111,18 +119,23 @@ class Area:
         if not code:
             return
         self.workspace = self.create_workspace()
-        feature_info = self.download_feature_info()
-        if feature_info:
-            geometry = self.get_geometry()
-        else:
-            self.log("Nothing found")
+        try:
+            feature_info = self.download_feature_info()
+            if feature_info:
+                self.get_geometry()
+            else:
+                self.log("Nothing found")
+        except Exception as er:
+            if er.reason:
+                self.log(er.reason)
+            else:
+                self.log(er.reason)
 
     def create_workspace(self):
         if not self.media_path:
             self.media_path = os.getcwd()
-        area_path_name = self.clear_code(self.code).replace(":", "_")
-        workspace = os.path.join(
-            self.media_path, "tmp", area_path_name)
+        area_path_name = code_to_filename(clear_code(self.code))
+        workspace = os.path.join(self.media_path, "tmp", area_path_name)
         if not os.path.isdir(workspace):
             os.makedirs(workspace)
         return workspace
@@ -138,15 +151,15 @@ class Area:
     def get_attrs(self):
         return self.attrs
 
-    def _get_attrs_to_geojson(self):
+    def _prepare_attrs(self):
         if self.attrs:
             for a in self.attrs:
                 attr = self.attrs[a]
                 if isinstance(attr, str):
                     try:
-                        attr = attr.strip()
+                        attr = attr.lstrip()
                         self.attrs[a] = attr
-                    except:
+                    except Exception:
                         pass
         return self.attrs
 
@@ -163,7 +176,7 @@ class Area:
     def to_geojson(self, geom_type="point", with_attrs=True, dumps=True):
         attrs = False
         if with_attrs:
-            attrs = self._get_attrs_to_geojson()
+            attrs = self._prepare_attrs()
         xy = []
         if self.center_only:
             xy = self.get_center_xy()
@@ -172,12 +185,16 @@ class Area:
             xy = self.xy
         if xy and len(xy):
             feature_collection = coords2geojson(
-                xy, geom_type, self.coord_out, attrs=attrs)
+                xy, geom_type, self.coord_out, attrs=attrs
+            )
             if feature_collection:
                 if dumps:
                     return json.dumps(feature_collection)
                 return feature_collection
         return False
+
+    def to_kml(self):
+        return coords2kml(self.xy, self._prepare_attrs())
 
     def get_center_xy(self):
         center = self.attrs.get("center")
@@ -195,7 +212,7 @@ class Area:
         data = False
         if self.use_cache:
             try:
-                with open(feature_info_path, 'r') as data_file:
+                with open(feature_info_path, "r") as data_file:
                     data = json.loads(data_file.read())
                 self.log(
                     f"Area info loaded from file: {feature_info_path}"
@@ -238,8 +255,7 @@ class Area:
 
     @staticmethod
     def clear_code(code):
-        """remove first nulls from code  xxxx:00xx >> xxxx:xx"""
-        return ":".join([str(int(x)) for x in code.split(":")])
+        return clear_code(code)
 
     @staticmethod
     def get_extent_list(extent):
@@ -251,8 +267,12 @@ class Area:
         ex = self.extent
         buf = self.buffer
         if ex and ex["xmin"]:
-            ex = [ex["xmin"] - buf, ex["ymin"] - buf,
-                  ex["xmax"] + buf, ex["ymax"] + buf]
+            ex = [
+                ex["xmin"] - buf,
+                ex["ymin"] - buf,
+                ex["xmax"] + buf,
+                ex["ymax"] + buf,
+            ]
         else:
             self.log("Area has no coordinates")
             # raise NoCoordinatesException()
@@ -270,12 +290,16 @@ class Area:
         for f in formats:
             bbox = self.get_buffer_extent_list()
             if bbox:
-                image = PkkAreaMerger(bbox=self.get_buffer_extent_list(),
-                                      output_format=f, with_log=self.with_log,
-                                      clear_code=self.clear_code(self.code_id),
-                                      output_dir=self.workspace,
-                                      requester=self.make_request,
-                                      use_cache=self.use_cache)
+                image = PkkAreaMerger(
+                    bbox=self.get_buffer_extent_list(),
+                    output_format=f,
+                    with_log=self.with_log,
+                    clear_code=self.clear_code(self.code_id),
+                    output_dir=self.workspace,
+                    requester=self.make_request,
+                    use_cache=self.use_cache,
+                    area_type=self.area_type,
+                )
                 image.download()
                 self.image_path = image.merge_tiles()
                 self.width = image.real_width
@@ -313,21 +337,31 @@ class Area:
     def get_image_xy_corner(self):
         """get сartesian coordinates from raster"""
         import cv2
+        import numpy
 
         if not self.image_path:
             return False
         image_xy_corners = []
 
         try:
-            img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
-            imagem = (255 - img)
+            # img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
+            stream = open(self.image_path, "rb")
+            bytes = bytearray(stream.read())
+            numpyarray = numpy.asarray(bytes, dtype=numpy.uint8)
+            img = cv2.imdecode(numpyarray, cv2.IMREAD_GRAYSCALE)
+            imagem = 255 - img
+            del img
             ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
+            del imagem
             try:
                 contours, hierarchy = cv2.findContours(
-                    thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                    thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+                )
             except Exception:
                 im2, contours, hierarchy = cv2.findContours(
-                    thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+                    thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
+                )
+            del thresh
 
             hierarchy = hierarchy[0]
             hierarchy_contours = [[] for _ in range(len(hierarchy))]
@@ -335,8 +369,12 @@ class Area:
                 currentContour = contours[fry]
                 currentHierarchy = hierarchy[fry]
                 cc = []
-                # epsilon = 0.0005 * cv2.arcLength(contours[len(contours) - 1], True)
-                approx = cv2.approxPolyDP(currentContour, self.epsilon, True)
+
+                perimeter = cv2.arcLength(currentContour, True)
+                # epsilon = 0.001 * cv2.arcLength(currentContour, True)
+                # epsilon = epsilon * self.epsilon
+                epsilon = self.epsilon
+                approx = cv2.approxPolyDP(currentContour, epsilon, True)
                 if len(approx) > 2:
                     for c in approx:
                         cc.append([c[0][0], c[0][1]])
@@ -353,8 +391,8 @@ class Area:
     def image_corners_to_coord(self, image_xy_corners):
         """calculate spatial coordinates from cartesian"""
         ex = self.get_extent_list(self.image_extent)
-        dx = ((ex[2] - ex[0]) / self.width)
-        dy = ((ex[3] - ex[1]) / self.height)
+        dx = (ex[2] - ex[0]) / self.width
+        dy = (ex[3] - ex[1]) / self.height
         xy_corners = []
         for im_x, im_y in image_xy_corners:
             x = ex[0] + (im_x * dx)
@@ -367,11 +405,12 @@ class Area:
     def show_plot(self):
         """Development tool"""
         import cv2
+
         try:
             from matplotlib import pyplot as plt
         except ImportError:
-            self.error('Matplotlib is not installed.')
-            raise ImportError('Matplotlib is not installed.')
+            self.error("Matplotlib is not installed.")
+            raise ImportError("matplotlib is not installed.")
 
         img = cv2.imread(self.image_path)
         for polygones in self.image_xy_corner:

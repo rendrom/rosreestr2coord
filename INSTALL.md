@@ -45,10 +45,10 @@ python -m venv ./.env
 # активация виртуального окружения для Windows
 . ./.env/Scripts/activate
 # установка зависимостей
-make.bat setup
+pip install -r requirements.txt
 ```
 
-или же воспользоваться poetry, он всё сделает сам. Команда таже.
+или же воспользоваться poetry, он всё сделает сам. Команда та же.
 
 ```bash
 make.bat setup

@@ -2,48 +2,29 @@ from distutils.core import setup
 
 from setuptools import find_packages
 
-from version import VERSION
+from rosreestr2coord.version import VERSION
 
 setup(
-    name='rosreestr2coord',
+    name="rosreestr2coord",
     version=VERSION,
-    packages=find_packages(exclude=['tests*']),
+    packages=find_packages(exclude=["tests*"]),
     zip_safe=False,
     include_package_data=True,
-    license='MIT',
+    license="MIT",
     classifiers=[
-        # How mature is this project? Common values are
-        #   3 - Alpha
-        #   4 - Beta
-        #   5 - Production/Stable
-        'Development Status :: 4 - Beta',
-
-        # Indicate who your project is intended for
-        # 'Intended Audience :: Developers',
-        # 'Topic :: Software Development :: Build Tools',
-
-        # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: MIT License',
-
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
-        # 'Programming Language :: Python :: 2',
-        # 'Programming Language :: Python :: 2.6',
-        # 'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        # 'Programming Language :: Python :: 3.3',
-        # 'Programming Language :: Python :: 3.4',
-        # 'Programming Language :: Python :: 3.5',
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
     ],
-    description='Get geometry from rosreestr',
-    long_description='Get area coordinates by its cadastral number',
-    install_requires=["numpy", "Pillow", "opencv-python", "matplotlib"],
-    url='https://github.com/rendrom/rosreestr2coord',
-    author='Artemiy Doroshkov',
-    author_email='rendrom@gmail.com',
+    description="Get geometry from rosreestr",
+    long_description="Get area coordinates by its cadastral number",
+    install_requires=["numpy==1.23.*", "Pillow==9.2.*", "opencv-python==4.6.0.*"],
+    url="https://github.com/rendrom/rosreestr2coord",
+    author="Artemiy Doroshkov",
+    author_email="rendrom@gmail.com",
     entry_points={
-        'console_scripts': [
-            'rosreestr2coord=rosreestr2coord.console:console',
+        "console_scripts": [
+            "rosreestr2coord=rosreestr2coord.console:console",
         ],
     },
 )
@@ -52,3 +33,5 @@ setup(
 
 # python setup.py sdist bdist_wheel
 # twine upload dist/*
+# twine upload -u 'rendrom' --repository-url https://upload.pypi.org/legacy/ dist/*
+# twine upload --repository r2c dist/*
