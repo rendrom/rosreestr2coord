@@ -19,7 +19,7 @@ setup(
     description="Get geometry from rosreestr",
     long_description="Get area coordinates by its cadastral number",
     install_requires=[
-        "numpy==1.23.*",
+        "numpy",
         "Pillow==9.2.*",
         "opencv-contrib-python==4.5.3.56",
     ],
@@ -35,6 +35,7 @@ setup(
 
 # https://pypi.python.org/pypi/twine
 
+# pip install twine
 # python setup.py sdist bdist_wheel
 # twine upload dist/*
 # twine upload -u 'rendrom' --repository-url https://upload.pypi.org/legacy/ dist/*
