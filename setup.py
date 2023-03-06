@@ -20,7 +20,7 @@ setup(
     long_description="Get area coordinates by its cadastral number",
     install_requires=[
         "numpy",
-        "Pillow==9.2.*",
+        "Pillow",
         "opencv-contrib-python==4.5.3.56",
     ],
     url="https://github.com/rendrom/rosreestr2coord",
