@@ -8,87 +8,87 @@ import urllib.request
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
-PROXY_PATH = "proxy.txt"
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) \
-    Chrome/64.0.3282.186 Safari/537.36"
+        Chrome/64.0.3282.186 Safari/537.36"
 
 
-def update_proxies(path=PROXY_PATH):
-    # Getting proxy list from address if file is old
-    proxies = load_proxies_from_file(path)
-    if not proxies:
-        download_proxies(path)
-    older = 3600 * 6  # 6h
-    try:
-        os.path.getmtime(path)
-    except OSError:
-        download_proxies(path)
-    diff = time.time() - os.path.getmtime(path)
-    if diff > older:
-        download_proxies(path)
+class ProxyHandling:
+    def __init__(self, path="proxy.txt", user_agent=USER_AGENT):
+        self.path = path
+        self.user_agent = user_agent
 
+    def update_proxies(self):
+        # Getting proxy list from address if file is old
+        proxies = self._load_proxies_from_file()
+        if not proxies:
+            self._download_proxies()
+        try:
+            older = 3600 * 6  # 6h
+            diff = time.time() - os.path.getmtime(self.path)
+            if diff > older:
+                self._download_proxies()
+        except OSError:
+            self._download_proxies()
 
-def download_proxies(path=PROXY_PATH):
-    # found = ip_adress_proxies()
-    found = free_proxies()
-    dump_proxies_to_file(found[:20], path)  # 20 top proxies
+    def dump_proxies(self, proxies):
+        with open(self.path, "w") as outfile:
+            for proxy in proxies:
+                outfile.write(proxy)
 
+    def load_proxies(self):
+        if not os.path.exists(self.path):
+            with open(self.path, "w"):
+                pass
+        self.update_proxies()
+        return self._load_proxies_from_file()
 
-def ip_adress_proxies(url="https://www.ip-adress.com/proxy_list/"):
-    # Downloading without proxy
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler())
-    urllib.request.install_opener(opener)
-    request = urllib.request.Request(url)
-    request.add_header("user-agent", USER_AGENT)
-    parsed_uri = urlparse(url)
-    host = "{uri.scheme}://{uri.netloc}/".format(uri=parsed_uri)
-    request.add_header("referer", host)
-    s = False
-    try:
-        context = ssl._create_unverified_context()
-        with urlopen(request, context=context, timeout=3000) as response:
-            s = response.read().decode("utf-8")
-    except Exception as er:
-        print("Download proxies error")
-        raise er
-    pattern = r"\d*\.\d*\.\d*\.\d*\</a>:\d*"
-    found = [i.replace("</a>", "") + "\n" for i in re.findall(pattern, s)]
-    return found
+    def get_proxies(self):
+        return self._load_proxies_from_file()
 
+    def _download_proxies(self):
+        # found = ip_adress_proxies()
+        found = self._free_proxies()
+        self.dump_proxies(found[:20])  # 20 top proxies
 
-def free_proxies(url="https://free-proxy-list.net/"):
-    # Downloading without proxy
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler())
-    urllib.request.install_opener(opener)
-    request = urllib.request.Request(url)
-    request.add_header("user-agent", USER_AGENT)
-    parsed_uri = urlparse(url)
-    host = "{uri.scheme}://{uri.netloc}/".format(uri=parsed_uri)
-    request.add_header("referer", host)
-    f = urllib.request.urlopen(request)
-    pattern = r"\d*\.\d*\.\d*\.\d*\</td><td>\d*"
-    s = f.read().decode("utf-8")
-    found = [i.replace("</td><td>", ":") + "\n" for i in re.findall(pattern, s)]
-    return found
+    def _ip_adress_proxies(self, url="https://www.ip-adress.com/proxy_list/"):
+        # Downloading without proxy
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler())
+        urllib.request.install_opener(opener)
+        request = urllib.request.Request(url)
+        request.add_header("user-agent", self.user_agent)
+        parsed_uri = urlparse(url)
+        host = "{uri.scheme}://{uri.netloc}/".format(uri=parsed_uri)
+        request.add_header("referer", host)
+        s = False
+        try:
+            context = ssl._create_unverified_context()
+            with urlopen(request, context=context, timeout=3000) as response:
+                s = response.read().decode("utf-8")
+        except Exception as er:
+            print("Download proxies error")
+            raise er
+        pattern = r"\d*\.\d*\.\d*\.\d*\</a>:\d*"
+        found = [i.replace("</a>", "") + "\n" for i in re.findall(pattern, s)]
+        return found
 
+    def _free_proxies(self, url="https://free-proxy-list.net/"):
+        # Downloading without proxy
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler())
+        urllib.request.install_opener(opener)
+        request = urllib.request.Request(url)
+        request.add_header("user-agent", self.user_agent)
+        parsed_uri = urlparse(url)
+        host = "{uri.scheme}://{uri.netloc}/".format(uri=parsed_uri)
+        request.add_header("referer", host)
+        f = urllib.request.urlopen(request)
+        pattern = r"\d*\.\d*\.\d*\.\d*\</td><td>\d*"
+        s = f.read().decode("utf-8")
+        found = [i.replace("</td><td>", ":") + "\n" for i in re.findall(pattern, s)]
+        return found
 
-def load_proxies(path=PROXY_PATH):
-    if not os.path.exists(PROXY_PATH):
-        with open(PROXY_PATH, "w"):
-            pass
-    update_proxies(path)
-    return load_proxies_from_file(path)
-
-
-def load_proxies_from_file(path=PROXY_PATH):
-    try:
-        with open(path) as outfile:
-            return outfile.readlines()
-    except Exception:
-        return None
-
-
-def dump_proxies_to_file(proxies, path=PROXY_PATH):
-    with open(path, "w") as outfile:
-        for proxy in proxies:
-            outfile.write(proxy)
+    def _load_proxies_from_file(self):
+        try:
+            with open(self.path) as outfile:
+                return outfile.readlines()
+        except Exception:
+            return []

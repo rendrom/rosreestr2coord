@@ -6,25 +6,7 @@ import urllib.error
 import urllib.parse
 from urllib.request import Request, urlopen
 
-from . import proxy_handling
-from .logger import logger
-
-
-# Try to send request through a TOR
-# try:
-#     import socks  # SocksiPy module
-#     import socket
-#     SOCKS_PORT = 9150 # 9050
-#     def create_connection(address, timeout=None, source_address=None):
-#         sock = socks.socksocket()
-#         sock.connect(address)
-#         return sock
-#     socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", SOCKS_PORT)
-#     socket.socket = socks.socksocket
-#     socket.create_connection = create_connection
-#     print("WITH PROXY")
-# except:
-#     pass
+from .proxy_handling import ProxyHandling
 
 
 def y2lat(y):
@@ -56,12 +38,14 @@ def get_rosreestr_headers():
     }
 
 
-def make_request(url, with_proxy=False):
-    # original function
+proxy_handling = ProxyHandling()
+
+
+def make_request(url, with_proxy=False, proxy_handler=None):
     if url:
-        logger.debug(url)
         if with_proxy:
-            return make_request_with_proxy(url)
+            proxy_handler = proxy_handler if proxy_handler else proxy_handling
+            return make_request_with_proxy(url, proxy_handler)
         try:
             headers = get_rosreestr_headers()
             request = Request(url, headers=headers)
@@ -72,30 +56,22 @@ def make_request(url, with_proxy=False):
             if is_error:
                 raise Exception(is_error)
             return read
-        # except urllib.error.HTTPError as er:
-        #     raise er
-        # except urllib.error.URLError as er:
-        #     logger.error(er)
-        #     raise er
         except Exception as er:
-            logger.error(er)
             raise er
-    raise Exception("The url is not set")
+    raise ValueError("The url is not set")
 
 
-def make_request_with_proxy(url):
-    proxies = proxy_handling.load_proxies()
-    if not proxies:
-        proxy_handling.update_proxies()
-        proxies = proxy_handling.load_proxies_from_file()
-    tries = 3  # number of tries for each proxy
-    for proxy in reversed(proxies):
-        for i in range(1, tries + 1):  # how many tries for each proxy
+def make_request_with_proxy(url, url_proxy):
+    tries_per_proxy = 3
+    tries_for_proxies = 20
+
+    for j in range(0, tries_for_proxies):
+        proxies = url_proxy.load_proxies()
+        p = proxies.pop()
+
+        for i in range(0, tries_per_proxy):
             try:
-                # print('%i iteration of proxy %s' % (i, proxy), end="")
-                proxy_handler = urllib.request.ProxyHandler(
-                    {"http": proxy, "https": proxy}
-                )
+                proxy_handler = urllib.request.ProxyHandler({"http": p, "https": p})
                 opener = urllib.request.build_opener(proxy_handler)
                 urllib.request.install_opener(opener)
                 headers = get_rosreestr_headers()
@@ -104,27 +80,21 @@ def make_request_with_proxy(url):
                 context = ssl._create_unverified_context()
                 with urlopen(request, context=context, timeout=3000) as response:
                     read = response.read()
-                is_error = is_error_response(url, read)
-                if is_error:
-                    logger.error(is_error)
-                    # raise Exception(is_error)
                 return read
             except urllib.error.HTTPError as er:
                 # 400 is not proxy problem
                 if er.code == 400:
                     raise er
             except Exception as er:
-                logger.error(er)
-            if i == tries:
-                # Update allowed proxies list as it may change when downloads in another thread
-                proxies = proxy_handling.load_proxies()
-                if proxies and proxy in proxies:
-                    proxies.remove(proxy)
-                    proxy_handling.dump_proxies_to_file(proxies)
+                pass
 
-    # if here, the result is not received
-    # try with the new proxy list
-    return make_request_with_proxy(url)
+        # remove useless proxy server
+        proxies_ = url_proxy.get_proxies()
+        if p in proxies_:
+            proxies_.remove(p)
+            url_proxy.dump_proxies(proxies_)
+
+    raise Exception("Unable to upload via proxy")
 
 
 def is_error_response(url, response):

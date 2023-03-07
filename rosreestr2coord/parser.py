@@ -5,16 +5,15 @@ import copy
 import json
 import string
 
-from rosreestr2coord.merge_tiles import PkkAreaMerger
-from rosreestr2coord.export import coords2kml
 from .utils import (
     clear_code,
     code_to_filename,
     xy2lonlat,
     make_request,
-    TimeoutException,
 )
-from .export import coords2geojson
+from .proxy_handling import ProxyHandling
+from .merge_tiles import PkkAreaMerger
+from .export import coords2geojson, coords2kml
 from .logger import logger
 
 
@@ -74,7 +73,6 @@ class NoCoordinatesException(Exception):
 
 
 class Area:
-
     code = ""
     code_id = ""  # from feature info attr id
     buffer = 10
@@ -99,6 +97,7 @@ class Area:
         center_only=False,
         with_proxy=False,
         use_cache=True,
+        proxy_handler=None,
     ):
         self.with_log = with_log
         self.area_type = area_type
@@ -109,6 +108,7 @@ class Area:
 
         self.file_name = code_to_filename(self.code[:])
         self.with_proxy = with_proxy
+        self.proxy_handler = proxy_handler
         self.use_cache = use_cache
         self.coord_out = coord_out
 
@@ -118,6 +118,7 @@ class Area:
         self.feature_info_url = t.substitute({"area_type": area_type})
         if not code:
             return
+        self.tmp_path = self.create_tmp()
         self.workspace = self.create_workspace()
         try:
             feature_info = self.download_feature_info()
@@ -126,16 +127,22 @@ class Area:
             else:
                 self.log("Nothing found")
         except Exception as er:
-            if er.reason:
+            if hasattr(er, "reason"):
                 self.log(er.reason)
             else:
-                self.log(er.reason)
+                self.log(er)
 
-    def create_workspace(self):
+    def create_tmp(self):
         if not self.media_path:
             self.media_path = os.getcwd()
+        tmp_path = os.path.join(self.media_path, "tmp")
+        if not os.path.isdir(tmp_path):
+            os.makedirs(tmp_path)
+        return tmp_path
+
+    def create_workspace(self):
         area_path_name = code_to_filename(clear_code(self.code))
-        workspace = os.path.join(self.media_path, "tmp", area_path_name)
+        workspace = os.path.join(self.tmp_path, area_path_name)
         if not os.path.isdir(workspace):
             os.makedirs(workspace)
         return workspace
@@ -204,19 +211,22 @@ class Area:
         return False
 
     def make_request(self, url):
-        response = make_request(url, self.with_proxy)
+        proxy_path = os.path.join(self.tmp_path, "proxy.txt")
+        proxy_handler = (
+            self.proxy_handler if self.proxy_handler else ProxyHandling(path=proxy_path)
+        )
+        logger.debug(url)
+        response = make_request(url, self.with_proxy, proxy_handler=proxy_handler)
         return response
 
     def _get_feature_data(self):
-        feature_info_path = os.path.join(self.workspace, 'feature_info.json')
+        feature_info_path = os.path.join(self.workspace, "feature_info.json")
         data = False
         if self.use_cache:
             try:
                 with open(feature_info_path, "r") as data_file:
                     data = json.load(data_file)
-                self.log(
-                    f"Area info loaded from file: {feature_info_path}"
-                )
+                self.log(f"Area info loaded from file: {feature_info_path}")
                 return data
             except Exception:
                 pass
@@ -226,7 +236,7 @@ class Area:
         resp = self.make_request(search_url)
         data = json.loads(resp)
         self.log("Area info downloaded.")
-        with open(feature_info_path, 'w') as outfile:
+        with open(feature_info_path, "w") as outfile:
             json.dump(data, outfile)
         return data
 
