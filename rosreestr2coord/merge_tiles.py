@@ -13,7 +13,6 @@ from itertools import chain, product
 from PIL import Image
 
 from rosreestr2coord.utils import code_to_filename, make_request, TimeoutException
-from .logger import logger
 
 Image.MAX_IMAGE_PIXELS = 1000000000
 Image.warnings.simplefilter("error", Image.DecompressionBombWarning)
@@ -36,7 +35,8 @@ def thread_download(target, xy_tile, total, thread_count=4):
         try:
             result.put(target(*args))
         except TimeoutException:
-            logger.warning("Waiting time exceeded")
+            # Waiting time exceeded
+            pass
 
     thread_count = total // 4 if total >= thread_count else total
     threads = [
@@ -281,7 +281,9 @@ class PkkAreaMerger(TileMerger, object):
     max_count = 50
     area_type = 1
 
-    def __init__(self, output_format, clear_code, use_cache, area_type=1, **kwargs):
+    def __init__(
+        self, output_format, clear_code, use_cache, logger, area_type=1, **kwargs
+    ):
         super(PkkAreaMerger, self).__init__(
             zoom=0,
             tile_format=".%s" % output_format,
@@ -294,6 +296,7 @@ class PkkAreaMerger(TileMerger, object):
         self.extent = self.bbox
         self.area_type = area_type
         self.use_cache = use_cache
+        self.logger = logger
 
         self.real_width = 0
         self.real_height = 0
@@ -365,7 +368,7 @@ class PkkAreaMerger(TileMerger, object):
         return dx, dy
 
     def _optimize_tile_size(self, count):
-        h = count ** 0.5
+        h = count**0.5
         xy = self.xy_range
         x = int((xy["xMax"] - xy["xMin"]) / h)
         y = int((xy["yMax"] - xy["yMin"]) / h)
@@ -472,10 +475,10 @@ class PkkAreaMerger(TileMerger, object):
                     if data.get("imageData"):
                         return data.get("imageData")
                 else:
-                    logger.warning("Can't get image meta data from: %s" % meta_url)
+                    self.logger.warning("Can't get image meta data from: %s" % meta_url)
 
         elif not self.extent:
-            logger.warning("Can't get image without extent")
+            self.logger.warning("Can't get image without extent")
         return False
 
     def _load_image_data(self, url, cache_path):
@@ -518,7 +521,7 @@ class PkkAreaMerger(TileMerger, object):
                         if tile.height > height:
                             height = tile.height
                     except Exception as er:
-                        logger.warning(er)
+                        self.logger.warning(er)
                 imx += height
 
             self.real_width = imx
@@ -605,7 +608,7 @@ def create_prj_file(path, crs=3857):
 
 def deg2num(lat_deg, lon_deg, zoom):
     lat_rad = math.radians(lat_deg)
-    n = 2.0 ** zoom
+    n = 2.0**zoom
     xtile = int((lon_deg + 180.0) / 360.0 * n)
     ytile = int(
         (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi)
@@ -621,7 +624,7 @@ def num2deg(xtile, ytile, zoom):
     Use the function with xtile+1 and/or ytile+1 to get the other corners.
     With xtile+0.5 & ytile+0.5 it will return the center of the tile.
     """
-    n = 2.0 ** zoom
+    n = 2.0**zoom
     lon_deg = xtile / n * 360.0 - 180.0
     lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * ytile / n)))
     lat_deg = math.degrees(lat_rad)

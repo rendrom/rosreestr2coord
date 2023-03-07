@@ -98,6 +98,7 @@ class Area:
         with_proxy=False,
         use_cache=True,
         proxy_handler=None,
+        logger=logger,
     ):
         self.with_log = with_log
         self.area_type = area_type
@@ -109,6 +110,7 @@ class Area:
         self.file_name = code_to_filename(self.code[:])
         self.with_proxy = with_proxy
         self.proxy_handler = proxy_handler
+        self.logger = logger
         self.use_cache = use_cache
         self.coord_out = coord_out
 
@@ -215,7 +217,7 @@ class Area:
         proxy_handler = (
             self.proxy_handler if self.proxy_handler else ProxyHandling(path=proxy_path)
         )
-        logger.debug(url)
+        self.logger.debug(url)
         response = make_request(url, self.with_proxy, proxy_handler=proxy_handler)
         return response
 
@@ -309,6 +311,7 @@ class Area:
                     requester=self.make_request,
                     use_cache=self.use_cache,
                     area_type=self.area_type,
+                    logger=self.logger,
                 )
                 image.download()
                 self.image_path = image.merge_tiles()
@@ -435,4 +438,4 @@ class Area:
 
     def error(self, msg):
         if self.with_log:
-            logger.warning(msg)
+            self.logger.warning(msg)
