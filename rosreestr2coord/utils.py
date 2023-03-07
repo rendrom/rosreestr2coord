@@ -50,7 +50,7 @@ def make_request(url, with_proxy=False, proxy_handler=None, logger=None):
             headers = get_rosreestr_headers()
             request = Request(url, headers=headers)
             context = ssl._create_unverified_context()
-            with urlopen(request, context=context, timeout=3000) as response:
+            with urlopen(request, context=context, timeout=10) as response:
                 read = response.read()
             is_error = is_error_response(url, read)
             if is_error:
@@ -80,7 +80,7 @@ def make_request_with_proxy(url, url_proxy, logger):
 
                 request = Request(url, headers=headers)
                 context = ssl._create_unverified_context()
-                with urlopen(request, context=context, timeout=3000) as response:
+                with urlopen(request, context=context, timeout=10) as response:
                     read = response.read()
                 return read
             except urllib.error.HTTPError as er:
