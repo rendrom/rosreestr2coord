@@ -218,7 +218,9 @@ class Area:
             self.proxy_handler if self.proxy_handler else ProxyHandling(path=proxy_path)
         )
         self.logger.debug(url)
-        response = make_request(url, self.with_proxy, proxy_handler=proxy_handler)
+        response = make_request(
+            url, self.with_proxy, proxy_handler=proxy_handler, logger=self.logger
+        )
         return response
 
     def _get_feature_data(self):

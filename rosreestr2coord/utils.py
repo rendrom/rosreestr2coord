@@ -41,11 +41,11 @@ def get_rosreestr_headers():
 proxy_handling = ProxyHandling()
 
 
-def make_request(url, with_proxy=False, proxy_handler=None):
+def make_request(url, with_proxy=False, proxy_handler=None, logger=None):
     if url:
         if with_proxy:
             proxy_handler = proxy_handler if proxy_handler else proxy_handling
-            return make_request_with_proxy(url, proxy_handler)
+            return make_request_with_proxy(url, proxy_handler, logger)
         try:
             headers = get_rosreestr_headers()
             request = Request(url, headers=headers)
@@ -61,13 +61,15 @@ def make_request(url, with_proxy=False, proxy_handler=None):
     raise ValueError("The url is not set")
 
 
-def make_request_with_proxy(url, url_proxy):
+def make_request_with_proxy(url, url_proxy, logger):
     tries_per_proxy = 3
     tries_for_proxies = 20
 
     for j in range(0, tries_for_proxies):
         proxies = url_proxy.load_proxies()
         p = proxies.pop()
+
+        logger.debug("use proxy {}".format(p))
 
         for i in range(0, tries_per_proxy):
             try:
@@ -86,7 +88,7 @@ def make_request_with_proxy(url, url_proxy):
                 if er.code == 400:
                     raise er
             except Exception as er:
-                pass
+                logger.error(er)
 
         # remove useless proxy server
         proxies_ = url_proxy.get_proxies()
@@ -94,7 +96,8 @@ def make_request_with_proxy(url, url_proxy):
             proxies_.remove(p)
             url_proxy.dump_proxies(proxies_)
 
-    raise Exception("Unable to upload via proxy")
+    logger.error("Unable to upload via proxy")
+    raise
 
 
 def is_error_response(url, response):
