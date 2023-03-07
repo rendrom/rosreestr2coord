@@ -98,6 +98,7 @@ class Area:
         with_proxy=False,
         use_cache=True,
         proxy_handler=None,
+        timeout=5,
         logger=logger,
     ):
         self.with_log = with_log
@@ -113,6 +114,7 @@ class Area:
         self.logger = logger
         self.use_cache = use_cache
         self.coord_out = coord_out
+        self.timeout = timeout
 
         t = string.Template(SEARCH_URL)
         self.search_url = t.substitute({"area_type": area_type})
@@ -219,7 +221,11 @@ class Area:
         )
         self.logger.debug(url)
         response = make_request(
-            url, self.with_proxy, proxy_handler=proxy_handler, logger=self.logger
+            url,
+            self.with_proxy,
+            proxy_handler=proxy_handler,
+            logger=self.logger,
+            timeout=self.timeout,
         )
         return response
 

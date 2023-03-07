@@ -94,6 +94,15 @@ def getopts():
         "(default %(default).2f)",
     )
     parser.add_argument(
+        "-T",
+        "--timeout",
+        action="store",
+        type=float,
+        required=False,
+        default=5,
+        help="delay between requests. " "(default %(default).2f)",
+    )
+    parser.add_argument(
         "-C",
         "--center_only",
         action="store_const",
@@ -185,7 +194,6 @@ def get_by_code(code, output, display, **kwargs):
 
 
 def console():
-
     opt = getopts()
     show_version = opt.version
     if show_version:
