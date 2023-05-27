@@ -13,7 +13,7 @@
 
 ## Зависимости
 
-- Python3
+- Python >= 3.6, <= 3.9
 - [OpenCV](http://opencv.org/)
 - Pillow
 
@@ -39,11 +39,11 @@ python setup.py install
 git clone https://github.com/rendrom/rosreestr2coord
 cd ./rosreestr2coord
 # создание виртуального окружения
-python -m venv ./.env
+python -m venv ./env
 # активация виртуального окружения Linux and MacOS
-. ./.env/bin/activate
+. ./env/bin/activate
 # активация виртуального окружения для Windows
-. ./.env/Scripts/activate
+. ./env/Scripts/activate
 # установка зависимостей
 pip install -r requirements.txt
 ```
