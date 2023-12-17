@@ -111,7 +111,7 @@ area.get_attrs()
 
 ## Журнал
 
-- 17-12-2023 - **v.4.1.6**
+- 17-12-2023 - **v.4.2.8**
   - Добавлена возможность указывать конкретный прокси в командной строке [#81](https://github.com/rendrom/rosreestr2coord/pull/81) by [sergeybarkov](https://github.com/sergeybarkov)
 - 05.10.2022 - **v.4.1.5**
   - Добавлена поддержка кадастровых номеров с номером контура (...:XXXX/C) [#65](https://github.com/rendrom/rosreestr2coord/issues/65)

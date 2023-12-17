@@ -35,8 +35,9 @@ setup(
 
 # https://pypi.python.org/pypi/twine
 
-# pip install twine
-# python setup.py sdist bdist_wheel
+# pip install build twine
+# python -m build
 # twine upload dist/*
 # twine upload -u 'rendrom' --repository-url https://upload.pypi.org/legacy/ dist/*
 # twine upload --repository r2c dist/*
+
