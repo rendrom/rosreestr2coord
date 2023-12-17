@@ -126,6 +126,14 @@ def getopts():
         required=False,
         help="show current version",
     )
+    parser.add_argument(
+        "-u",
+        "--proxy_url",
+        action="store",
+        type=str,
+        required=False,
+        help="set proxy url",
+    )
     opts = parser.parse_args()
     return opts
 
@@ -142,6 +150,7 @@ def run_console(opt):
         "center_only": opt.center_only if opt.center_only else False,
         "use_cache": False if opt.refresh else True,
         "coord_out": "EPSG:4326",
+        "proxy_url": opt.proxy_url
     }
 
     if opt.list:

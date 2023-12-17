@@ -100,6 +100,7 @@ class Area:
         proxy_handler=None,
         timeout=5,
         logger=logger,
+        proxy_url=None
     ):
         self.with_log = with_log
         self.area_type = area_type
@@ -107,6 +108,8 @@ class Area:
         self.center_only = center_only
         self.epsilon = epsilon
         self.code = code
+
+        self.proxy_url = proxy_url
 
         self.file_name = code_to_filename(self.code[:])
         self.with_proxy = with_proxy
@@ -226,6 +229,7 @@ class Area:
             proxy_handler=proxy_handler,
             logger=self.logger,
             timeout=self.timeout,
+            proxy_url=self.proxy_url
         )
         return response
 
