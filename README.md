@@ -84,6 +84,7 @@ python -m rosreestr2coord -c 38:06:144003:4723
 - -P - загрузка через прокси
 - -C - экспортировать только центры участков
 - -v - показать версию
+- -u - установить адрес прокси (http://user:password@12.345.67.89:9876)
 
 ### Программно
 
@@ -101,6 +102,7 @@ area = Area("38:06:144003:4723")
 #   center_only=False - экспорт координат центров участка
 #   with_proxy=False - запросы через прокси
 #   use_cache=True - использовать кэширование запросов
+#   proxy_url - адрес прокси сервера
 area.to_geojson()
 area.to_geojson_poly()
 area.get_coord() # [[[area1_xy], [hole1_xy], [hole2_xy]], [[area2_xyl]]]
@@ -109,8 +111,10 @@ area.get_attrs()
 
 ## Журнал
 
+- 17-12-2023 - **v.4.1.6**
+  - Добавлена возможность указывать конкретный прокси в командной строке [#81](https://github.com/rendrom/rosreestr2coord/pull/81) by [sergeybarkov](https://github.com/sergeybarkov)
 - 05.10.2022 - **v.4.1.5**
-  - Добавлена поддержка кадастровых номеров с номером контура (...:XXXX/C) ()[#65](https://github.com/rendrom/rosreestr2coord/issues/65)
+  - Добавлена поддержка кадастровых номеров с номером контура (...:XXXX/C) [#65](https://github.com/rendrom/rosreestr2coord/issues/65)
 - 16.09.2022 - **v.4.1.4**
   - Исправлено кэширование пустых ответов [#63](https://github.com/rendrom/rosreestr2coord/issues/63)
 - 05.07.2022 - **v.4.1.3**
