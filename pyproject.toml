@@ -1,7 +1,3 @@
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "rosreestr2coord"
 version = "4.3.0"
@@ -10,8 +6,8 @@ authors = [{ name = "Artemiy Doroshkov", email = "rendrom@gmail.com" }]
 dependencies = [
     "numpy",
     "Pillow",
-    "opencv-contrib-python==4.5.3.56",
-    "matplotlib>=3.5.2",
+    "opencv-contrib-python",
+    "matplotlib",
 ]
 license = { file = "LICENSE.md" }
 classifiers = [
@@ -19,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 urls = { "Homepage" = "https://github.com/rendrom/rosreestr2coord" }
-dynamic = ["readme"]
+readme = "README.md"
 
 [project.scripts]
 rosreestr2coord = "rosreestr2coord.console:console"
@@ -27,11 +23,13 @@ rosreestr2coord = "rosreestr2coord.console:console"
 [project.optional-dependencies]
 dev = ["black", "isort"]
 
-[tool.setuptools.dynamic]
-readme = { file = ["README.md"] }
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages.find]
-exclude = ["rosreestr2coord.tests*"]
+[tool.setuptools]
+packages = ["rosreestr2coord"]
+include-package-data = true
 
 [tool.isort]
 profile = "black"

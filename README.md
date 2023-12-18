@@ -13,7 +13,7 @@
 
 ## Зависимости
 
-- Python >= 3.6, <= 3.9
+- Python >= 3.6
 - [OpenCV](http://opencv.org/)
 - Pillow
 
