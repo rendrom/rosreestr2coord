@@ -28,3 +28,4 @@ proxy.txt
 .coverage
 .tox/
 poetry.lock
+pip-wheel-metadata

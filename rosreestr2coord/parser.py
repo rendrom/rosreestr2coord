@@ -1,21 +1,14 @@
 # coding: utf-8
-
-import os
 import copy
 import json
+import os
 import string
 
-from .utils import (
-    clear_code,
-    code_to_filename,
-    xy2lonlat,
-    make_request,
-)
-from .proxy_handling import ProxyHandling
-from .merge_tiles import PkkAreaMerger
 from .export import coords2geojson, coords2kml
 from .logger import logger
-
+from .merge_tiles import PkkAreaMerger
+from .proxy_handling import ProxyHandling
+from .utils import clear_code, code_to_filename, make_request, xy2lonlat
 
 ##############
 # SEARCH URL #
@@ -100,7 +93,7 @@ class Area:
         proxy_handler=None,
         timeout=5,
         logger=logger,
-        proxy_url=None
+        proxy_url=None,
     ):
         self.with_log = with_log
         self.area_type = area_type
@@ -198,9 +191,7 @@ class Area:
         else:
             xy = self.xy
         if xy and len(xy):
-            feature_collection = coords2geojson(
-                xy, geom_type, self.coord_out, attrs=attrs
-            )
+            feature_collection = coords2geojson(xy, geom_type, self.coord_out, attrs=attrs)
             if feature_collection:
                 if dumps:
                     return json.dumps(feature_collection)
@@ -219,9 +210,7 @@ class Area:
 
     def make_request(self, url):
         proxy_path = os.path.join(self.tmp_path, "proxy.txt")
-        proxy_handler = (
-            self.proxy_handler if self.proxy_handler else ProxyHandling(path=proxy_path)
-        )
+        proxy_handler = self.proxy_handler if self.proxy_handler else ProxyHandling(path=proxy_path)
         self.logger.debug(url)
         response = make_request(
             url,
@@ -229,7 +218,7 @@ class Area:
             proxy_handler=proxy_handler,
             logger=self.logger,
             timeout=self.timeout,
-            proxy_url=self.proxy_url
+            proxy_url=self.proxy_url,
         )
         return response
 
@@ -379,13 +368,9 @@ class Area:
             ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
             del imagem
             try:
-                contours, hierarchy = cv2.findContours(
-                    thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-                )
+                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             except Exception:
-                im2, contours, hierarchy = cv2.findContours(
-                    thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
-                )
+                im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
             del thresh
 
             hierarchy = hierarchy[0]

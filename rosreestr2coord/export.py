@@ -1,11 +1,8 @@
 # coding: utf-8
-
-
 import copy
 import csv
 import json
 import os
-
 import xml.etree.cElementTree as ET
 
 
@@ -127,7 +124,6 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
 
 
 def coords2kml(coords, attrs):
-
     if len(coords):
         kml = ET.Element("kml", attrib={"xmlns": "http://www.opengis.net/kml/2.2"})
         doc = ET.SubElement(kml, "Document")
@@ -147,7 +143,6 @@ def coords2kml(coords, attrs):
         multi_geometry = ET.SubElement(placemark, "MultiGeometry")
 
         for i in range(len(coords)):
-
             polygon = ET.SubElement(multi_geometry, "Polygon")
             for j in range(len(coords[i])):
                 if j:
@@ -158,9 +153,7 @@ def coords2kml(coords, attrs):
                 xy = coords[i][j]
                 xy.append(xy[0])
                 linear_ring = ET.SubElement(boundary, "LinearRing")
-                ET.SubElement(linear_ring, "coordinates").text = " ".join(
-                    map(lambda c: ",".join(map(str, c)), xy)
-                )
+                ET.SubElement(linear_ring, "coordinates").text = " ".join(map(lambda c: ",".join(map(str, c)), xy))
         # return ET.tostring(kml, encoding='utf8', method='xml')
         return ET.ElementTree(kml)
     return False

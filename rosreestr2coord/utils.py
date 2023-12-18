@@ -1,7 +1,7 @@
-import re
-import ssl
 import json
 import math
+import re
+import ssl
 import urllib.error
 import urllib.parse
 from urllib.request import Request, urlopen
@@ -68,15 +68,11 @@ def make_request_with_specified_proxy(url, proxy_url, logger):
     for i in range(1, attempts + 1):
         try:
             ssl._create_default_https_context = ssl._create_unverified_context
-            opener = urllib.request.build_opener(
-                urllib.request.ProxyHandler(
-                    {
-                        'http': proxy_url,
-                        'https': proxy_url
-                        }))
+            opener = urllib.request.build_opener(urllib.request.ProxyHandler({"http": proxy_url, "https": proxy_url}))
             return opener.open(url).read()
         except:
             logger.debug("Attempt failed, retry")
+
 
 def make_request_with_proxy(url, url_proxy, logger, timeout):
     tries_per_proxy = 3

@@ -1,18 +1,18 @@
 # coding=utf-8
-import os
+import base64
 import json
-import time
 import math
+import os
 import queue
 import random
-import base64
 import threading
+import time
 import urllib.parse
 from itertools import chain, product
 
 from PIL import Image
 
-from rosreestr2coord.utils import code_to_filename, make_request, TimeoutException
+from rosreestr2coord.utils import TimeoutException, code_to_filename, make_request
 
 Image.MAX_IMAGE_PIXELS = 1000000000
 Image.warnings.simplefilter("error", Image.DecompressionBombWarning)
@@ -39,10 +39,7 @@ def thread_download(target, xy_tile, total, thread_count=4):
             pass
 
     thread_count = total // 4 if total >= thread_count else total
-    threads = [
-        threading.Thread(target=task_wrapper, args=(p,))
-        for p in list(chunks(xy_tile, thread_count))
-    ]
+    threads = [threading.Thread(target=task_wrapper, args=(p,)) for p in list(chunks(xy_tile, thread_count))]
     for t in threads:
         t.daemon = True
         t.start()
@@ -123,14 +120,7 @@ class TileMerger:
                     *list(
                         map(
                             sorted,
-                            list(
-                                zip(
-                                    *[
-                                        deg2num(coord[0], coord[1], self.zoom)
-                                        for coord in (bbox[:2], bbox[2:])
-                                    ]
-                                )
-                            ),
+                            list(zip(*[deg2num(coord[0], coord[1], self.zoom) for coord in (bbox[:2], bbox[2:])])),
                         )
                     )
                 )
@@ -174,11 +164,7 @@ class TileMerger:
 
     def bbox_download(self):
         xy = self.xy_range
-        p = list(
-            product(
-                range(xy["xMin"], xy["xMax"] + 1), range(xy["yMin"], xy["yMax"] + 1)
-            )
-        )
+        p = list(product(range(xy["xMin"], xy["xMax"] + 1), range(xy["yMin"], xy["yMax"] + 1)))
         self.stream(target=self.fetch_tile, xy_tile=p, total=self.total)
         if self.with_log:
             pass
@@ -198,8 +184,7 @@ class TileMerger:
                     self.count += 1
                 if self.with_log:
                     print(
-                        "\r%d%% %d/%d"
-                        % ((self.count / self.total) * 100, self.count, self.total),
+                        "\r%d%% %d/%d" % ((self.count / self.total) * 100, self.count, self.total),
                         end="",
                     )
 
@@ -213,9 +198,7 @@ class TileMerger:
                 if tile.getcode() == 200:
                     self.write_image(
                         tile.read(),
-                        os.path.join(
-                            self.tile_dir, "%s_%s%s" % (x, y, self.tile_format)
-                        ),
+                        os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format)),
                     )
                     if y > self.xy_range["yMax"]:
                         self.xy_range["yMax"] = y
@@ -251,9 +234,7 @@ class TileMerger:
             for x in range(xy_range["xMin"], xy_range["xMax"] + 1):
                 imy = 0
                 for y in range(xy_range["yMin"], xy_range["yMax"] + 1):
-                    tile_file = os.path.join(
-                        self.tile_dir, "%s_%s%s" % (x, y, self.tile_format)
-                    )
+                    tile_file = os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format))
                     tile = Image.open(tile_file)
                     out.paste(tile, (imx, imy))
                     imy += self.image_size[1]
@@ -281,14 +262,9 @@ class PkkAreaMerger(TileMerger, object):
     max_count = 50
     area_type = 1
 
-    def __init__(
-        self, output_format, clear_code, use_cache, logger, area_type=1, **kwargs
-    ):
+    def __init__(self, output_format, clear_code, use_cache, logger, area_type=1, **kwargs):
         super(PkkAreaMerger, self).__init__(
-            zoom=0,
-            tile_format=".%s" % output_format,
-            file_name_prefix=clear_code,
-            **kwargs
+            zoom=0, tile_format=".%s" % output_format, file_name_prefix=clear_code, **kwargs
         )
         self.file_name_prefix = code_to_filename(clear_code)
         self.output_format = output_format
@@ -344,8 +320,7 @@ class PkkAreaMerger(TileMerger, object):
 
                 if self.with_log:
                     print(
-                        "\r%d%% %d/%d"
-                        % ((self.count / self.total) * 100, self.count, self.total),
+                        "\r%d%% %d/%d" % ((self.count / self.total) * 100, self.count, self.total),
                         end="",
                     )
 
@@ -404,10 +379,7 @@ class PkkAreaMerger(TileMerger, object):
             # TODO: Understand how the layerDefs parameter works.
             if self.area_type == 10:
                 layers = [0, 1, 2, 6]
-                layerDefs = (
-                    '{"0":"ID = \'%s\'","1":"objectid = -1","2":"objectid = -1","6":"objectid = -1"}'
-                    % code
-                )
+                layerDefs = '{"0":"ID = \'%s\'","1":"objectid = -1","2":"objectid = -1","6":"objectid = -1"}' % code
             # elif self.area_type == 7:
             #     layers = [0, 1, 5, 2, 6, 3, 7, 4]
 
@@ -511,9 +483,7 @@ class PkkAreaMerger(TileMerger, object):
                 imy = 0
                 height = 0
                 for y in reversed(range(dy)):
-                    tile_file = os.path.join(
-                        self.tile_dir, "%s_%s%s" % (x, y, self.tile_format)
-                    )
+                    tile_file = os.path.join(self.tile_dir, "%s_%s%s" % (x, y, self.tile_format))
                     try:
                         tile = Image.open(tile_file)
                         tiles.append((tile, (imx, imy)))
@@ -610,11 +580,7 @@ def deg2num(lat_deg, lon_deg, zoom):
     lat_rad = math.radians(lat_deg)
     n = 2.0**zoom
     xtile = int((lon_deg + 180.0) / 360.0 * n)
-    ytile = int(
-        (1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi)
-        / 2.0
-        * n
-    )
+    ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
     return xtile, ytile
 
 

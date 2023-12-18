@@ -1,48 +1,49 @@
-[tool.poetry]
-name = "rosreestr2coord"
-version = "4.2.8"
-license = "MIT"
-description = "Get coordinates of area by cadastral number"
-authors = ["Artemiy Doroshkov <rendrom@gmail.com>"]
-readme = 'README.md'
-repository = "https://github.com/rendrom/rosreestr2coord"
-homepage = "https://github.com/rendrom/rosreestr2coord"
-
-[tool.poetry.dependencies]
-python = "^3.6"
-numpy = "^1.24"
-opencv-contrib-python = "4.5.3.56"
-Pillow = "^9.1"
-matplotlib = "^3.5"
-
-[tool.poetry.dev-dependencies]
-pytest = '^5.0'
-pytest-cov = '^2.4'
-tox = '^3.4'
-mypy = '*'
-flake8 = '*'
-flake8-quotes = '*'
-
-[tool.poetry.scripts]
-rosreestr2coord = 'scripts.console:main'
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[mypy]
-ignore_missing_imports = true
-show_error_context = true
-disallow_untyped_calls = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_subclassing_any = false
-warn_no_return = true
-strict_optional = true
-no_implicit_optional = true
-disallow_any_generics = true
-disallow_any_unimported = false
-warn_redundant_casts = true
-warn_unused_configs = true
-show_traceback = true
-always_false = 'MYPYC'
+[project]
+name = "rosreestr2coord"
+version = "4.3.0.dev0"
+description = "Get geometry from rosreestr"
+authors = [{ name = "Artemiy Doroshkov", email = "rendrom@gmail.com" }]
+dependencies = [
+    "numpy",
+    "Pillow",
+    "opencv-contrib-python==4.5.3.56",
+    "matplotlib>=3.5.2",
+]
+license = { file = "LICENSE.md" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3",
+]
+urls = { "Homepage" = "https://github.com/rendrom/rosreestr2coord" }
+dynamic = ["readme"]
+
+[project.scripts]
+rosreestr2coord = "rosreestr2coord.console:console"
+
+[project.optional-dependencies]
+dev = ["black", "isort"]
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.md"] }
+
+[tool.setuptools.packages.find]
+exclude = ["rosreestr2coord.tests*"]
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 120
+
+
+# https://pypi.python.org/pypi/twine
+
+# pip install build twine
+# python -m build
+# twine upload dist/*
+# twine upload -u 'rendrom' --repository-url https://upload.pypi.org/legacy/ dist/*
+# twine upload --repository r2c dist/*
