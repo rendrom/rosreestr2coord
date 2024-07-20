@@ -109,7 +109,8 @@ def coords2geojson(coords, geom_type, crs_name, attrs=None):
                 for j in range(len(coords[fry])):
                     xy = coords[fry][j]
                     # close polygon
-                    xy.append(xy[0])
+                    if xy[-1] != xy[0]:
+                        xy.append(xy[0])
                     polygon.append(xy)
                 multi_polygon.append(polygon)
             feature = {
