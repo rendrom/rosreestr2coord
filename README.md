@@ -137,24 +137,26 @@ attributes = area.get_attrs()
 
 ## Журнал
 
+- 22-07-2024 - **v.4.4.0**
+  - Устранено дублирование замыкающей точки в геометрии [#86](https://github.com/rendrom/rosreestr2coord/pull/86) by [botanegg](https://github.com/botanegg).
 - 17-12-2023 - **v.4.2.8**
-  - Добавлена возможность указывать конкретный прокси в командной строке [#81](https://github.com/rendrom/rosreestr2coord/pull/81) by [sergeybarkov](https://github.com/sergeybarkov)
+  - Добавлена возможность указывать конкретный прокси в командной строке [#81](https://github.com/rendrom/rosreestr2coord/pull/81) by [sergeybarkov](https://github.com/sergeybarkov).
 - 05.10.2022 - **v.4.1.5**
-  - Добавлена поддержка кадастровых номеров с номером контура (...:XXXX/C) [#65](https://github.com/rendrom/rosreestr2coord/issues/65)
+  - Добавлена поддержка кадастровых номеров с номером контура (...:XXXX/C) [#65](https://github.com/rendrom/rosreestr2coord/issues/65).
 - 16.09.2022 - **v.4.1.4**
-  - Исправлено кэширование пустых ответов [#63](https://github.com/rendrom/rosreestr2coord/issues/63)
+  - Исправлено кэширование пустых ответов [#63](https://github.com/rendrom/rosreestr2coord/issues/63).
 - 05.07.2022 - **v.4.1.3**
-  - Заменён механизм загрузки списка адресов прокси-серверов [#62](https://github.com/rendrom/rosreestr2coord/issues/62)
+  - Заменён механизм загрузки списка адресов прокси-серверов [#62](https://github.com/rendrom/rosreestr2coord/issues/62).
 - 27.05.2022 - **v.4.1.1**
-  - Исправлена работа ключа `-r` `--refresh` [#61](https://github.com/rendrom/rosreestr2coord/issues/61)
+  - Исправлена работа ключа `-r` `--refresh` [#61](https://github.com/rendrom/rosreestr2coord/issues/61).
 - 21.05.2022 - **v.4.1.0**
-  - Во время получения геометрии удаляем неиспользуемые промежуточные изображения [#60](https://github.com/rendrom/rosreestr2coord/pull/60) by [2joy](https://github.com/2joy)
+  - Во время получения геометрии удаляем неиспользуемые промежуточные изображения [#60](https://github.com/rendrom/rosreestr2coord/pull/60) by [2joy](https://github.com/2joy).
 - 18.04.2022 - **v.4.0.20**
-  - Очистка лишних символов. Для удобства использования прямых выгрузок из CSV или MID/MIF by [PbIXTOP](https://github.com/PbIXTOP)
+  - Очистка лишних символов. Для удобства использования прямых выгрузок из CSV или MID/MIF by [PbIXTOP](https://github.com/PbIXTOP).
 - 29.11.2021 - **v.4.0.19**
-  - Доработка загрузки `area_type = 7` (Границы)
+  - Доработка загрузки `area_type = 7` (Границы).
 - 27.11.2021 - **v.4.0.18**
-  - Исправлена загрузка для `area_type = 7` (Границы)
+  - Исправлена загрузка для `area_type = 7` (Границы).
   - Исправлено формирование запросов с нулями в кадастровом номере.
   - Исправлено поведении опции `-r`, `--refresh`.
 - 10.11.2021 - **v.4.0.15**

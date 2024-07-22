@@ -1,6 +1,6 @@
 [project]
 name = "rosreestr2coord"
-version = "4.3.0"
+version = "4.4.0"
 description = "Get geometry from rosreestr"
 authors = [{ name = "Artemiy Doroshkov", email = "rendrom@gmail.com" }]
 dependencies = [
@@ -44,4 +44,4 @@ line-length = 120
 # python -m build
 # twine upload dist/*
 # twine upload -u 'rendrom' --repository-url https://upload.pypi.org/legacy/ dist/*
-# twine upload --repository r2c dist/*
+
