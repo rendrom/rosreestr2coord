@@ -1,11 +1,12 @@
 [project]
 name = "rosreestr2coord"
-version = "4.4.1"
+version = "4.5.0"
 description = "Get geometry from rosreestr"
 authors = [{ name = "Artemiy Doroshkov", email = "rendrom@gmail.com" }]
 dependencies = [
     "numpy",
     "Pillow",
+    "httpx",
     "opencv-contrib-python",
     "matplotlib",
 ]

@@ -1,11 +1,9 @@
 import json
 import math
 import re
-import ssl
-import urllib.error
-import urllib.parse
 from typing import Dict, List, Optional, Union
-from urllib.request import Request, urlopen
+
+import httpx
 
 from .proxy_handling import ProxyHandling
 
@@ -65,25 +63,25 @@ def make_request(
 
 def perform_request(
     url: str,
-    proxy_handler: Optional[urllib.request.ProxyHandler],
+    proxy: Optional[str],
     logger: Optional[object],
     timeout: int,
 ) -> bytes:
     try:
         headers = get_rosreestr_headers()
-        if proxy_handler:
-            opener = urllib.request.build_opener(proxy_handler)
-            urllib.request.install_opener(opener)
-        request = Request(url, headers=headers)
-        context = ssl._create_unverified_context()
-        with urlopen(request, context=context, timeout=timeout) as response:
-            read = response.read()
-        is_error = is_error_response(url, read)
+        if proxy:
+            proxy_url = f"http://{proxy}"
+            proxies = {"http://": proxy_url, "https://": proxy_url}
+        else:
+            proxies = None
+        response = httpx.get(url, headers=headers, proxies=proxies, timeout=timeout, verify=False)
+        response.raise_for_status()
+        is_error = is_error_response(url, response.content)
         if is_error:
             raise Exception(is_error)
-        return read
-    except urllib.error.HTTPError as er:
-        if er.code == 400:
+        return response.content
+    except httpx.HTTPStatusError as er:
+        if er.response.status_code == 400:
             raise er
         else:
             raise Exception(f"HTTPError: {er}")
@@ -97,8 +95,7 @@ def make_request_with_specified_proxy(url: str, proxy_url: str, logger: Optional
     tries = 3
     for attempt in range(1, tries + 1):
         try:
-            proxy_handler = urllib.request.ProxyHandler({"http": proxy_url, "https": proxy_url})
-            return perform_request(url, proxy_handler, logger, timeout=5)
+            return perform_request(url, proxy_url, logger, timeout=5)
         except Exception as er:
             if logger:
                 logger.error(f"Attempt {attempt} failed: {er}")
@@ -115,26 +112,25 @@ def make_request_with_proxy(url: str, url_proxy: ProxyHandling, logger: Optional
 
     for j in range(tries_for_proxies):
         proxies = url_proxy.load_proxies()
-        p = proxies.pop()
-
+        px = proxies.pop()
+        p = px.strip()
         if logger:
             logger.debug(f"Using proxy {p}")
 
         for i in range(tries_per_proxy):
             try:
-                proxy_handler = urllib.request.ProxyHandler({"http": p, "https": p})
-                return perform_request(url, proxy_handler, logger, timeout)
-            except urllib.error.HTTPError as er:
+                return perform_request(url, p, logger, timeout)
+            except httpx.HTTPStatusError as er:
                 # 400 is not proxy problem
-                if er.code == 400:
+                if er.response.status_code == 400:
                     raise er
             except Exception as er:
                 if logger:
                     logger.error(er)
         # remove useless proxy server
         proxies_ = url_proxy.get_proxies()
-        if p in proxies_:
-            proxies_.remove(p)
+        if px in proxies_:
+            proxies_.remove(px)
             url_proxy.dump_proxies(proxies_)
 
     if logger:

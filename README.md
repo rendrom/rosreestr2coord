@@ -137,6 +137,8 @@ attributes = area.get_attrs()
 
 ## Журнал
 
+- 22-09-2024 - **v.4.5.0**
+  - Изменен механизм формирования запросов [#87](https://github.com/rendrom/rosreestr2coord/issues/87) [#72](https://github.com/rendrom/rosreestr2coord/issues/72#issuecomment-2362843205).
 - 22-07-2024 - **v.4.4.0**
   - Устранено дублирование замыкающей точки в геометрии [#86](https://github.com/rendrom/rosreestr2coord/pull/86) by [botanegg](https://github.com/botanegg).
 - 17-12-2023 - **v.4.2.8**

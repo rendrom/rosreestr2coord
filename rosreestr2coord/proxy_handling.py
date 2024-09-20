@@ -46,30 +46,8 @@ class ProxyHandling:
         return self._load_proxies_from_file()
 
     def _download_proxies(self):
-        # found = ip_adress_proxies()
         found = self._free_proxies()
         self.dump_proxies(found[:20])  # 20 top proxies
-
-    def _ip_adress_proxies(self, url="https://www.ip-adress.com/proxy_list/"):
-        # Downloading without proxy
-        opener = urllib.request.build_opener(urllib.request.ProxyHandler())
-        urllib.request.install_opener(opener)
-        request = urllib.request.Request(url)
-        request.add_header("user-agent", self.user_agent)
-        parsed_uri = urlparse(url)
-        host = "{uri.scheme}://{uri.netloc}/".format(uri=parsed_uri)
-        request.add_header("referer", host)
-        s = False
-        try:
-            context = ssl._create_unverified_context()
-            with urlopen(request, context=context, timeout=3000) as response:
-                s = response.read().decode("utf-8")
-        except Exception as er:
-            print("Download proxies error")
-            raise er
-        pattern = r"\d*\.\d*\.\d*\.\d*\</a>:\d*"
-        found = [i.replace("</a>", "") + "\n" for i in re.findall(pattern, s)]
-        return found
 
     def _free_proxies(self, url="https://free-proxy-list.net/"):
         # Downloading without proxy
