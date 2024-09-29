@@ -1,14 +1,18 @@
 # coding: utf-8
 import copy
 import json
+import logging
 import os
 import string
+from typing import Any, Dict, List, Optional, Union
+
+from rosreestr2coord.request.request import make_request
 
 from .export import coords2geojson, coords2kml
 from .logger import logger
 from .merge_tiles import PkkAreaMerger
-from .proxy_handling import ProxyHandling
-from .utils import clear_code, code_to_filename, make_request, xy2lonlat
+from .request.proxy_handling import ProxyHandling
+from .utils import clear_code, code_to_filename, xy2lonlat
 
 ##############
 # SEARCH URL #
@@ -66,34 +70,22 @@ class NoCoordinatesException(Exception):
 
 
 class Area:
-    code = ""
-    code_id = ""  # from feature info attr id
-    buffer = 10
-    xy = []  # [[[area1], [hole1], [holeN]], [[area2]]]
-    image_xy_corner = []  # cartesian coord from image, for draw plot
-    width = 0
-    height = 0
-    image_path = ""
-    extent = {}
-    image_extent = {}
-    center = {"x": None, "y": None}
-    attrs = {}
 
     def __init__(
         self,
-        code="",
-        area_type=1,
-        epsilon=5,
-        media_path="",
-        with_log=True,
-        coord_out="EPSG:4326",
-        center_only=False,
-        with_proxy=False,
-        use_cache=True,
-        proxy_handler=None,
-        timeout=5,
-        logger=logger,
-        proxy_url=None,
+        code: str = "",
+        area_type: int = 1,
+        epsilon: int = 5,
+        media_path: str = "",
+        with_log: bool = True,
+        coord_out: str = "EPSG:4326",
+        center_only: bool = False,
+        with_proxy: bool = False,
+        use_cache: bool = True,
+        proxy_handler: Optional[ProxyHandling] = None,
+        timeout: int = 5,
+        logger: Optional[logging.Logger] = logger,
+        proxy_url: Optional[str] = None,
     ):
         self.with_log = with_log
         self.area_type = area_type
@@ -116,6 +108,19 @@ class Area:
         self.search_url = t.substitute({"area_type": area_type})
         t = string.Template(FEATURE_INFO_URL)
         self.feature_info_url = t.substitute({"area_type": area_type})
+
+        self.code_id: str = ""  # from feature info attr id
+        self.buffer: int = 10
+        self.xy: List[List[List[List[float]]]] = []  # [[[area1], [hole1], [holeN]], [[area2]]]
+        self.image_xy_corner: List[List[List[int]]] = []  # cartesian coord from image, for draw plot
+        self.width: int = 0
+        self.height: int = 0
+        self.image_path: str = ""
+        self.extent: Dict[str, Union[int, float]] = {}
+        self.image_extent: Dict[str, Union[int, float]] = {}
+        self.center: Dict[str, Optional[float]] = {"x": None, "y": None}
+        self.attrs: Dict[str, Any] = {}
+
         if not code:
             return
         self.tmp_path = self.create_tmp()
@@ -213,8 +218,8 @@ class Area:
         proxy_handler = self.proxy_handler if self.proxy_handler else ProxyHandling(path=proxy_path)
         self.logger.debug(url)
         response = make_request(
-            url,
-            self.with_proxy,
+            url=url,
+            with_proxy=self.with_proxy,
             proxy_handler=proxy_handler,
             logger=self.logger,
             timeout=self.timeout,

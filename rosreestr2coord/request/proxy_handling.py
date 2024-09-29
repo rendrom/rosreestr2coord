@@ -1,15 +1,12 @@
 import os
 import re
-import ssl
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from urllib.parse import urlparse
-from urllib.request import urlopen
 
-USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) \
-        Chrome/64.0.3282.186 Safari/537.36"
+from .helpers import USER_AGENT
 
 
 class ProxyHandling:

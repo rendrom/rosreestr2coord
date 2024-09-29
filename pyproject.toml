@@ -6,7 +6,6 @@ authors = [{ name = "Artemiy Doroshkov", email = "rendrom@gmail.com" }]
 dependencies = [
     "numpy",
     "Pillow",
-    "httpx",
     "opencv-contrib-python",
     "matplotlib",
 ]

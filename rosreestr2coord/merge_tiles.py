@@ -12,7 +12,9 @@ from itertools import chain, product
 
 from PIL import Image
 
-from rosreestr2coord.utils import TimeoutException, code_to_filename, make_request
+from rosreestr2coord.request.exceptions import TimeoutException
+from rosreestr2coord.request.request import make_request
+from rosreestr2coord.utils import code_to_filename
 
 Image.MAX_IMAGE_PIXELS = 1000000000
 Image.warnings.simplefilter("error", Image.DecompressionBombWarning)
