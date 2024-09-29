@@ -2,11 +2,10 @@ from typing import Optional, Union
 
 from requests import RequestException
 
-from rosreestr2coord.request.urlib_adapter import UrllibAdapter
-
 from .base_adapter import RequestAdapter
 from .exceptions import HTTPBadRequestException, HTTPErrorException, TimeoutException
 from .proxy_handling import ProxyHandling
+from .urlib_adapter import UrllibAdapter
 
 proxy_handling = ProxyHandling()
 request_adapter = UrllibAdapter()

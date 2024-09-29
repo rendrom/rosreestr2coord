@@ -6,12 +6,11 @@ import os
 import string
 from typing import Any, Dict, List, Optional, Union
 
-from rosreestr2coord.request.request import make_request
-
 from .export import coords2geojson, coords2kml
 from .logger import logger
 from .merge_tiles import PkkAreaMerger
 from .request.proxy_handling import ProxyHandling
+from .request.request import make_request
 from .utils import clear_code, code_to_filename, xy2lonlat
 
 ##############

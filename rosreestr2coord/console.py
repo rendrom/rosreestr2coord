@@ -6,9 +6,9 @@ import os
 import signal
 import sys
 
-from rosreestr2coord.batch import batch_parser
-from rosreestr2coord.parser import TYPES, Area
-from rosreestr2coord.utils import code_to_filename
+from .batch import batch_parser
+from .parser import TYPES, Area
+from .utils import code_to_filename
 
 __version__ = importlib.metadata.version("rosreestr2coord")
 

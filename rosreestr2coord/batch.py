@@ -1,9 +1,9 @@
 import os
 from time import sleep
 
-from rosreestr2coord.export import area_json_output, batch_csv_output, batch_json_output
-from rosreestr2coord.parser import Area
-from rosreestr2coord.request.exceptions import TimeoutException
+from .export import area_json_output, batch_csv_output, batch_json_output
+from .parser import Area
+from .request.exceptions import TimeoutException
 
 
 def batch_parser(
