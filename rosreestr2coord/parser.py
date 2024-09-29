@@ -371,11 +371,8 @@ class Area:
             imagem = 255 - img
             del img
 
-            blurred = cv2.GaussianBlur(imagem, (5, 5), 0)
+            ret, thresh = cv2.threshold(imagem, 11, 128, cv2.THRESH_BINARY)
             del imagem
-
-            ret, thresh = cv2.threshold(blurred, 10, 128, cv2.THRESH_BINARY)
-            del blurred
 
             try:
                 contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
