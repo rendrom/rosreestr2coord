@@ -356,22 +356,27 @@ class Area:
     def get_image_xy_corner(self):
         """get сartesian coordinates from raster"""
         import cv2
-        import numpy
+        import numpy as np
 
         if not self.image_path:
             return False
         image_xy_corners = []
 
         try:
-            # img = cv2.imread(self.image_path, cv2.IMREAD_GRAYSCALE)
             stream = open(self.image_path, "rb")
             bytes = bytearray(stream.read())
-            numpyarray = numpy.asarray(bytes, dtype=numpy.uint8)
+            numpyarray = np.asarray(bytes, dtype=np.uint8)
             img = cv2.imdecode(numpyarray, cv2.IMREAD_GRAYSCALE)
+
             imagem = 255 - img
             del img
-            ret, thresh = cv2.threshold(imagem, 10, 128, cv2.THRESH_BINARY)
+
+            blurred = cv2.GaussianBlur(imagem, (5, 5), 0)
             del imagem
+
+            ret, thresh = cv2.threshold(blurred, 10, 128, cv2.THRESH_BINARY)
+            del blurred
+
             try:
                 contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             except Exception:
@@ -380,16 +385,13 @@ class Area:
 
             hierarchy = hierarchy[0]
             hierarchy_contours = [[] for _ in range(len(hierarchy))]
-            for fry in range(len(contours)):
-                currentContour = contours[fry]
+            for fry, contour in enumerate(contours):
+
                 currentHierarchy = hierarchy[fry]
                 cc = []
 
-                perimeter = cv2.arcLength(currentContour, True)
-                # epsilon = 0.001 * cv2.arcLength(currentContour, True)
-                # epsilon = epsilon * self.epsilon
                 epsilon = self.epsilon
-                approx = cv2.approxPolyDP(currentContour, epsilon, True)
+                approx = cv2.approxPolyDP(contour, epsilon, True)
                 if len(approx) > 2:
                     for c in approx:
                         cc.append([c[0][0], c[0][1]])
