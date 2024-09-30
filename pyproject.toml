@@ -1,6 +1,6 @@
 [project]
 name = "rosreestr2coord"
-version = "4.6.1"
+version = "4.6.4"
 description = "Get geometry from rosreestr"
 authors = [{ name = "Artemiy Doroshkov", email = "rendrom@gmail.com" }]
 dependencies = [
@@ -24,11 +24,11 @@ rosreestr2coord = "rosreestr2coord.console:console"
 dev = ["black", "isort"]
 
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "wheel", "twine"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["rosreestr2coord"]
+packages = ["rosreestr2coord", "rosreestr2coord.request"]
 include-package-data = true
 
 [tool.isort]
