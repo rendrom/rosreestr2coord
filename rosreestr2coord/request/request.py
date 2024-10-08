@@ -1,7 +1,5 @@
 from typing import Optional, Union
 
-from requests import RequestException
-
 from .base_adapter import RequestAdapter
 from .exceptions import HTTPBadRequestException, HTTPErrorException, TimeoutException
 from .proxy_handling import ProxyHandling
@@ -52,7 +50,7 @@ def make_request_with_specified_proxy(
             # Specific error; do not retry
             logger.error(f"HTTP 400 Bad Request: {er}")
             raise
-        except (HTTPErrorException, RequestException) as er:
+        except (HTTPErrorException, Exception) as er:
             if logger:
                 logger.error(f"Attempt {attempt} failed: {er}")
             if attempt == tries:
@@ -88,7 +86,7 @@ def make_request_with_proxy(
                 # Specific error; do not retry
                 logger.error(f"HTTP 400 Bad Request: {er}")
                 raise
-            except (HTTPErrorException, RequestException) as er:
+            except (HTTPErrorException, Exception) as er:
                 if logger:
                     logger.error(f"Attempt {attempt} with proxy {proxy} failed: {er}")
                 if attempt == tries_per_proxy:
