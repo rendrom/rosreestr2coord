@@ -15,9 +15,10 @@ def make_request(
     with_proxy: bool = False,
     proxy_handler: Optional[ProxyHandling] = None,
     logger: Optional[object] = None,
-    timeout: int = 5,
+    timeout: int = 15,
     proxy_url: Optional[str] = None,
 ) -> Union[bytes, None]:
+    tries = 3
     if not url:
         raise ValueError("The URL is not set")
 
@@ -30,10 +31,19 @@ def make_request(
         return make_request_with_proxy(url, proxy_handler, logger, adapter, timeout)
     else:
         # Make a direct request without proxies
-        try:
-            return adapter.perform_request(url, None, logger, timeout)
-        except Exception as er:
-            raise er
+        for attempt in range(1, tries + 1):
+            try:
+                return adapter.perform_request(url, None, logger, timeout)
+            except (HTTPErrorException, Exception) as er:
+                if logger:
+                    logger.error(f"Attempt {attempt} failed: {er}")
+                if attempt == tries:
+                    raise TimeoutException(f"Failed to make request after {tries} attempts") from er
+                else:
+                    if logger:
+                        logger.debug(f"Retrying... (Attempt {attempt + 1} of {tries})")
+            except Exception as er:
+                raise er
 
 
 def make_request_with_specified_proxy(
@@ -45,7 +55,7 @@ def make_request_with_specified_proxy(
     tries = 3
     for attempt in range(1, tries + 1):
         try:
-            return adapter.perform_request(url, proxy, logger, timeout=5)
+            return adapter.perform_request(url, proxy, logger, timeout=15)
         except HTTPBadRequestException as er:
             # Specific error; do not retry
             logger.error(f"HTTP 400 Bad Request: {er}")
@@ -65,7 +75,7 @@ def make_request_with_proxy(
     url_proxy: ProxyHandling,
     logger: Optional[object],
     adapter: RequestAdapter,
-    timeout: int = 5,
+    timeout: int = 15,
 ) -> bytes:
     tries_per_proxy = 3
     tries_for_proxies = 20
