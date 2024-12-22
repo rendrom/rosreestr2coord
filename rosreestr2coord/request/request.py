@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 from .base_adapter import RequestAdapter
 from .exceptions import HTTPBadRequestException, HTTPErrorException, TimeoutException
@@ -17,21 +17,24 @@ def make_request(
     logger: Optional[object] = None,
     timeout: int = 5,
     proxy_url: Optional[str] = None,
+    headers: Optional[dict] = None,
+    method: str = "GET",
+    body: Union[Dict, bytes, None] = None,
 ) -> Union[bytes, None]:
     if not url:
         raise ValueError("The URL is not set")
 
     if proxy_url is not None:
         # Use a specified proxy
-        return make_request_with_specified_proxy(url, proxy_url, logger, adapter)
+        return make_request_with_specified_proxy(url, proxy_url, logger, adapter, timeout, method, headers, body)
     elif with_proxy:
         # Use a pool of proxies
         proxy_handler = proxy_handler if proxy_handler else ProxyHandling()
-        return make_request_with_proxy(url, proxy_handler, logger, adapter, timeout)
+        return make_request_with_proxy(url, proxy_handler, logger, adapter, timeout, method, headers, body)
     else:
         # Make a direct request without proxies
         try:
-            return adapter.perform_request(url, None, logger, timeout)
+            return adapter.perform_request(url, None, logger, timeout, headers, method, headers, body)
         except Exception as er:
             raise er
 
@@ -41,14 +44,19 @@ def make_request_with_specified_proxy(
     proxy: str,
     logger: Optional[object],
     adapter: RequestAdapter,
+    timeout: int,
+    headers: Optional[dict] = None,
+    method: str = "GET",
+    body: Union[Dict, bytes, None] = None,
 ) -> bytes:
     tries = 3
     for attempt in range(1, tries + 1):
         try:
-            return adapter.perform_request(url, proxy, logger, timeout=5)
+            return adapter.perform_request(url, proxy, logger, timeout, headers, method, body)
         except HTTPBadRequestException as er:
             # Specific error; do not retry
-            logger.error(f"HTTP 400 Bad Request: {er}")
+            if logger:
+                logger.error(f"HTTP 400 Bad Request: {er}")
             raise
         except (HTTPErrorException, Exception) as er:
             if logger:
@@ -65,7 +73,10 @@ def make_request_with_proxy(
     url_proxy: ProxyHandling,
     logger: Optional[object],
     adapter: RequestAdapter,
-    timeout: int = 5,
+    timeout: int,
+    method: str,
+    headers: Optional[dict] = None,
+    body: Union[Dict, bytes, None] = None,
 ) -> bytes:
     tries_per_proxy = 3
     tries_for_proxies = 20
@@ -81,10 +92,11 @@ def make_request_with_proxy(
 
         for attempt in range(1, tries_per_proxy + 1):
             try:
-                return adapter.perform_request(url, proxy, logger, timeout)
+                return adapter.perform_request(url, proxy, logger, timeout, headers, method, body)
             except HTTPBadRequestException as er:
                 # Specific error; do not retry
-                logger.error(f"HTTP 400 Bad Request: {er}")
+                if logger:
+                    logger.error(f"HTTP 400 Bad Request: {er}")
                 raise
             except (HTTPErrorException, Exception) as er:
                 if logger:

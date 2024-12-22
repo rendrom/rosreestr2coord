@@ -12,3 +12,7 @@ class HTTPBadRequestException(RequestException):
 
 class HTTPErrorException(RequestException):
     pass
+
+
+class HTTPForbiddenException(RequestException):
+    pass

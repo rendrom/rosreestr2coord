@@ -1,17 +1,12 @@
 [project]
 name = "rosreestr2coord"
-version = "4.6.5"
+version = "5.0.0.dev1"
 description = "Get geometry from rosreestr"
 authors = [{ name = "Artemiy Doroshkov", email = "rendrom@gmail.com" }]
-dependencies = [
-    "numpy",
-    "Pillow",
-    "opencv-contrib-python",
-    "matplotlib",
-]
+dependencies = ["requests"]
 license = { file = "LICENSE.md" }
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
 ]
 urls = { "Homepage" = "https://github.com/rendrom/rosreestr2coord" }
@@ -44,4 +39,3 @@ line-length = 120
 # python -m build
 # twine upload dist/*
 # twine upload -u 'rendrom' --repository-url https://upload.pypi.org/legacy/ dist/*
-

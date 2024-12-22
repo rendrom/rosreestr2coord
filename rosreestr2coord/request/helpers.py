@@ -21,7 +21,7 @@ def is_error_response(url: str, response: bytes) -> Union[bool, str]:
 def get_rosreestr_headers() -> Dict[str, str]:
     return {
         "pragma": "no-cache",
-        "referer": "https://pkk.rosreestr.ru/",
+        "referer": "https://nspd.gov.ru/map",
         "user-agent": USER_AGENT,
         "x-requested-with": "XMLHttpRequest",
     }

@@ -7,7 +7,7 @@ import signal
 import sys
 
 from .batch import batch_parser
-from .parser import TYPES, Area
+from .parser import Area
 from .utils import code_to_filename
 
 __version__ = importlib.metadata.version("rosreestr2coord")
@@ -18,22 +18,24 @@ def getopts():
     Get the command line options.
     """
     parser = argparse.ArgumentParser(
-        description="Get geojson with coordinates of area by cadastral number (based on https://pkk.rosreestr.ru)",
+        description="Get geojson with coordinates of area by cadastral number (based on https://nspd.gov.ru/map)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("-c", "--code", type=str, help="area cadastral number")
-    parser.add_argument(
-        "-t", "--area_type", type=int, default=1, help=f"area types: {', '.join(f'{k}:{v}' for k, v in TYPES.items())}"
-    )
+    # parser.add_argument(
+    #     "-t",
+    #     "--area_type",
+    #     type=int,
+    #     default=1,
+    #     help=f"area types: {', '.join(f'{k}: {v[0]}' for k, v in TYPES.items())}",
+    # )
     parser.add_argument("-p", "--path", type=str, help="media path")
     parser.add_argument("-o", "--output", type=str, default=os.path.join(os.getcwd(), "output"), help="output path")
     parser.add_argument("-l", "--list", type=str, help="path of file with cadastral codes list")
     parser.add_argument("-d", "--display", action="store_true", help="display plot (only for --code mode)")
     parser.add_argument("-D", "--delay", type=float, default=1, help="delay between requests (only for --list mode)")
     parser.add_argument("-r", "--refresh", action="store_true", help="do not use cache")
-    parser.add_argument("-e", "--epsilon", type=float, default=5, help="approximation accuracy")
     parser.add_argument("-T", "--timeout", type=float, default=5, help="delay between requests")
-    parser.add_argument("-C", "--center_only", action="store_true", help="use only the center of area")
     parser.add_argument("-P", "--proxy", action="store_true", help="use proxies")
     parser.add_argument("-v", "--version", action="store_true", help="show current version")
     parser.add_argument("-u", "--proxy_url", type=str, help="set proxy URL")
@@ -83,9 +85,6 @@ def run_console(opt):
     kwargs = {
         "media_path": opt.path,
         "with_proxy": opt.proxy,
-        "epsilon": opt.epsilon,
-        "area_type": opt.area_type,
-        "center_only": opt.center_only,
         "use_cache": not opt.refresh,
         "coord_out": "EPSG:4326",
         "proxy_url": opt.proxy_url,

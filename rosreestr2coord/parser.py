@@ -1,66 +1,31 @@
 # coding: utf-8
-import copy
 import json
 import logging
 import os
-import string
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
-from .export import coords2geojson, coords2kml
+from rosreestr2coord.request.exceptions import HTTPForbiddenException
+
+from .export import coords2kml
 from .logger import logger
-from .merge_tiles import PkkAreaMerger
 from .request.proxy_handling import ProxyHandling
 from .request.request import make_request
-from .utils import clear_code, code_to_filename, xy2lonlat
-
-##############
-# SEARCH URL #
-##############
-# https://pkk.rosreestr.ru/api/features/1
-#   ?text=38:36:000021:1106
-#   &tolerance=4
-#   &limit=11
-SEARCH_URL = "https://pkk.rosreestr.ru/api/features/$area_type"
-
-############################
-# URL to get area metainfo #
-############################
-# https://pkk.rosreestr.ru/api/features/1/38:36:21:1106
-FEATURE_INFO_URL = "https://pkk.rosreestr.ru/api/features/$area_type/"
-
-#########################
-# URL to get area image #
-#########################
-# https://pkk.rosreestr.ru/arcgis/rest/services/PKK6/CadastreSelected/MapServer/export
-#   ?dpi=96
-#   &transparent=true
-#   &format=png32
-#   &layers=show%3A6%2C7
-#   &bbox=11612029.005008286%2C6849457.6834302815%2C11612888.921576614%2C6849789.706771941
-#   &bboxSR=102100
-#   &imageSR=102100
-#   &size=1440%2C556
-#   &layerDefs=%7B%226%22%3A%22ID%20%3D%20%2738%3A36%3A21%3A1106%27%22%2C%227%22%3A%22ID%20%3D%20%2738%3A36%3A21%3A1106%27%22%7D
-#   &f=image
-# WHERE:
-#    'layerDefs' decode to {'6':'ID = '38:36:21:1106'','7':'ID = '38:36:21:1106''}
-#    'f' may be `json` or `html`
-#    set `&format=svg&f=json` to export image in svg !closed by rosreestr, now only PNG
+from .utils import clear_code, code_to_filename
 
 TYPES = {
-    "Участки": 1,
-    "ОКС": 5,
-    "Кварталы": 2,
-    "Районы": 3,
-    "Округа": 4,
-    "Границы": 7,
-    "ЗОУИТ": 10,
-    "Тер. зоны": 6,
-    "Красные линии": 13,
-    "Лес": 12,
-    "СРЗУ": 15,
-    "ОЭЗ": 16,
-    "ГОК": 9,
+    "Участки": (1, "RR:PARCEL_V"),
+    # "ОКС": 5,
+    "Кварталы": (2, "RR:CAD_BLOCK"),
+    # "Районы": 3,
+    # "Округа": 4,
+    # "Границы": 7,
+    # "ЗОУИТ": 10,
+    # "Тер. зоны": 6,
+    # "Красные линии": 13,
+    # "Лес": 12,
+    # "СРЗУ": 15,
+    # "ОЭЗ": 16,
+    # "ГОК": 9,
 }
 
 
@@ -74,11 +39,9 @@ class Area:
         self,
         code: str = "",
         area_type: int = 1,
-        epsilon: int = 5,
         media_path: str = "",
         with_log: bool = True,
         coord_out: str = "EPSG:4326",
-        center_only: bool = False,
         with_proxy: bool = False,
         use_cache: bool = True,
         proxy_handler: Optional[ProxyHandling] = None,
@@ -87,10 +50,9 @@ class Area:
         proxy_url: Optional[str] = None,
     ):
         self.with_log = with_log
-        self.area_type = area_type
+        self.area_type = self._get_code_by_number(area_type)
         self.media_path = media_path
-        self.center_only = center_only
-        self.epsilon = epsilon
+
         self.code = code
 
         self.proxy_url = proxy_url
@@ -103,32 +65,20 @@ class Area:
         self.coord_out = coord_out
         self.timeout = timeout
 
-        t = string.Template(SEARCH_URL)
-        self.search_url = t.substitute({"area_type": area_type})
-        t = string.Template(FEATURE_INFO_URL)
-        self.feature_info_url = t.substitute({"area_type": area_type})
+        self.session_id = None
+        self.max_session_id_attempt = 5
+        self.session_id_attempt = 0
 
-        self.code_id: str = ""  # from feature info attr id
-        self.buffer: int = 10
-        self.xy: List[List[List[List[float]]]] = []  # [[[area1], [hole1], [holeN]], [[area2]]]
-        self.image_xy_corner: List[List[List[int]]] = []  # cartesian coord from image, for draw plot
-        self.width: int = 0
-        self.height: int = 0
-        self.image_path: str = ""
-        self.extent: Dict[str, Union[int, float]] = {}
-        self.image_extent: Dict[str, Union[int, float]] = {}
-        self.center: Dict[str, Optional[float]] = {"x": None, "y": None}
-        self.attrs: Dict[str, Any] = {}
+        self.feature = None
 
         if not code:
             return
         self.tmp_path = self.create_tmp()
         self.workspace = self.create_workspace()
+        self._update_session_id()
         try:
-            feature_info = self.download_feature_info()
-            if feature_info:
-                self.get_geometry()
-            else:
+            geom = self.get_geometry()
+            if not geom:
                 self.log("Nothing found")
         except Exception as er:
             if hasattr(er, "reason"):
@@ -151,286 +101,123 @@ class Area:
             os.makedirs(workspace)
         return workspace
 
-    def get_coord(self):
-        if self.xy:
-            return self.xy
-        center = self.get_center_xy()
-        if center:
-            return center
-        return []
+    @staticmethod
+    def _get_code_by_number(number: int) -> str:
+        for key, value in TYPES.items():
+            if value[0] == number:
+                return value[1]
+        return None
 
-    def get_attrs(self):
-        return self.attrs
+    def search(self):
+        url = "https://nspd.gov.ru/map_api/s_search/search"
+        payload = {
+            "text": self.code,
+            "pageNumber": 0,
+            "pageSize": 1,
+        }
+        resp = self.make_request(url, method="POST", body=payload)
+        response_str = resp.decode("utf-8")
+        response_obj = json.loads(response_str)
+        return response_obj["result"][0]
 
-    def _prepare_attrs(self):
-        if self.attrs:
-            for a in self.attrs:
-                attr = self.attrs[a]
-                if isinstance(attr, str):
-                    try:
-                        attr = attr.lstrip()
-                        self.attrs[a] = attr
-                    except Exception:
-                        pass
-        return self.attrs
+    def get_geometry(self):
 
-    def to_geojson_poly(self, with_attrs=True, dumps=True):
-        return self.to_geojson("polygon", with_attrs, dumps)
+        cad_item = self.search()
 
-    def to_geojson_center(self, with_attrs=True, dumps=True):
-        current_center_status = self.center_only
-        self.center_only = True
-        to_return = self.to_geojson("point", with_attrs, dumps)
-        self.center_only = current_center_status
-        return to_return
+        url = "https://nspd.gov.ru/geoserver/wfs"
+        params = [
+            "service=wfs",
+            "version=2.0.0",
+            "OUTPUTFORMAT=application/json",
+            "REQUEST=GetFeature",
+            f"TYPENAME={cad_item["className"]}",
+            f"cql_filter=cad_num='{self.code}'",
+            f"authkey={self.session_id}",
+            f"srsName={self.coord_out}",
+        ]
+        url = f"{url}?{'&'.join(params)}"
 
-    def to_geojson(self, geom_type="point", with_attrs=True, dumps=True):
-        attrs = False
-        if with_attrs:
-            attrs = self._prepare_attrs()
-        xy = []
-        if self.center_only:
-            xy = self.get_center_xy()
-            geom_type = "point"
-        else:
-            xy = self.xy
-        if xy and len(xy):
-            feature_collection = coords2geojson(xy, geom_type, self.coord_out, attrs=attrs)
-            if feature_collection:
-                if dumps:
-                    return json.dumps(feature_collection)
-                return feature_collection
+        resp = self.make_request(url)
+        response_str = resp.decode("utf-8")
+        response_obj = json.loads(response_str)
+        feature = response_obj["features"][0]
+        self.feature = feature
+        return feature
+
+    # Deprecated use to_geojson for all cases
+    def to_geojson_poly(self, dumps=True):
+        return self.to_geojson(dumps)
+
+    def to_geojson(self, dumps=True):
+        feature_collection = self.feature
+        if feature_collection:
+            if dumps:
+                return json.dumps(feature_collection)
+            return feature_collection
         return False
 
     def to_kml(self):
-        return coords2kml(self.xy, self._prepare_attrs())
+        coords = [self.feature["geometry"]["coordinates"]]
+        attrs = self.feature["properties"]
+        return coords2kml(coords, attrs)
 
-    def get_center_xy(self):
-        center = self.attrs.get("center")
-        if center:
-            xy = [[[[center["x"], center["y"]]]]]
-            return xy
-        return False
+    def _update_session_id(self):
+        if not self.session_id:
+            url = "https://nspd.gov.ru/map_api/auth/authorize"
+            resp = self._make_request(url=url, method="POST", body={"userId": None, "roles": []})
+            resp_str = resp.decode("utf-8")
+            resp_json = json.loads(resp_str)
 
-    def make_request(self, url):
+            self.session_id = resp_json["sessionId"]
+
+    def _make_request(
+        self,
+        url: str,
+        method: str,
+        body: Optional[Union[Dict, bytes]],
+    ):
         proxy_path = os.path.join(self.tmp_path, "proxy.txt")
         proxy_handler = self.proxy_handler if self.proxy_handler else ProxyHandling(path=proxy_path)
         self.logger.debug(url)
+        headers = {
+            "Content-Type": "application/json",
+        }
         response = make_request(
             url=url,
+            body=body,
+            method=method,
             with_proxy=self.with_proxy,
             proxy_handler=proxy_handler,
             logger=self.logger,
             timeout=self.timeout,
+            headers=headers,
             proxy_url=self.proxy_url,
         )
         return response
 
-    def _get_feature_data(self):
-        feature_info_path = os.path.join(self.workspace, "feature_info.json")
-        data = False
-        if self.use_cache:
-            try:
-                with open(feature_info_path, "r") as data_file:
-                    data = json.load(data_file)
-                self.log(f"Area info loaded from file: {feature_info_path}")
-                return data
-            except Exception:
-                pass
-
-        search_url = self.feature_info_url + self.clear_code(self.code)
-        self.log("Start downloading area info: %s" % search_url)
-        resp = self.make_request(search_url)
-        data = json.loads(resp)
-        self.log("Area info downloaded.")
-        with open(feature_info_path, "w") as outfile:
-            json.dump(data, outfile)
-        return data
-
-    def download_feature_info(self):
-        data = self._get_feature_data()
-        if not data:
-            return data
-        feature = data.get("feature")
-        if not feature:
-            return False
-
-        attrs = feature.get("attrs")
-        if attrs:
-            self.attrs = attrs
-            self.code_id = attrs["id"]
-        if feature.get("extent"):
-            self.extent = feature["extent"]
-        if feature.get("center"):
-            x = feature["center"]["x"]
-            y = feature["center"]["y"]
-            if self.coord_out == "EPSG:4326":
-                (x, y) = xy2lonlat(x, y)
-            self.center = {"x": x, "y": y}
-            self.attrs["center"] = self.center
-        return feature
+    def make_request(
+        self,
+        url: str,
+        method: str = "GET",
+        body: Union[Dict, bytes, None] = None,
+    ):
+        self._update_session_id()
+        try:
+            resp = self._make_request(url, method, body)
+            self.session_id_attempt = 0
+            return resp
+        except HTTPForbiddenException:
+            if self.max_session_id_attempt < self.session_id_attempt:
+                self.session_id = None
+                self.session_id_attempt = self.session_id_attempt + 1
+                return self.make_request(url, method=method, body=body)
+            raise
+        except Exception:
+            raise
 
     @staticmethod
     def clear_code(code):
         return clear_code(code)
-
-    @staticmethod
-    def get_extent_list(extent):
-        """convert extent dick to ordered array"""
-        return [extent["xmin"], extent["ymin"], extent["xmax"], extent["ymax"]]
-
-    def get_buffer_extent_list(self):
-        """add some buffer to ordered extent array"""
-        ex = self.extent
-        buf = self.buffer
-        if ex and ex["xmin"]:
-            ex = [
-                ex["xmin"] - buf,
-                ex["ymin"] - buf,
-                ex["xmax"] + buf,
-                ex["ymax"] + buf,
-            ]
-        else:
-            self.log("Area has no coordinates")
-            # raise NoCoordinatesException()
-        return ex
-
-    def get_geometry(self):
-        if self.center_only:
-            return self.get_center_xy()
-        else:
-            return self.parse_geometry_from_image()
-
-    def parse_geometry_from_image(self):
-        formats = ["png"]
-
-        for f in formats:
-            bbox = self.get_buffer_extent_list()
-            if bbox:
-                image = PkkAreaMerger(
-                    bbox=self.get_buffer_extent_list(),
-                    output_format=f,
-                    with_log=self.with_log,
-                    clear_code=self.clear_code(self.code_id),
-                    output_dir=self.workspace,
-                    requester=self.make_request,
-                    use_cache=self.use_cache,
-                    area_type=self.area_type,
-                    logger=self.logger,
-                )
-                image.download()
-                self.image_path = image.merge_tiles()
-                self.width = image.real_width
-                self.height = image.real_height
-                self.image_extent = image.image_extent
-
-                if image:
-                    return self.get_image_geometry()
-
-    def get_image_geometry(self):
-        """
-        get corner geometry array from downloaded image
-        [area1],[area2] - may be multipolygon geometry
-           |
-        [self],[hole_1],[hole_N]     - holes is optional
-           |
-        [coord1],[coord2],[coord3]   - min 3 coord for polygon
-           |
-         [x,y]                       - coordinate pair
-
-         Example:
-             [[ [ [x,y],[x,y],[x,y] ], [ [x,y],[x,y],[x,y] ], ], [ [x,y],[x,y],[x,y] ], [ [x,y],[x,y],[x,y] ] ]
-                -----------------first polygon-----------------  ----------------second polygon--------------
-                ----outer contour---   --first hole contour-
-        """
-        image_xy_corner = self.image_xy_corner = self.get_image_xy_corner()
-        if image_xy_corner:
-            self.xy = copy.deepcopy(image_xy_corner)
-            for geom in self.xy:
-                for p in range(len(geom)):
-                    geom[p] = self.image_corners_to_coord(geom[p])
-            return self.xy
-        return []
-
-    def get_image_xy_corner(self):
-        """get сartesian coordinates from raster"""
-        import cv2
-        import numpy as np
-
-        if not self.image_path:
-            return False
-        image_xy_corners = []
-
-        try:
-            stream = open(self.image_path, "rb")
-            bytes = bytearray(stream.read())
-            numpyarray = np.asarray(bytes, dtype=np.uint8)
-            img = cv2.imdecode(numpyarray, cv2.IMREAD_GRAYSCALE)
-
-            imagem = 255 - img
-            del img
-
-            ret, thresh = cv2.threshold(imagem, 11, 128, cv2.THRESH_BINARY)
-            del imagem
-
-            try:
-                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            except Exception:
-                im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-            del thresh
-
-            hierarchy = hierarchy[0]
-            hierarchy_contours = [[] for _ in range(len(hierarchy))]
-            for fry, contour in enumerate(contours):
-
-                currentHierarchy = hierarchy[fry]
-                cc = []
-
-                epsilon = self.epsilon
-                approx = cv2.approxPolyDP(contour, epsilon, True)
-                if len(approx) > 2:
-                    for c in approx:
-                        cc.append([c[0][0], c[0][1]])
-                    parent_index = currentHierarchy[3]
-                    index = fry if parent_index < 0 else parent_index
-                    hierarchy_contours[index].append(cc)
-
-            image_xy_corners = [c for c in hierarchy_contours if len(c) > 0]
-            return image_xy_corners
-        except Exception as ex:
-            self.error(ex)
-        return image_xy_corners
-
-    def image_corners_to_coord(self, image_xy_corners):
-        """calculate spatial coordinates from cartesian"""
-        ex = self.get_extent_list(self.image_extent)
-        dx = (ex[2] - ex[0]) / self.width
-        dy = (ex[3] - ex[1]) / self.height
-        xy_corners = []
-        for im_x, im_y in image_xy_corners:
-            x = ex[0] + (im_x * dx)
-            y = ex[3] - (im_y * dy)
-            if self.coord_out == "EPSG:4326":
-                (x, y) = xy2lonlat(x, y)
-            xy_corners.append([x, y])
-        return xy_corners
-
-    def show_plot(self):
-        """Development tool"""
-        import cv2
-
-        try:
-            from matplotlib import pyplot as plt
-        except ImportError:
-            self.error("Matplotlib is not installed.")
-            raise ImportError("matplotlib is not installed.")
-
-        img = cv2.imread(self.image_path)
-        for polygones in self.image_xy_corner:
-            for corners in polygones:
-                for x, y in corners:
-                    cv2.circle(img, (x, y), 3, 255, -1)
-        plt.imshow(img), plt.show()
 
     def log(self, msg):
         if self.with_log:

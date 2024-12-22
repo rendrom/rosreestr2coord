@@ -129,7 +129,7 @@ def coords2kml(coords, attrs):
         kml = ET.Element("kml", attrib={"xmlns": "http://www.opengis.net/kml/2.2"})
         doc = ET.SubElement(kml, "Document")
         folder = ET.SubElement(doc, "Folder")
-        name = attrs["cn"] if "cn" in attrs else attrs["id"]
+        name = attrs["cad_num"]
         ET.SubElement(folder, "name").text = name
         placemark = ET.SubElement(folder, "Placemark")
 
