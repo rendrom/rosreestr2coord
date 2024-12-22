@@ -1,6 +1,6 @@
 [project]
 name = "rosreestr2coord"
-version = "5.0.0.dev1"
+version = "5.0.0"
 description = "Get geometry from rosreestr"
 authors = [{ name = "Artemiy Doroshkov", email = "rendrom@gmail.com" }]
 dependencies = ["requests"]
