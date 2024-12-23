@@ -19,6 +19,21 @@ def code_to_filename(code: str) -> str:
     return code.replace(":", "_").replace("/", "-")
 
 
+def transform_to_wgs(geojson: dict) -> dict:
+    def process_coords(coords):
+        return [xy2lonlat(x, y) for x, y in coords]
+
+    result = geojson.copy()
+    geom = result["geometry"]
+
+    if geom["type"] == "Polygon":
+        geom["coordinates"] = [process_coords(ring) for ring in geom["coordinates"]]
+    elif geom["type"] == "MultiPolygon":
+        geom["coordinates"] = [[process_coords(ring) for ring in poly] for poly in geom["coordinates"]]
+
+    return result
+
+
 def clear_code(code: str) -> str:
     """
     Remove first nulls from code xxxx:00xx >> xxxx:xx

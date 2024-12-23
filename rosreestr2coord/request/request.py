@@ -26,15 +26,15 @@ def make_request(
 
     if proxy_url is not None:
         # Use a specified proxy
-        return make_request_with_specified_proxy(url, proxy_url, logger, adapter, timeout, method, headers, body)
+        return make_request_with_specified_proxy(url, proxy_url, logger, adapter, timeout, headers, method, body)
     elif with_proxy:
         # Use a pool of proxies
         proxy_handler = proxy_handler if proxy_handler else ProxyHandling()
-        return make_request_with_proxy(url, proxy_handler, logger, adapter, timeout, method, headers, body)
+        return make_request_with_proxy(url, proxy_handler, logger, adapter, timeout, headers, method, body)
     else:
         # Make a direct request without proxies
         try:
-            return adapter.perform_request(url, None, logger, timeout, headers, method, headers, body)
+            return adapter.perform_request(url, None, logger, timeout, headers, method, body)
         except Exception as er:
             raise er
 
@@ -74,8 +74,8 @@ def make_request_with_proxy(
     logger: Optional[object],
     adapter: RequestAdapter,
     timeout: int,
-    method: str,
     headers: Optional[dict] = None,
+    method: str = "GET",
     body: Union[Dict, bytes, None] = None,
 ) -> bytes:
     tries_per_proxy = 3

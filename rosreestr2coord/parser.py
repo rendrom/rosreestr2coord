@@ -10,22 +10,22 @@ from .export import coords2kml
 from .logger import logger
 from .request.proxy_handling import ProxyHandling
 from .request.request import make_request
-from .utils import clear_code, code_to_filename
+from .utils import clear_code, code_to_filename, transform_to_wgs
 
 TYPES = {
-    "Участки": (1, "RR:PARCEL_V"),
-    # "ОКС": 5,
-    "Кварталы": (2, "RR:CAD_BLOCK"),
-    # "Районы": 3,
-    # "Округа": 4,
-    # "Границы": 7,
-    # "ЗОУИТ": 10,
-    # "Тер. зоны": 6,
-    # "Красные линии": 13,
-    # "Лес": 12,
-    # "СРЗУ": 15,
-    # "ОЭЗ": 16,
-    # "ГОК": 9,
+    "Участки": 1,
+    "ОКС": 5,
+    "Кварталы": 2,
+    "Районы": 3,
+    "Округа": 4,
+    "Границы": 7,
+    "ЗОУИТ": 10,
+    "Тер. зоны": 6,
+    "Красные линии": 13,
+    "Лес": 12,
+    "СРЗУ": 15,
+    "ОЭЗ": 16,
+    "ГОК": 9,
 }
 
 
@@ -50,7 +50,7 @@ class Area:
         proxy_url: Optional[str] = None,
     ):
         self.with_log = with_log
-        self.area_type = self._get_code_by_number(area_type)
+        self.area_type = area_type
         self.media_path = media_path
 
         self.code = code
@@ -65,17 +65,13 @@ class Area:
         self.coord_out = coord_out
         self.timeout = timeout
 
-        self.session_id = None
-        self.max_session_id_attempt = 5
-        self.session_id_attempt = 0
-
         self.feature = None
 
         if not code:
             return
         self.tmp_path = self.create_tmp()
         self.workspace = self.create_workspace()
-        self._update_session_id()
+
         try:
             geom = self.get_geometry()
             if not geom:
@@ -101,13 +97,6 @@ class Area:
             os.makedirs(workspace)
         return workspace
 
-    @staticmethod
-    def _get_code_by_number(number: int) -> str:
-        for key, value in TYPES.items():
-            if value[0] == number:
-                return value[1]
-        return None
-
     def search(self):
         url = "https://nspd.gov.ru/map_api/s_search/search"
         payload = {
@@ -116,33 +105,33 @@ class Area:
             "pageSize": 1,
         }
         resp = self.make_request(url, method="POST", body=payload)
-        response_str = resp.decode("utf-8")
-        response_obj = json.loads(response_str)
-        return response_obj["result"][0]
+        return resp["result"][0]
 
     def get_geometry(self):
 
-        cad_item = self.search()
+        # cad_item = self.search()
 
-        url = "https://nspd.gov.ru/geoserver/wfs"
+        url = "https://nspd.gov.ru/api/geoportal/v2/search/geoportal"
         params = [
-            "service=wfs",
-            "version=2.0.0",
-            "OUTPUTFORMAT=application/json",
-            "REQUEST=GetFeature",
-            f"TYPENAME={cad_item["className"]}",
-            f"cql_filter=cad_num='{self.code}'",
-            f"authkey={self.session_id}",
-            f"srsName={self.coord_out}",
+            f"thematicSearchId={self.area_type}",
+            f"query={self.code}",
+            # "service=wfs",
+            # "version=2.0.0",
+            # "OUTPUTFORMAT=application/json",
+            # "REQUEST=GetFeature",
+            # f"TYPENAME={cad_item["className"]}",
+            # f"cql_filter=cad_num='{self.code}'",
+            f"CRS={self.coord_out}",
         ]
         url = f"{url}?{'&'.join(params)}"
 
         resp = self.make_request(url)
-        response_str = resp.decode("utf-8")
-        response_obj = json.loads(response_str)
-        feature = response_obj["features"][0]
-        self.feature = feature
-        return feature
+        features = resp["data"]["features"]
+        if len(features):
+            feature = transform_to_wgs(features[0])
+            self.feature = feature
+            return feature
+        return False
 
     # Deprecated use to_geojson for all cases
     def to_geojson_poly(self, dumps=True):
@@ -160,15 +149,6 @@ class Area:
         coords = [self.feature["geometry"]["coordinates"]]
         attrs = self.feature["properties"]
         return coords2kml(coords, attrs)
-
-    def _update_session_id(self):
-        if not self.session_id:
-            url = "https://nspd.gov.ru/map_api/auth/authorize"
-            resp = self._make_request(url=url, method="POST", body={"userId": None, "roles": []})
-            resp_str = resp.decode("utf-8")
-            resp_json = json.loads(resp_str)
-
-            self.session_id = resp_json["sessionId"]
 
     def _make_request(
         self,
@@ -201,19 +181,7 @@ class Area:
         method: str = "GET",
         body: Union[Dict, bytes, None] = None,
     ):
-        self._update_session_id()
-        try:
-            resp = self._make_request(url, method, body)
-            self.session_id_attempt = 0
-            return resp
-        except HTTPForbiddenException:
-            if self.max_session_id_attempt < self.session_id_attempt:
-                self.session_id = None
-                self.session_id_attempt = self.session_id_attempt + 1
-                return self.make_request(url, method=method, body=body)
-            raise
-        except Exception:
-            raise
+        return self._make_request(url, method, body)
 
     @staticmethod
     def clear_code(code):

@@ -2,12 +2,13 @@
 # coding: utf-8
 import argparse
 import importlib.metadata
+import json
 import os
 import signal
 import sys
 
 from .batch import batch_parser
-from .parser import Area
+from .parser import TYPES, Area
 from .utils import code_to_filename
 
 __version__ = importlib.metadata.version("rosreestr2coord")
@@ -22,13 +23,13 @@ def getopts():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("-c", "--code", type=str, help="area cadastral number")
-    # parser.add_argument(
-    #     "-t",
-    #     "--area_type",
-    #     type=int,
-    #     default=1,
-    #     help=f"area types: {', '.join(f'{k}: {v[0]}' for k, v in TYPES.items())}",
-    # )
+    parser.add_argument(
+        "-t",
+        "--area_type",
+        type=int,
+        default=1,
+        help=f"area types: {', '.join(f'{k}: {v}' for k, v in TYPES.items())}",
+    )
     parser.add_argument("-p", "--path", type=str, help="media path")
     parser.add_argument("-o", "--output", type=str, default=os.path.join(os.getcwd(), "output"), help="output path")
     parser.add_argument("-l", "--list", type=str, help="path of file with cadastral codes list")
@@ -85,6 +86,7 @@ def run_console(opt):
     kwargs = {
         "media_path": opt.path,
         "with_proxy": opt.proxy,
+        "area_type": opt.area_type,
         "use_cache": not opt.refresh,
         "coord_out": "EPSG:4326",
         "proxy_url": opt.proxy_url,

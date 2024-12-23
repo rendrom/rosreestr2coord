@@ -14,8 +14,8 @@ class UrllibAdapter(RequestAdapter):
         self,
         url: str,
         proxy: Optional[str],
-        headers: dict,
         timeout: int,
+        headers: dict,
         method: str = "GET",
         body: Optional[Union[Dict, bytes]] = None,
     ) -> bytes:
@@ -34,14 +34,18 @@ class UrllibAdapter(RequestAdapter):
 
         try:
             with urlopen(request, context=context, timeout=timeout) as response:
-                return response.read()
+                encoding = response.headers.get_content_charset() or "utf-8"
+                data = response.read().decode(encoding)
+
+                return json.loads(data)
+
         except urllib.error.HTTPError as e:
             if e.code == 403:
                 raise HTTPForbiddenException(f"HTTP 403 Forbidden: {e.reason}") from e
             elif e.code == 400:
                 raise HTTPBadRequestException("HTTP 400 Bad Request") from e
-            else:
-                raise
+        except Exception as er:
+            raise
 
     def get_specific_http_error(self):
         """Returns the urllib HTTPError class."""

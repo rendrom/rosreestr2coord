@@ -16,8 +16,8 @@ class RequestAdapter(ABC):
         self,
         url: str,
         proxy: Optional[str],
-        headers: dict,
         timeout: int,
+        headers: dict,
         method: str = "GET",
         body: Optional[Union[Dict, bytes]] = None,
     ) -> bytes:
@@ -38,7 +38,7 @@ class RequestAdapter(ABC):
         headers = {**default_headers, **(headers or {})}
 
         try:
-            response = self._make_request(url, proxy, headers, timeout, method, body)
+            response = self._make_request(url, proxy, timeout, headers, method, body)
             is_error = is_error_response(url, response)
             if is_error:
                 raise RequestException(is_error)
