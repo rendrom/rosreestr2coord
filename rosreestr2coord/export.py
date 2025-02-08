@@ -129,7 +129,9 @@ def coords2kml(coords, attrs):
         kml = ET.Element("kml", attrib={"xmlns": "http://www.opengis.net/kml/2.2"})
         doc = ET.SubElement(kml, "Document")
         folder = ET.SubElement(doc, "Folder")
-        name = attrs["options"]["cad_num"]
+        name = attrs.get("label")
+        if not name:
+            name = attrs.get("options", {}).get("cad_num", "")
         ET.SubElement(folder, "name").text = name
         placemark = ET.SubElement(folder, "Placemark")
 
@@ -155,6 +157,5 @@ def coords2kml(coords, attrs):
                 xy.append(xy[0])
                 linear_ring = ET.SubElement(boundary, "LinearRing")
                 ET.SubElement(linear_ring, "coordinates").text = " ".join(map(lambda c: ",".join(map(str, c)), xy))
-        # return ET.tostring(kml, encoding='utf8', method='xml')
         return ET.ElementTree(kml)
     return False

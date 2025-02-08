@@ -2,9 +2,8 @@
 import json
 import logging
 import os
+import warnings
 from typing import Dict, Optional, Union
-
-from rosreestr2coord.request.exceptions import HTTPForbiddenException
 
 from .export import coords2kml
 from .logger import logger
@@ -13,23 +12,18 @@ from .request.request import make_request
 from .utils import clear_code, code_to_filename, transform_to_wgs
 
 TYPES = {
-    "Участки": 1,
-    "ОКС": 5,
-    "Кварталы": 2,
-    "Районы": 3,
-    "Округа": 4,
-    "Границы": 7,
-    "ЗОУИТ": 10,
-    "Тер. зоны": 6,
-    "Красные линии": 13,
-    "Лес": 12,
-    "СРЗУ": 15,
-    "ОЭЗ": 16,
-    "ГОК": 9,
+    "Объекты недвижимости": 1,
+    "Кадастровое деление": 2,
+    "Административно-территориальное деление": 4,
+    "Зоны и территории": 5,
+    "Территориальные зоны": 7,
+    "Комплексы объектов": 15,
 }
 
 
 class NoCoordinatesException(Exception):
+    """Exception raised when no coordinates are found."""
+
     pass
 
 
@@ -38,7 +32,7 @@ class Area:
     def __init__(
         self,
         code: str = "",
-        area_type: int = 1,
+        area_type: Optional[int] = None,
         media_path: str = "",
         with_log: bool = True,
         coord_out: str = "EPSG:4326",
@@ -49,125 +43,104 @@ class Area:
         logger: Optional[logging.Logger] = logger,
         proxy_url: Optional[str] = None,
     ):
-        self.with_log = with_log
-        self.area_type = area_type
-        self.media_path = media_path
+        self.code: str = code
+        self.area_type: Optional[int] = area_type
+        self.media_path: str = media_path or os.getcwd()
+        self.with_log: bool = with_log
+        self.coord_out: str = coord_out
+        self.with_proxy: bool = with_proxy
+        self.use_cache: bool = use_cache
+        self.timeout: int = timeout
+        self.proxy_handler: Optional[ProxyHandling] = proxy_handler
+        self.proxy_url: Optional[str] = proxy_url
+        self.logger: logging.Logger = logger or logging.getLogger(__name__)
 
-        self.code = code
+        self.file_name: str = code_to_filename(self.code)
+        self.feature: Optional[dict] = None
 
-        self.proxy_url = proxy_url
+        self.tmp_path: str = self.create_tmp()
 
-        self.file_name = code_to_filename(self.code[:])
-        self.with_proxy = with_proxy
-        self.proxy_handler = proxy_handler
-        self.logger = logger
-        self.use_cache = use_cache
-        self.coord_out = coord_out
-        self.timeout = timeout
-
-        self.feature = None
-
-        if not code:
+        if not self.code:
             return
-        self.tmp_path = self.create_tmp()
-        self.workspace = self.create_workspace()
 
         try:
             geom = self.get_geometry()
             if not geom:
                 self.log("Nothing found")
         except Exception as er:
-            if hasattr(er, "reason"):
-                self.log(er.reason)
-            else:
-                self.log(er)
+            message = getattr(er, "reason", str(er))
+            self.log(message)
 
-    def create_tmp(self):
-        if not self.media_path:
-            self.media_path = os.getcwd()
+    def create_tmp(self) -> str:
         tmp_path = os.path.join(self.media_path, "tmp")
-        if not os.path.isdir(tmp_path):
-            os.makedirs(tmp_path)
+        os.makedirs(tmp_path, exist_ok=True)
         return tmp_path
 
-    def create_workspace(self):
-        area_path_name = code_to_filename(clear_code(self.code))
-        workspace = os.path.join(self.tmp_path, area_path_name)
-        if not os.path.isdir(workspace):
-            os.makedirs(workspace)
-        return workspace
-
-    def search(self):
-        url = "https://nspd.gov.ru/map_api/s_search/search"
-        payload = {
-            "text": self.code,
-            "pageNumber": 0,
-            "pageSize": 1,
-        }
-        resp = self.make_request(url, method="POST", body=payload)
-        return resp["result"][0]
-
-    def get_geometry(self):
-
-        # cad_item = self.search()
-
-        url = "https://nspd.gov.ru/api/geoportal/v2/search/geoportal"
+    def _build_url(self, area_type: int) -> str:
+        base_url = "https://nspd.gov.ru/api/geoportal/v2/search/geoportal"
         params = [
-            f"thematicSearchId={self.area_type}",
+            f"thematicSearchId={area_type}",
             f"query={self.code}",
-            # "service=wfs",
-            # "version=2.0.0",
-            # "OUTPUTFORMAT=application/json",
-            # "REQUEST=GetFeature",
-            # f"TYPENAME={cad_item["className"]}",
-            # f"cql_filter=cad_num='{self.code}'",
             f"CRS={self.coord_out}",
         ]
-        url = f"{url}?{'&'.join(params)}"
+        return f"{base_url}?{'&'.join(params)}"
 
+    def _query_with_area_type(self, area_type: int) -> Optional[dict]:
+        url = self._build_url(area_type)
         resp = self.make_request(url)
-        features = resp["data"]["features"]
-        if len(features):
-            feature = transform_to_wgs(features[0])
-            self.feature = feature
-            return feature
-        return False
+        if resp:
+            features = resp.get("data", {}).get("features", [])
+            if features:
+                feature = transform_to_wgs(features[0])
+                if self._matches_criteria(feature):
+                    self.feature = feature
+                    return feature
+        return None
 
-    # Deprecated use to_geojson for all cases
-    def to_geojson_poly(self, dumps=True):
-        return self.to_geojson(dumps)
+    def get_geometry(self) -> Optional[dict]:
+        if self.area_type is not None:
+            if self.area_type not in TYPES.values():
+                raise ValueError(
+                    "Invalid area_type specified. Available options: "
+                    + ", ".join([f"{k} - {v}" for k, v in TYPES.items()])
+                )
+            return self._query_with_area_type(self.area_type)
 
-    def to_geojson(self, dumps=True):
-        feature_collection = self.feature
-        if feature_collection:
-            if dumps:
-                return json.dumps(feature_collection)
-            return feature_collection
-        return False
+    def _matches_criteria(self, feature: dict) -> bool:
+        return True
 
-    def to_kml(self):
-        coords = [self.feature["geometry"]["coordinates"]]
-        attrs = self.feature["properties"]
+    def to_geojson_poly(self, dumps: bool = True) -> Union[str, dict, None]:
+        warnings.warn("to_geojson_poly is deprecated. Use to_geojson instead.", DeprecationWarning)
+        return self.to_geojson(dumps=dumps)
+
+    def to_geojson(self, dumps: bool = True) -> Union[str, dict, None]:
+        if self.feature:
+            return json.dumps(self.feature) if dumps else self.feature
+        return None
+
+    def to_kml(self) -> str:
+        if not self.feature:
+            raise NoCoordinatesException("No geometry feature available for conversion to KML.")
+        coords = [self.feature.get("geometry", {}).get("coordinates")]
+        attrs = self.feature.get("properties", {})
         return coords2kml(coords, attrs)
 
     def _make_request(
         self,
         url: str,
         method: str,
-        body: Optional[Union[Dict, bytes]],
-    ):
+        body: Optional[Union[Dict, bytes]] = None,
+    ) -> dict:
         proxy_path = os.path.join(self.tmp_path, "proxy.txt")
-        proxy_handler = self.proxy_handler if self.proxy_handler else ProxyHandling(path=proxy_path)
-        self.logger.debug(url)
-        headers = {
-            "Content-Type": "application/json",
-        }
+        effective_proxy_handler = self.proxy_handler or ProxyHandling(path=proxy_path)
+        self.logger.debug(f"Request URL: {url}")
+        headers = {"Content-Type": "application/json"}
         response = make_request(
             url=url,
             body=body,
             method=method,
             with_proxy=self.with_proxy,
-            proxy_handler=proxy_handler,
+            proxy_handler=effective_proxy_handler,
             logger=self.logger,
             timeout=self.timeout,
             headers=headers,
@@ -179,18 +152,19 @@ class Area:
         self,
         url: str,
         method: str = "GET",
-        body: Union[Dict, bytes, None] = None,
-    ):
+        body: Optional[Union[Dict, bytes]] = None,
+    ) -> dict:
         return self._make_request(url, method, body)
 
     @staticmethod
-    def clear_code(code):
+    def clear_code(code: str) -> str:
         return clear_code(code)
 
-    def log(self, msg):
+    def log(self, msg: str) -> None:
         if self.with_log:
+            self.logger.info(msg)
             print(msg)
 
-    def error(self, msg):
+    def error(self, msg: str) -> None:
         if self.with_log:
             self.logger.warning(msg)

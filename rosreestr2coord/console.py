@@ -59,13 +59,15 @@ def get_by_code(code, output, display, **kwargs):
 
 def process_area(area, output_path, display):
     geojson = area.to_geojson_poly()
-    kml = area.to_kml()
+
     file_name = code_to_filename(area.file_name)
 
-    if kml:
-        save_file(kml, output_path, file_name, "kml")
     if geojson:
         save_file(geojson, output_path, file_name, "geojson")
+
+        kml = area.to_kml()
+        if kml:
+            save_file(kml, output_path, file_name, "kml")
     if display:
         area.show_plot()
 
