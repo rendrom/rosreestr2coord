@@ -2,7 +2,6 @@
 # coding: utf-8
 import argparse
 import importlib.metadata
-import json
 import os
 import signal
 import sys

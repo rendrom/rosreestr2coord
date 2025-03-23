@@ -16,7 +16,16 @@ readme = "README.md"
 rosreestr2coord = "rosreestr2coord.console:console"
 
 [project.optional-dependencies]
-dev = ["black", "isort"]
+dev = [
+    "ruff",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "tox",
+    "requests-mock",
+    "build",
+    "twine",
+]
 
 [build-system]
 requires = ["setuptools", "wheel", "twine"]
@@ -26,11 +35,34 @@ build-backend = "setuptools.build_meta"
 packages = ["rosreestr2coord", "rosreestr2coord.request"]
 include-package-data = true
 
-[tool.isort]
-profile = "black"
-
-[tool.black]
+[tool.ruff]
 line-length = 120
+target-version = "py311"
+extend-select = ["I", "E", "F", "W"]
+src = ["rosreestr2coord", "tests"]
+exclude = ["__pycache__", "build", "dist"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --tb=short"
+testpaths = ["tests"]
+markers = [
+    "integration: mark test as integration (requires internet)",
+    "unit: mark test as unit (fast, local)",
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py38, py39, py310, py311
+
+[testenv]
+deps =
+    pytest
+    pytest-cov
+commands =
+    pytest --cov=rosreestr2coord --cov-report=term-missing
+"""
 
 
 # https://pypi.python.org/pypi/twine

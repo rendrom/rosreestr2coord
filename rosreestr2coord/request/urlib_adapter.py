@@ -44,7 +44,7 @@ class UrllibAdapter(RequestAdapter):
                 raise HTTPForbiddenException(f"HTTP 403 Forbidden: {e.reason}") from e
             elif e.code == 400:
                 raise HTTPBadRequestException("HTTP 400 Bad Request") from e
-        except Exception as er:
+        except Exception:
             raise
 
     def get_specific_http_error(self):
