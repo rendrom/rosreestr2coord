@@ -32,7 +32,7 @@ class Area:
     def __init__(
         self,
         code: str = "",
-        area_type: Optional[int] = None,
+        area_type: Optional[int] = 1,
         media_path: str = "",
         with_log: bool = True,
         coord_out: str = "EPSG:4326",
