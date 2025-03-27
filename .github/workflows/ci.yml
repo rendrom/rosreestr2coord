@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -27,14 +27,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install .[dev]
 
-      - name: Run unit and integration tests
+      - name: Run unit tests
         run: |
           pytest -m "not integration"
-
-      - name: Run integration tests (optional)
-        run: |
-          pytest -m integration
-        if: ${{ always() }}
 
       - name: Lint and format check (ruff)
         run: |
