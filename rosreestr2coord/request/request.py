@@ -79,7 +79,7 @@ def make_request_with_proxy(
     body: Union[Dict, bytes, None] = None,
 ) -> bytes:
     tries_per_proxy = 3
-    tries_for_proxies = 20
+    tries_for_proxies = 5
 
     for _ in range(tries_for_proxies):
         proxies = url_proxy.load_proxies()
