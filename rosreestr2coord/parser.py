@@ -28,7 +28,6 @@ class NoCoordinatesException(Exception):
 
 
 class Area:
-
     def __init__(
         self,
         code: str = "",
@@ -63,13 +62,16 @@ class Area:
         if not self.code:
             return
 
-        try:
+        if with_log:
+            try:
+                geom = self.get_geometry()
+                if not geom:
+                    self.log("Nothing found")
+            except Exception as er:
+                message = getattr(er, "reason", str(er))
+                self.log(message)
+        else:
             geom = self.get_geometry()
-            if not geom:
-                self.log("Nothing found")
-        except Exception as er:
-            message = getattr(er, "reason", str(er))
-            self.log(message)
 
     def create_tmp(self) -> str:
         tmp_path = os.path.join(self.media_path, "tmp")
