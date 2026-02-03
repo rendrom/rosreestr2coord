@@ -48,7 +48,7 @@ def make_request_with_specified_proxy(
     headers: Optional[dict] = None,
     method: str = "GET",
     body: Union[Dict, bytes, None] = None,
-) -> bytes:
+):
     tries = 3
     for attempt in range(1, tries + 1):
         try:

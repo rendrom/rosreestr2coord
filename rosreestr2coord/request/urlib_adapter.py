@@ -25,7 +25,6 @@ class UrllibAdapter(RequestAdapter):
         request = Request(url, data=body, headers=headers, method=method)
 
         context = ssl._create_unverified_context()
-        context.set_ciphers("ALL:@SECLEVEL=1")
 
         try:
             if proxy:
@@ -43,7 +42,8 @@ class UrllibAdapter(RequestAdapter):
 
         except urllib.error.HTTPError as e:
             if e.code == 403:
-                raise HTTPForbiddenException(f"HTTP 403 Forbidden: {e.reason}") from e
+                b = e.read().decode("utf-8", "ignore")
+                raise HTTPForbiddenException(f"HTTP {e.code}: {e.reason}; body={b[:500]}") from e
             elif e.code == 400:
                 raise HTTPBadRequestException("HTTP 400 Bad Request") from e
         except urllib.error.URLError as e:

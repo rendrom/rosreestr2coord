@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional, Union
 
 import httpx
 
@@ -10,11 +10,13 @@ class HttpxAdapter(RequestAdapter):
         self,
         url: str,
         proxy: Optional[str],
-        headers: dict,
         timeout: int,
+        headers: dict,
+        method: str = "GET",
+        body: Optional[Union[Dict, bytes]] = None,
     ) -> bytes:
         proxies = {"http://": f"http://{proxy}", "https://": f"http://{proxy}"} if proxy else None
-        with httpx.Client(proxies=proxies, verify=False, timeout=timeout) as client:
+        with httpx.Client(verify=False, timeout=timeout) as client:
             response = client.get(url, headers=headers)
             response.raise_for_status()
             return response.content
